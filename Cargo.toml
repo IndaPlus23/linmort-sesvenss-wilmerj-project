@@ -1,0 +1,29 @@
+[package]
+name = "raycaster_rewritten"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+bevy = "0.13.1"
+nalgebra = "0.32.4"
+
+# Enable only a small amount of optimization in debug mode
+[profile.dev]
+opt-level = 1
+
+# Enable max optimizations for dependencies, but not for our code:
+[profile.dev.package."*"]
+opt-level = 3
+
+#If you want, you can also enable LTO (Link-Time-Optimization) for the actual release builds, 
+#to squeeze out even more performance at the cost of very slow compile times.
+
+#Here is a configuration for the most aggressive optimizations possible:
+[profile.release]
+lto = true
+opt-level = 3
+codegen-units = 1
+incremental = false
+debug = false
