@@ -22,7 +22,7 @@ The development branch is where new features and ongoing work are integrated and
 
 Issues will be created for every feature or task that is needed. The title should summarize the essence and quickly convey the nature of the issue. if required, a detailed description with further information may be included. To help further categorize each issue will be assigned labels based on attributes like type or priority. Assignees will be assigned and take responsibility for the issue. Issues with deadlines will be added under milestones. 
 
-Examples of good issue titles are `Implement asset pipeline` with the label `Feature` or `Player movement is jittery near walls` labeled as `Bug`.
+Examples of good issue titles are `Implement asset pipeline` with the label `Feature` or `Missing collision for walls` labeled as `Bug`.
 
 > Issues with small or insignificant changes that do not require their own issue may be committed directly to its according branch.
 
