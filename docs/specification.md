@@ -18,6 +18,10 @@ The development branch is where new features and ongoing work are integrated and
 
 ### Issues
 
+Issues will be created for every feature or task that is needed. The title should summarize the essence and quickly convey the nature of the issue. if required, a detailed description with further information may be included. To help further categorize each issue will be assigned labels based on attributes like type or priority. Assignees will be assigned and take responsibility for the issue. Issues with deadlines will be added under milestones. Examples of good issue titles are `Implement asset pipeline for importing custom textures` with the label `Feature` or `Player movement is jittery near walls` labeled as `Bug`.
+
+> Issues with small or insignificant changes that do not require their own issue may be committed directly to its according branch.
+
 ### Commits
 
 Commit messages should provide a concise but informative explanation of the change. In accordance with Git standards commits will be written in an imperative mood starting with a verb indicating the action to be performed. Ideally, the message should fit within a single sentence. However, if the message alone is insufficient in conveying the change or if the situation demands so a shorter description is to be included. Examples of good commit messages are `Update specification.md` or `Fix collision detection with walls`, where the latter may require an additional description.
