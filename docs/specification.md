@@ -20,7 +20,7 @@ The development branch is where new features and ongoing work are integrated and
 
 ### Code
 
-Code will be written in accordance with the [Rust style convention](https://doc.rust-lang.org/1.0.0/style/style/README.html)
+Code will be written in accordance with the [Rust style convention](https://doc.rust-lang.org/1.0.0/style/style/README.html). Before submitting, code should be formatted using `cargo fmt`.
 
 ### Issues
 
@@ -55,6 +55,7 @@ The MoSCoW method is used to prioritize requirements in categories of Must have,
 ### Should have
 
 * A real time map editor to easily add, edit and remove level contents.
+* Basic UI elements displaying debugging text.
 * Binary space partitioning as famously popularized by John Carmack.
 * Basic FPS mechanics like shooting, reloading and displaying the ammunition.
 * Audio and music system.
