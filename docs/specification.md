@@ -18,6 +18,10 @@ The development branch is where new features and ongoing work are integrated and
 
 ## Naming convention
 
+### Code
+
+Code will be written in accordance with the [Rust style convention](https://doc.rust-lang.org/1.0.0/style/style/README.html)
+
 ### Issues
 
 Issues will be created for every feature or task that is needed. The title should summarize the essence and quickly convey the nature of the issue. if required, a detailed description with further information may be included. To help further categorize each issue will be assigned labels based on attributes like type or priority. Assignees will be assigned and take responsibility for the issue. Issues with deadlines will be added under milestones. 
@@ -33,6 +37,8 @@ Commit messages should provide a concise but informative explanation of the chan
 Examples of good commit messages are `Update specification.md` or `Fix collision detection with walls`, where the latter may require an additional description.
 
 ### Pull requests
+
+Pull requests should be descriptive but concise and motivate the change in a contextual manner. They should be named after the associated issue, and if possible reference a github project feature. 
 
 ## MoSCoW
 
