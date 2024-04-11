@@ -8,6 +8,9 @@ use crate::Player;
 use crate::structures::Wall;
 use crate::Triangle;
 
+
+
+
 pub fn render(
     mut query: Query<&Player>,
     mut gizmos: Gizmos,
@@ -53,15 +56,16 @@ pub fn render(
                 mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, new_positions);
             }
             if let Some(_uvs) = mesh.attribute_mut(Mesh::ATTRIBUTE_UV_0) {
+
                 if wall.triangle == Triangle::Upper {
                     mesh.insert_attribute(
                         Mesh::ATTRIBUTE_UV_0,
-                        vec![[0.0, 1.0], [1.0, 0.0], [0.0, 0.0]],
+                        vec![[0.0, 1.], [0.0, 0.0], [1., 0.0]], //0 1, 0 0, 1 0
                     );
                 } else if wall.triangle == Triangle::Lower {
                     mesh.insert_attribute(
                         Mesh::ATTRIBUTE_UV_0,
-                        vec![[0.0, 1.0], [1.0, 0.0], [1.0, 1.0]],
+                        vec![[0.0, 1.0], [1.0, 0.0], [1.0, 1.0]], //0 1, 1 0, 1 1
                     );
                 }
             }
@@ -81,10 +85,12 @@ pub fn render(
             transform.translation.z = z_ordering;
             z_ordering += 1.;
         }
+    
+        
     }
 }
 
-// Converts world coordinates from above function to actual 3d screen coordinates
+// Converts world 3d coordinates to 2d screen coordinates
 fn world_to_screen_coordinates(world_x: f32, world_y: f32, world_z: f32) -> Vec2 {
     let screen_x = world_x * 2000. / world_z;
     let screen_y = world_y * 2000. / world_z;

@@ -34,6 +34,7 @@ impl Wall {
         commands: &mut Commands,
         meshes: &mut ResMut<Assets<Mesh>>,
         materials: &mut ResMut<Assets<ColorMaterial>>,
+        asset_server: &mut Res<AssetServer>,
         start: Vec3,
         end: Vec3,
         height: f32,
@@ -47,7 +48,10 @@ impl Wall {
             ),
             MaterialMesh2dBundle {
                 mesh: meshes.add(Triangle2d::default()).into(),
-                material: materials.add(Color::YELLOW),
+                material: materials.add(ColorMaterial {
+                    texture: Some(asset_server.load("grass_front.png")),
+                    color: Color::WHITE,
+                }),
                 ..Default::default()
             },
         ));
@@ -61,7 +65,10 @@ impl Wall {
             ),
             MaterialMesh2dBundle {
                 mesh: meshes.add(Triangle2d::default()).into(),
-                material: materials.add(Color::RED),
+                material: materials.add(ColorMaterial {
+                    texture: Some(asset_server.load("grass_front.png")),
+                    color: Color::WHITE,
+                }),
                 ..Default::default()
             },
         ));

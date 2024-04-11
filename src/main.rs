@@ -3,6 +3,9 @@ use bevy::{
     prelude::*,
     render::mesh::Mesh,
     window::{PresentMode, WindowTheme},
+    reflect::TypePath,
+    render::render_resource::{AsBindGroup, ShaderRef},
+    sprite::{Mesh2dHandle, Material2d, Material2dPlugin, MaterialMesh2dBundle},
 };
 use std::f32::consts::PI;
 
@@ -15,6 +18,19 @@ use crate::render::render;
 mod structures;
 use crate::structures::Wall;
 use crate::structures::Triangle;
+
+#[derive(Asset, TypePath, AsBindGroup, Debug, Clone)]
+pub struct CustomMaterial {
+    #[texture(0)]
+    #[sampler(1)]
+    texture: Handle<Image>,
+}
+
+impl Material2d for CustomMaterial {
+    fn fragment_shader() -> ShaderRef {
+        "shaders/custom_material.wgsl".into()
+    }
+}
 
 fn main() {
     App::new()
@@ -44,6 +60,7 @@ fn main() {
             //LogDiagnosticsPlugin::default(),
             //bevy::diagnostic::SystemInformationDiagnosticsPlugin::default()
         ))
+        .add_plugins(Material2dPlugin::<CustomMaterial>::default())
         .add_systems(Startup, setup)
         .add_systems(Update, keyboard_input)
         .add_systems(Update, mouse_input)
@@ -56,6 +73,9 @@ fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
+    mut custom_materials: ResMut<Assets<CustomMaterial>>,
+    //mut standard_materials: ResMut<Assets<StandardMaterial>>,
+    mut asset_server: Res<AssetServer>,
 ) {
     commands.spawn(Camera2dBundle {
         transform: Transform::from_xyz(0.0, 0.0, 0.0)
@@ -69,10 +89,29 @@ fn setup(
         &mut commands,
         &mut meshes,
         &mut materials,
-        Vec3::new(-100., -5., -40.),
+        &mut asset_server,
+        Vec3::new(-5., -5., -40.),
         Vec3::new(100., -5., -40.),
         10.,
     );
+
+    let mut mesh: Mesh = Rectangle::default().into();
+    if let Some(_positions) = mesh.attribute_mut(Mesh::ATTRIBUTE_POSITION) {
+        let positions = vec![[0.5, 0.3, 0.0], [-0.5, 1.5, 0.0], [-0.5, -1.5, 0.0], [0.5, -0.3, 0.0]];
+        mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, positions);
+    }
+
+    let mesh_handle = meshes.add(mesh);
+    let mesh_2d_handle = Mesh2dHandle::from(mesh_handle);
+
+    commands.spawn(MaterialMesh2dBundle {
+        mesh: mesh_2d_handle,
+        transform: Transform::default().with_scale(Vec3::splat(128.)),
+        material: custom_materials.add(CustomMaterial {
+            texture: asset_server.load("grass_front.png"),
+        }),
+        ..default()
+    });
 }
 
 fn change_title(mut windows: Query<&mut Window>, time: Res<'_, Time<Real>>, query: Query<&Player>) {
