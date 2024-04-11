@@ -46,19 +46,19 @@ The MoSCoW method is used to prioritize requirements in categories of Must have,
 
 ### Must have
 
-* Rendering logic closely resembling the original 1993 Doom game.
-* Basic structures like walls, floors, ceilings and doors.
-* Working collision and noclip toggle.
-* Sprites that always face the player.
-* Textures.
+* Rendering logic closely resembling the original 1993 Doom game. (Wilmer)
+* Basic structures like walls, floors, ceilings and doors. (Samtliga, bred punk, en del mindre)
+* Working collision and noclip toggle. (Sebastian mfl)
+* Sprites that always face the player. (Linus Sebastian mfl)
+* Textures. (Wilmer mfl)
 
 ### Should have
 
 * A real time map editor to easily add, edit and remove level contents.
-* Basic UI elements displaying debugging text.
+* Basic UI elements displaying debugging text. (Sebastian mfl)
 * Binary space partitioning as famously popularized by John Carmack.
-* Basic FPS mechanics like shooting, reloading and displaying the ammunition.
-* Audio and music system.
+* Basic FPS mechanics like shooting, reloading and displaying the ammunition. (Linus mfl)
+* Audio and music system. (Sebastian mfl)
 
 ### Could have
 
