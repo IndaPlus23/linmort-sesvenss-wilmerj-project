@@ -13,6 +13,8 @@ use crate::player::Player;
 mod render;
 use crate::render::render;
 mod structures;
+mod assets;
+
 use crate::structures::Wall;
 use crate::structures::Triangle;
 
@@ -45,6 +47,7 @@ fn main() {
             //bevy::diagnostic::SystemInformationDiagnosticsPlugin::default()
         ))
         .add_systems(Startup, setup)
+        .add_system(Startup, load_assets)
         .add_systems(Update, keyboard_input)
         .add_systems(Update, mouse_input)
         .add_systems(Update, render)
@@ -75,6 +78,10 @@ fn setup(
     );
 }
 
+fn load_assets() {
+    // TODO: Load assets for game logic and sound
+
+}
 fn change_title(mut windows: Query<&mut Window>, time: Res<'_, Time<Real>>, query: Query<&Player>) {
     let mut window = windows.single_mut();
     for player in query.iter() {

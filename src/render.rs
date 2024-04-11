@@ -49,7 +49,6 @@ pub fn render(
                     [-indice2.x, -indice2.y, 0.0],
                     [-indice3.x, -indice3.y, 0.0],
                 ];
-
                 mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, new_positions);
             }
             if let Some(_uvs) = mesh.attribute_mut(Mesh::ATTRIBUTE_UV_0) {
