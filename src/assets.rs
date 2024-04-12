@@ -26,7 +26,7 @@ fn load_sprites(
     mut commands: Commands,
     server: Res<AssetServer>
 ) {
-    if let Ok(handles) = server.load_folder("assets/images") {
+    if let Ok(handles) = server.load_folder("images") {
         commands.insert_resource(Sprites(handles))
     }
 }
@@ -36,7 +36,7 @@ fn load_audio(
     mut commands: Commands,
     server: Res<AssetServer>
 ) {
-    if let Ok(handles) = server.load_folder("assets/audio") {
+    if let Ok(handles) = server.load_folder("audio") {
         commands.insert_resource(Audio(handles))
     }
 }

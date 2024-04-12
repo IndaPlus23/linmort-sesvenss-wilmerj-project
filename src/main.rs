@@ -47,7 +47,7 @@ fn main() {
             //bevy::diagnostic::SystemInformationDiagnosticsPlugin::default()
         ))
         .add_systems(Startup, setup)
-        .add_system(Startup, load_assets)
+        .add_systems(Startup, load_assets)
         .add_systems(Update, keyboard_input)
         .add_systems(Update, mouse_input)
         .add_systems(Update, render)
