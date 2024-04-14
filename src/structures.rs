@@ -1,9 +1,6 @@
-use bevy::{
-    prelude::*,
-    render::mesh::Mesh,
-    sprite::MaterialMesh2dBundle,
-};
+use bevy::{prelude::*, render::mesh::Mesh, sprite::MaterialMesh2dBundle};
 
+use crate::CustomMaterial;
 use crate::Player;
 
 #[derive(Clone, PartialEq)]
@@ -33,7 +30,8 @@ impl Wall {
     pub fn spawn_wall(
         commands: &mut Commands,
         meshes: &mut ResMut<Assets<Mesh>>,
-        materials: &mut ResMut<Assets<ColorMaterial>>,
+        _materials: &mut ResMut<Assets<ColorMaterial>>,
+        custom_materials: &mut ResMut<Assets<CustomMaterial>>,
         asset_server: &mut Res<AssetServer>,
         start: Vec3,
         end: Vec3,
@@ -48,9 +46,14 @@ impl Wall {
             ),
             MaterialMesh2dBundle {
                 mesh: meshes.add(Triangle2d::default()).into(),
-                material: materials.add(ColorMaterial {
-                    texture: Some(asset_server.load("grass_front.png")),
-                    color: Color::WHITE,
+                material: custom_materials.add(CustomMaterial {
+                    texture: asset_server.load("grass_front.png"),
+                    a: Vec3::new(0., 0., 0.),
+                    b: Vec3::new(0., 0., 0.),
+                    c: Vec3::new(0., 0., 0.),
+                    a_uv: Vec2::new(0., 0.),
+                    b_uv: Vec2::new(0., 0.),
+                    c_uv: Vec2::new(0., 0.),
                 }),
                 ..Default::default()
             },
@@ -65,9 +68,14 @@ impl Wall {
             ),
             MaterialMesh2dBundle {
                 mesh: meshes.add(Triangle2d::default()).into(),
-                material: materials.add(ColorMaterial {
-                    texture: Some(asset_server.load("grass_front.png")),
-                    color: Color::WHITE,
+                material: custom_materials.add(CustomMaterial {
+                    texture: asset_server.load("grass_front.png"),
+                    a: Vec3::new(0., 0., 0.),
+                    b: Vec3::new(0., 0., 0.),
+                    c: Vec3::new(0., 0., 0.),
+                    a_uv: Vec2::new(0., 0.),
+                    b_uv: Vec2::new(0., 0.),
+                    c_uv: Vec2::new(0., 0.),
                 }),
                 ..Default::default()
             },
@@ -112,7 +120,6 @@ impl Wall {
 }
 
 // Converts vertices to world coordinates based on player rotation and position.
-// Following the exact method showed in the doom engine video
 fn vertices_to_world_coordinates(player: &Player, mut x: f32, mut y: f32, mut z: f32) -> Vec3 {
     let cos = player.yaw.cos();
     let sin = player.yaw.sin();

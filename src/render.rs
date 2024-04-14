@@ -1,31 +1,35 @@
 use bevy::{
     prelude::*,
+    render::mesh::Mesh,
     sprite::Mesh2dHandle,
-    render::mesh::{Indices, Mesh},
 };
 
-use crate::Player;
 use crate::structures::Wall;
+use crate::CustomMaterial;
+use crate::Player;
 use crate::Triangle;
-
-
-
 
 pub fn render(
     mut query: Query<&Player>,
     mut gizmos: Gizmos,
-    _commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
-    _materials: ResMut<Assets<ColorMaterial>>,
-    _standard_materials: ResMut<Assets<StandardMaterial>>,
-    mut wall_query: Query<(&mut Wall, &mut Transform, &mut Mesh2dHandle)>,
+    mut custom_materials: ResMut<Assets<CustomMaterial>>,
+    mut wall_query: Query<(
+        &mut Wall,
+        &mut Transform,
+        &mut Mesh2dHandle,
+        &mut Handle<CustomMaterial>,
+    )>,
 ) {
     for player in query.iter_mut() {
         let mut z_ordering = 0.;
 
-        for (wall, mut transform, mesh2dhandle) in wall_query.iter_mut() {
+        for (wall, mut transform, mesh2dhandle, material_handle) in wall_query.iter_mut() {
             let mesh_handle = &mesh2dhandle.0;
             let mesh = meshes.get_mut(mesh_handle).unwrap();
+
+            let material_handle = material_handle.clone();
+            let material = custom_materials.get_mut(material_handle).unwrap();
 
             let (start, end) = wall.clipping(player);
 
@@ -41,10 +45,18 @@ pub fn render(
                     indice1 = world_to_screen_coordinates(start.x, start.y, start.z);
                     indice2 = world_to_screen_coordinates(start.x, start.y + wall.height, start.z);
                     indice3 = world_to_screen_coordinates(end.x, end.y + wall.height, end.z);
+
+                    material.a = Vec3::new(-indice1.x, -indice1.y, -start.z);
+                    material.b = Vec3::new(-indice2.x, -indice2.y, -start.z);
+                    material.c = Vec3::new(-indice3.x, -indice3.y, -end.z);
                 } else if wall.triangle == Triangle::Lower {
                     indice1 = world_to_screen_coordinates(start.x, start.y, start.z);
                     indice2 = world_to_screen_coordinates(end.x, end.y + wall.height, end.z);
                     indice3 = world_to_screen_coordinates(end.x, end.y, end.z);
+
+                    material.a = Vec3::new(-indice1.x, -indice1.y, -start.z);
+                    material.b = Vec3::new(-indice2.x, -indice2.y, -end.z);
+                    material.c = Vec3::new(-indice3.x, -indice3.y, -end.z);
                 }
 
                 let new_positions = vec![
@@ -55,38 +67,32 @@ pub fn render(
 
                 mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, new_positions);
             }
-            if let Some(_uvs) = mesh.attribute_mut(Mesh::ATTRIBUTE_UV_0) {
 
+            if let Some(_uvs) = mesh.attribute_mut(Mesh::ATTRIBUTE_UV_0) {
                 if wall.triangle == Triangle::Upper {
                     mesh.insert_attribute(
                         Mesh::ATTRIBUTE_UV_0,
-                        vec![[0.0, 1.], [0.0, 0.0], [1., 0.0]], //0 1, 0 0, 1 0
+                        vec![[0.0, 1.0], [0.0, 0.0], [1.0, 0.0]], //0 1, 0 0, 1 0
                     );
+
+                    material.a_uv = Vec2::new(0.0, 1.0);
+                    material.b_uv = Vec2::new(0.0, 0.0);
+                    material.c_uv = Vec2::new(1.0, 0.0);
                 } else if wall.triangle == Triangle::Lower {
                     mesh.insert_attribute(
                         Mesh::ATTRIBUTE_UV_0,
                         vec![[0.0, 1.0], [1.0, 0.0], [1.0, 1.0]], //0 1, 1 0, 1 1
                     );
+
+                    material.a_uv = Vec2::new(0.0, 1.0);
+                    material.b_uv = Vec2::new(1.0, 0.0);
+                    material.c_uv = Vec2::new(1.0, 1.0);
                 }
-            }
-            if let Some(_normals) = mesh.attribute_mut(Mesh::ATTRIBUTE_NORMAL) {
-                let new_normals = vec![[0.0, 0.0, 1.0], [0.0, 0.0, 1.0], [0.0, 0.0, 1.0]];
-
-                mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, new_normals);
-            }
-            if let Some(_indices) = mesh.indices() {
-                let new_indices = Indices::U32(vec![
-                    0, 2, 1, // why?
-                ]);
-
-                mesh.insert_indices(new_indices);
             }
 
             transform.translation.z = z_ordering;
             z_ordering += 1.;
         }
-    
-        
     }
 }
 

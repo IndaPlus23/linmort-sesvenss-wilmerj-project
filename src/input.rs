@@ -1,9 +1,6 @@
-use bevy::{
-    input::mouse::MouseMotion,
-    prelude::*,
-};
-use std::f32::consts::PI;
 use crate::Player;
+use bevy::{input::mouse::MouseMotion, prelude::*};
+use std::f32::consts::PI;
 
 #[derive(Default)]
 pub struct MouseState {
