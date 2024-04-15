@@ -15,6 +15,7 @@ mod render;
 use crate::render::render;
 mod structures;
 mod assets;
+mod sprites;
 
 use crate::structures::Wall;
 use crate::structures::Triangle;
