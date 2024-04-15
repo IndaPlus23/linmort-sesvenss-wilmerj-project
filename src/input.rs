@@ -1,9 +1,12 @@
 use bevy::{
     input::mouse::MouseMotion,
+    sprite::Mesh2dHandle, // ADDED FOR BASIC WALL COLLISION
     prelude::*,
 };
 use std::f32::consts::PI;
 use crate::Player;
+use crate::structures::Wall; // ADDED FOR BASIC WALL COLLISION
+
 
 #[derive(Default)]
 pub struct MouseState {
@@ -16,6 +19,9 @@ pub fn keyboard_input(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut query: Query<&mut Player>,
     time: Res<'_, Time<Real>>,
+
+    // ADDED wall_query TO CHECK IF POSITION OF PLAYER IS THE SAME AS WALL FOR BASIC WALL COLLISION
+    mut wall_query: Query<(&mut Wall, &mut Transform, &mut Mesh2dHandle)>, 
 ) {
     if keyboard_input.just_pressed(KeyCode::Escape) {
         std::process::exit(0);
@@ -48,6 +54,50 @@ pub fn keyboard_input(
         }
 
         movement = movement.normalize_or_zero() * speed * time.delta_seconds();
+
+        /*
+        WALL COLLISION
+
+        CHECK IF 
+
+        player.x + movement.x
+        player.y + movement.y
+        player.z + movement.z
+
+        IS THE SAME VALUE AS WALL POSITION + PADDING
+
+        IF SAME SET movement.z TO 0
+
+        TODO: 
+        clean up code 
+        make sure collision works with floor and ceiling (when added)
+
+         */
+
+         for (wall, mut transform, mesh2dhandle) in wall_query.iter_mut() {
+
+            let mut x_hit = false;
+            let mut y_hit = false;
+            let mut z_hit = false;
+
+            // positiv X åt höger
+            if player.x + movement.x > wall.start.x - 1.0 && player.x + movement.x < wall.end.x + 1.0 {
+                x_hit = true
+            }
+            //positiv Y uppåt
+            if player.y + movement.y >= wall.start.y - 1.0 && player.y + movement.y <= wall.end.y + wall.height + 1.0 {
+                y_hit = true
+            }
+            // -Z i framåtriktningen
+            if player.z + movement.z >= wall.start.z - 1.0 && player.z + movement.z <= wall.end.z + 1.0 {
+                z_hit = true;
+                movement.z = 0.0;
+            }
+
+            if x_hit && y_hit && z_hit {
+                movement.z = 0.0;
+            }
+         }
 
         player.x += movement.x;
         player.y += movement.y;
