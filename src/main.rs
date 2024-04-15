@@ -5,6 +5,7 @@ use bevy::{
     window::{PresentMode, WindowTheme},
 };
 use std::f32::consts::PI;
+use assets::{load_assets};
 
 mod input;
 use crate::input::{MouseState, mouse_input, keyboard_input};
@@ -78,10 +79,6 @@ fn setup(
     );
 }
 
-fn load_assets() {
-    // TODO: Load assets for game logic and sound
-
-}
 fn change_title(mut windows: Query<&mut Window>, time: Res<'_, Time<Real>>, query: Query<&Player>) {
     let mut window = windows.single_mut();
     for player in query.iter() {
