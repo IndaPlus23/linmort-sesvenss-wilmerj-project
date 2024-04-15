@@ -10,6 +10,8 @@ struct Sprites(Handle<LoadedFolder>);
 struct Audio(Handle<LoadedFolder>);
 
 /// Initialize all assets.
+/// - Sprites are loaded as untyped, and must be upgraded before usage.
+/// - Audios are loaded as untyped, and must be upgraded before usage.
 pub fn load_assets(
     mut commands: Commands,
     server: Res<AssetServer>
