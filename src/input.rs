@@ -73,23 +73,25 @@ pub fn keyboard_input(
         make sure collision works with floor and ceiling (when added)
 
          */
+        let padding = 1.0;
 
-         for (wall, mut transform, mesh2dhandle) in wall_query.iter_mut() {
+        // CHECKS EVERY WALL
+         for (wall, _transform, _mesh2dhandle) in wall_query.iter_mut() {
 
             let mut x_hit = false;
             let mut y_hit = false;
             let mut z_hit = false;
 
             // positiv X åt höger
-            if player.x + movement.x > wall.start.x - 1.0 && player.x + movement.x < wall.end.x + 1.0 {
+            if player.x + movement.x > wall.start.x - padding && player.x + movement.x < wall.end.x + padding {
                 x_hit = true
             }
             //positiv Y uppåt
-            if player.y + movement.y > wall.start.y - 1.0 && player.y + movement.y < wall.end.y + wall.height + 1.0 {
+            if player.y + movement.y > wall.start.y - padding && player.y + movement.y < wall.end.y + wall.height + padding {
                 y_hit = true
             }
             // -Z i framåtriktningen
-            if player.z + movement.z > wall.start.z - 1.0 && player.z + movement.z < wall.end.z + 1.0 {
+            if player.z + movement.z > wall.start.z - padding && player.z + movement.z < wall.end.z + padding {
                 z_hit = true;
             }
 
