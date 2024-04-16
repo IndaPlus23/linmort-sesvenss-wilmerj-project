@@ -85,14 +85,16 @@ pub fn keyboard_input(
                 x_hit = true
             }
             //positiv Y uppåt
-            if player.y + movement.y >= wall.start.y - 1.0 && player.y + movement.y <= wall.end.y + wall.height + 1.0 {
+            if player.y + movement.y > wall.start.y - 1.0 && player.y + movement.y < wall.end.y + wall.height + 1.0 {
                 y_hit = true
             }
             // -Z i framåtriktningen
-            if player.z + movement.z >= wall.start.z - 1.0 && player.z + movement.z <= wall.end.z + 1.0 {
+            if player.z + movement.z > wall.start.z - 1.0 && player.z + movement.z < wall.end.z + 1.0 {
                 z_hit = true;
-                movement.z = 0.0;
             }
+
+            // DEBUGING
+            //println!("START: {:?} END: {:?} PLAYER: ({:?}, {:?}, {:?} HIT: {:?} {:?} {:?})",wall.start, wall.end, player.x, player.y, player.z, x_hit, y_hit, z_hit);
 
             if x_hit && y_hit && z_hit {
                 movement.z = 0.0;
