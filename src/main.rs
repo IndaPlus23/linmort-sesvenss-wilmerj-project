@@ -5,7 +5,6 @@ use bevy::{
     window::{PresentMode, WindowTheme},
 };
 use std::f32::consts::PI;
-use assets::{load_assets};
 
 mod input;
 use crate::input::{MouseState, mouse_input, keyboard_input};
@@ -14,15 +13,15 @@ use crate::player::Player;
 mod render;
 use crate::render::render;
 mod structures;
-mod assets;
+mod asset_loader;
 mod sprites;
+mod movement;
 
 use crate::structures::Wall;
 use crate::structures::Triangle;
 
-use sprites::Sprite;
-
-// TODO: Load a sprite in view
+use crate::asset_loader::AssetLoaderPlugin;
+use crate::sprites::SpritePlugin;
 
 fn main() {
     App::new()
@@ -30,6 +29,8 @@ fn main() {
         .insert_resource(MouseState {
             press_coords: Vec::new(),
         })
+        .add_plugins(AssetLoaderPlugin)
+        .add_plugins(SpritePlugin)
         .add_plugins((
             DefaultPlugins.set(WindowPlugin {
                 primary_window: Some(Window {
@@ -53,7 +54,6 @@ fn main() {
             //bevy::diagnostic::SystemInformationDiagnosticsPlugin::default()
         ))
         .add_systems(Startup, setup)
-        .add_systems(PreStartup, load_assets) // Don't attempt to start game if assets fail
         .add_systems(Update, keyboard_input)
         .add_systems(Update, mouse_input)
         .add_systems(Update, render)
@@ -82,8 +82,6 @@ fn setup(
         Vec3::new(100., -5., -40.),
         10.,
     );
-
-    Sprite::new()
 }
 
 fn change_title(mut windows: Query<&mut Window>, time: Res<'_, Time<Real>>, query: Query<&Player>) {
