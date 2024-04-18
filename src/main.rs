@@ -20,6 +20,10 @@ mod sprites;
 use crate::structures::Wall;
 use crate::structures::Triangle;
 
+use sprites::Sprite;
+
+// TODO: Load a sprite in view
+
 fn main() {
     App::new()
         .insert_resource(ClearColor(Color::rgb(0.1, 0.1, 0.1)))
@@ -49,7 +53,7 @@ fn main() {
             //bevy::diagnostic::SystemInformationDiagnosticsPlugin::default()
         ))
         .add_systems(Startup, setup)
-        .add_systems(Startup, load_assets)
+        .add_systems(PreStartup, load_assets) // Don't attempt to start game if assets fail
         .add_systems(Update, keyboard_input)
         .add_systems(Update, mouse_input)
         .add_systems(Update, render)
@@ -78,6 +82,8 @@ fn setup(
         Vec3::new(100., -5., -40.),
         10.,
     );
+
+    Sprite::new()
 }
 
 fn change_title(mut windows: Query<&mut Window>, time: Res<'_, Time<Real>>, query: Query<&Player>) {

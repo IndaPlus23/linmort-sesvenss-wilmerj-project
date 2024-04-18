@@ -1,24 +1,23 @@
-use bevy::asset::{AssetServer, Handle, LoadedFolder};
-use bevy::prelude::{Commands, Res, Resource};
-use bevy::text::Font;
+use bevy::prelude::*;
 
-#[derive(Resource)]
-struct UiFont(Handle<Font>);
-#[derive(Resource)]
-struct Sprites(Handle<LoadedFolder>);
-#[derive(Resource)]
-struct Audio(Handle<LoadedFolder>);
+/// SceneAssets stores handles for assets used in the scene.
+#[derive(Resource, Debug, Default)]
+pub struct SceneAssets {
+    pub enemy: Handle<Scene>,
+}
 
-/// Initialize all assets.
-/// - Sprites are loaded as untyped, and must be upgraded before usage.
-/// - Audios are loaded as untyped, and must be upgraded before usage.
-pub fn load_assets(
-    mut commands: Commands,
-    server: Res<AssetServer>
-) {
-    let handle: Handle<Font> = server.load("menu_font.ttf");
+pub struct AssetLoaderPlugin;
 
-    commands.insert_resource(UiFont(handle));
-    commands.insert_resource(Sprites(server.load_folder("images")));
-    commands.insert_resource(Audio(server.load_folder("audio")));
+impl Plugin for AssetLoaderPlugin {
+    fn build(&self, app: &mut App) {
+        app.init_resource::<SceneAssets>().add_systems(Startup, load_assets);
+    }
+}
+
+/// load_assets loads assets from asset folder and populates AssetScene, making them available
+/// for usage without having multiple handles reference various copies of the same asset.
+fn load_assets(mut scene_assets: ResMut<SceneAssets>, asset_server: Res<AssetServer>) {
+    *scene_assets = SceneAssets {
+        enemy: asset_server.load("models/Rock.glb#Scene0"),
+    }
 }
