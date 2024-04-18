@@ -16,8 +16,11 @@ use crate::player::Player;
 mod render;
 use crate::render::render;
 mod structures;
+use crate::structures::Kind;
 use crate::structures::Triangle;
 use crate::structures::Wall;
+mod floor;
+use crate::floor::Floor;
 
 #[derive(Component, Asset, TypePath, AsBindGroup, Debug, Clone)]
 pub struct CustomMaterial {
@@ -51,7 +54,8 @@ fn main() {
             press_coords: Vec::new(),
         })
         .add_plugins((
-            DefaultPlugins.set(WindowPlugin {
+            DefaultPlugins.set(
+                WindowPlugin {
                 primary_window: Some(Window {
                     title: "Raycaster".into(),
                     name: Some("Raycaster".into()),
@@ -67,7 +71,8 @@ fn main() {
                     ..default()
                 }),
                 ..default()
-            }),
+            })
+            .set(ImagePlugin::default_nearest()),
             //FrameTimeDiagnosticsPlugin,
             //LogDiagnosticsPlugin::default(),
             //bevy::diagnostic::SystemInformationDiagnosticsPlugin::default()
@@ -84,7 +89,6 @@ fn main() {
 fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
     mut custom_materials: ResMut<Assets<CustomMaterial>>,
     //mut standard_materials: ResMut<Assets<StandardMaterial>>,
     mut asset_server: Res<AssetServer>,
@@ -100,45 +104,25 @@ fn setup(
     Wall::spawn_wall(
         &mut commands,
         &mut meshes,
-        &mut materials,
         &mut custom_materials,
         &mut asset_server,
-        Vec3::new(-5., -5., -40.),
-        Vec3::new(5., -5., -40.),
+        Vec3::new(0., -5., -50.),
+        Vec3::new(50., -5., -50.),
         10.,
+        Kind::Wall,
     );
 
-    Wall::spawn_wall(
+    Floor::spawn(
         &mut commands,
         &mut meshes,
-        &mut materials,
         &mut custom_materials,
         &mut asset_server,
-        Vec3::new(-5., -5., -40.),
-        Vec3::new(-5., -5., -50.),
-        10.,
-    );
-
-    Wall::spawn_wall(
-        &mut commands,
-        &mut meshes,
-        &mut materials,
-        &mut custom_materials,
-        &mut asset_server,
-        Vec3::new(5., -5., -40.),
-        Vec3::new(5., -5., -50.),
-        10.,
-    );
-
-    Wall::spawn_wall(
-        &mut commands,
-        &mut meshes,
-        &mut materials,
-        &mut custom_materials,
-        &mut asset_server,
-        Vec3::new(-5., -5., -50.),
-        Vec3::new(5., -5., -50.),
-        10.,
+        Vec3::new(-20., -5., -50.),
+        Vec3::new(-20., -5., -100.),
+        Vec3::new(50., -5., -50.),
+        Vec2::new(0., 1.),
+        Vec2::new(0., 0.,),
+        Vec2::new(1., 1.),
     );
 }
 

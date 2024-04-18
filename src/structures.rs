@@ -1,4 +1,5 @@
 use bevy::{prelude::*, render::mesh::Mesh, sprite::MaterialMesh2dBundle};
+use std::f32::consts::PI;
 
 use crate::CustomMaterial;
 use crate::Player;
@@ -9,20 +10,28 @@ pub enum Triangle {
     Lower,
 }
 
+#[derive(Clone, PartialEq, Copy)]
+pub enum Kind {
+    Wall,
+    Floor,
+}
+
 #[derive(Component, Clone)]
 pub struct Wall {
     pub start: Vec3,
     pub end: Vec3,
     pub height: f32,
+    pub kind: Kind,
     pub triangle: Triangle,
 }
 
 impl Wall {
-    pub fn new(start: Vec3, end: Vec3, height: f32, triangle: Triangle) -> Self {
+    pub fn new(start: Vec3, end: Vec3, height: f32, kind: Kind, triangle: Triangle) -> Self {
         Self {
             start,
             end,
             height,
+            kind,
             triangle,
         }
     }
@@ -30,20 +39,15 @@ impl Wall {
     pub fn spawn_wall(
         commands: &mut Commands,
         meshes: &mut ResMut<Assets<Mesh>>,
-        _materials: &mut ResMut<Assets<ColorMaterial>>,
         custom_materials: &mut ResMut<Assets<CustomMaterial>>,
         asset_server: &mut Res<AssetServer>,
         start: Vec3,
         end: Vec3,
         height: f32,
+        kind: Kind,
     ) {
         commands.spawn((
-            Wall::new(
-                Vec3::new(start.x, start.y, start.z),
-                Vec3::new(end.x, end.y, end.z),
-                height,
-                Triangle::Upper,
-            ),
+            Wall::new(start, end, height, kind, Triangle::Upper),
             MaterialMesh2dBundle {
                 mesh: meshes.add(Triangle2d::default()).into(),
                 material: custom_materials.add(CustomMaterial {
@@ -60,12 +64,7 @@ impl Wall {
         ));
 
         commands.spawn((
-            Wall::new(
-                Vec3::new(start.x, start.y, start.z),
-                Vec3::new(end.x, end.y, end.z),
-                height,
-                Triangle::Lower,
-            ),
+            Wall::new(start, end, height, kind.clone(), Triangle::Lower),
             MaterialMesh2dBundle {
                 mesh: meshes.add(Triangle2d::default()).into(),
                 material: custom_materials.add(CustomMaterial {
@@ -95,23 +94,11 @@ impl Wall {
         } else if world_start.z > 0. {
             // Wall starting point is behind the player
             // Clip the starting point so it never is behind the player
-            let delta_z = world_end.z - world_start.z;
-            let delta_x = world_end.x - world_start.x;
-            let k = delta_z / delta_x;
-            let m = world_start.z - (k * world_start.x);
-            let new_start_x = -m / k;
-            let new_world_start = Vec3::new(new_start_x, world_start.y, -1.);
-            return (new_world_start, world_end);
+            clip_line_segment(world_start, world_end)
         } else if world_end.z > 0. {
             // Wall end point is behind the player
             // Clip the end point so it never is behind the player
-            let delta_z = world_start.z - world_end.z;
-            let delta_x = world_start.x - world_end.x;
-            let k = delta_z / delta_x;
-            let m = world_end.z - (k * world_end.x);
-            let new_end_x = -m / k;
-            let new_world_end = Vec3::new(new_end_x, world_end.y, -1.);
-            return (world_start, new_world_end);
+            clip_line_segment(world_end, world_start)
         } else {
             // No point is behind the player
             return (world_start, world_end);
@@ -133,4 +120,33 @@ fn vertices_to_world_coordinates(player: &Player, mut x: f32, mut y: f32, mut z:
     let world_y = y + (player.pitch * world_z);
 
     Vec3::new(world_x, world_y, world_z)
+}
+
+pub fn clipping_vertice(player: &Player, x: f32, y: f32, z: f32, reference_z: f32) -> Vec3 {
+    let world = vertices_to_world_coordinates(player, x, y, z);
+
+    if world.z > 0. && reference_z > 0. {
+        return Vec3::new(0., 0., 0.);
+    } else if world.z > 0. {
+        return Vec3::new(world.x, world.y, -1.);
+    } else {
+        return world;
+    }
+}
+
+fn clip_line_segment(start: Vec3, end: Vec3) -> (Vec3, Vec3) {
+    let delta_z = end.z - start.z;
+    let delta_x = end.x - start.x;
+    let delta_y = end.y - start.y;
+
+    let k = delta_z / delta_x;
+    let m = start.z - (k * start.x);
+    let new_start_x = -m / k;
+
+    let k = delta_z / delta_y;
+    let m = start.z - (k * start.y);
+    let new_start_y = -m / k;
+
+    let new_start = Vec3::new(new_start_x, new_start_y, -0.01);
+    return (new_start, end);
 }
