@@ -99,6 +99,8 @@ pub fn keyboard_input(
             //println!("START: {:?} END: {:?} PLAYER: ({:?}, {:?}, {:?} HIT: {:?} {:?} {:?})",wall.start, wall.end, player.x, player.y, player.z, x_hit, y_hit, z_hit);
 
             if x_hit && y_hit && z_hit {
+                movement.x = 0.0;
+                movement.y = 0.0;
                 movement.z = 0.0;
             }
          }
