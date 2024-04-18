@@ -15,46 +15,13 @@ mod player;
 use crate::player::Player;
 mod render;
 use crate::render::render;
-mod structures;
-use crate::structures::Kind;
-use crate::structures::Triangle;
-use crate::structures::Wall;
+mod wall;
+use crate::wall::Triangle;
+use crate::wall::Wall;
 mod floor;
 use crate::floor::Floor;
-
-#[derive(Clone, Copy)]
-pub struct Vertice {
-    position: Vec3,
-    original_uv: Vec2,
-    uv: Vec2, 
-}
-
-impl Vertice {
-    pub fn new(position: Vec3, uv: Vec2) -> Self {
-        let original_uv = uv;
-        Self {
-            position,
-            original_uv,
-            uv,
-        }
-    }
-
-    pub fn zero() -> Self {
-        let position = Vec3::ZERO;
-        let original_uv = Vec2::ZERO;
-        let uv = Vec2::ZERO;
-        Self {
-            position,
-            original_uv,
-            uv
-        }
-    }
-
-    pub fn new_position(&mut self, position: Vec3) {
-        let position = position;
-        self.position = position;
-    }
-}
+mod vertice;
+use crate::vertice::Vertice;
 
 #[derive(Component, Asset, TypePath, AsBindGroup, Debug, Clone)]
 pub struct CustomMaterial {
@@ -142,8 +109,7 @@ fn setup(
         &mut asset_server,
         Vec3::new(0., -5., -50.),
         Vec3::new(50., -5., -50.),
-        10.,
-        Kind::Wall,
+        10.
     );
 
     Floor::spawn(

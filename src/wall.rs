@@ -10,28 +10,20 @@ pub enum Triangle {
     Lower,
 }
 
-#[derive(Clone, PartialEq, Copy)]
-pub enum Kind {
-    Wall,
-    Floor,
-}
-
 #[derive(Component, Clone)]
 pub struct Wall {
     pub start: Vec3,
     pub end: Vec3,
     pub height: f32,
-    pub kind: Kind,
     pub triangle: Triangle,
 }
 
 impl Wall {
-    pub fn new(start: Vec3, end: Vec3, height: f32, kind: Kind, triangle: Triangle) -> Self {
+    pub fn new(start: Vec3, end: Vec3, height: f32, triangle: Triangle) -> Self {
         Self {
             start,
             end,
             height,
-            kind,
             triangle,
         }
     }
@@ -44,10 +36,9 @@ impl Wall {
         start: Vec3,
         end: Vec3,
         height: f32,
-        kind: Kind,
     ) {
         commands.spawn((
-            Wall::new(start, end, height, kind, Triangle::Upper),
+            Wall::new(start, end, height, Triangle::Upper),
             MaterialMesh2dBundle {
                 mesh: meshes.add(Triangle2d::default()).into(),
                 material: custom_materials.add(CustomMaterial {
@@ -64,7 +55,7 @@ impl Wall {
         ));
 
         commands.spawn((
-            Wall::new(start, end, height, kind.clone(), Triangle::Lower),
+            Wall::new(start, end, height, Triangle::Lower),
             MaterialMesh2dBundle {
                 mesh: meshes.add(Triangle2d::default()).into(),
                 material: custom_materials.add(CustomMaterial {

@@ -1,10 +1,9 @@
 use bevy::{prelude::*, render::mesh::Mesh, sprite::Mesh2dHandle};
 
 use crate::floor::Floor;
-use crate::structures::clipping_vertice;
-use crate::structures::Wall;
+use crate::wall::clipping_vertice;
+use crate::wall::Wall;
 use crate::CustomMaterial;
-use crate::Kind;
 use crate::Player;
 use crate::Triangle;
 
@@ -49,60 +48,25 @@ pub fn render(
             if let Some(_positions) = mesh.attribute_mut(Mesh::ATTRIBUTE_POSITION) {
                 let (mut indice1, mut indice2, mut indice3) = (Vec2::ZERO, Vec2::ZERO, Vec2::ZERO);
 
-                if wall.kind == Kind::Wall {
-                    if wall.triangle == Triangle::Upper {
-                        indice1 = world_to_screen_coordinates(start.x, start.y, start.z);
-                        indice2 =
-                            world_to_screen_coordinates(start.x, start.y + wall.height, start.z);
-                        indice3 = world_to_screen_coordinates(end.x, end.y + wall.height, end.z);
+                if wall.triangle == Triangle::Upper {
+                    indice1 = world_to_screen_coordinates(start.x, start.y, start.z);
+                    indice2 =
+                        world_to_screen_coordinates(start.x, start.y + wall.height, start.z);
+                    indice3 = world_to_screen_coordinates(end.x, end.y + wall.height, end.z);
 
-                        material.a = Vec3::new(-indice1.x, -indice1.y, -start.z);
-                        material.b = Vec3::new(-indice2.x, -indice2.y, -start.z);
-                        material.c = Vec3::new(-indice3.x, -indice3.y, -end.z);
-                    } else if wall.triangle == Triangle::Lower {
-                        indice1 = world_to_screen_coordinates(start.x, start.y, start.z);
-                        indice2 = world_to_screen_coordinates(end.x, end.y + wall.height, end.z);
-                        indice3 = world_to_screen_coordinates(end.x, end.y, end.z);
+                    material.a = Vec3::new(-indice1.x, -indice1.y, -start.z);
+                    material.b = Vec3::new(-indice2.x, -indice2.y, -start.z);
+                    material.c = Vec3::new(-indice3.x, -indice3.y, -end.z);
+                } else if wall.triangle == Triangle::Lower {
+                    indice1 = world_to_screen_coordinates(start.x, start.y, start.z);
+                    indice2 = world_to_screen_coordinates(end.x, end.y + wall.height, end.z);
+                    indice3 = world_to_screen_coordinates(end.x, end.y, end.z);
 
-                        material.a = Vec3::new(-indice1.x, -indice1.y, -start.z);
-                        material.b = Vec3::new(-indice2.x, -indice2.y, -end.z);
-                        material.c = Vec3::new(-indice3.x, -indice3.y, -end.z);
-                    }
+                    material.a = Vec3::new(-indice1.x, -indice1.y, -start.z);
+                    material.b = Vec3::new(-indice2.x, -indice2.y, -end.z);
+                    material.c = Vec3::new(-indice3.x, -indice3.y, -end.z);
                 }
-
-                if wall.kind == Kind::Floor {
-                    if wall.triangle == Triangle::Upper {
-                        indice1 = world_to_screen_coordinates(start.x, start.y, start.z);
-
-                        let indice2_world =
-                            clipping_vertice(player, wall.start.x, wall.end.y, wall.end.z, start.z);
-                        indice2 = world_to_screen_coordinates(
-                            indice2_world.x,
-                            indice2_world.y,
-                            indice2_world.z,
-                        );
-
-                        indice3 = world_to_screen_coordinates(end.x, end.y, end.z);
-
-                        gizmos.circle_2d(
-                            Vec2::new(indice2_world.x, -indice2_world.z),
-                            1.,
-                            Color::RED,
-                        );
-
-                        material.a = Vec3::new(-indice1.x, -indice1.y, -start.z);
-                        material.b = Vec3::new(-indice2.x, -indice2.y, -end.z);
-                        material.c = Vec3::new(-indice3.x, -indice3.y, -end.z);
-                    } else if wall.triangle == Triangle::Lower {
-                        //indice1 = world_to_screen_coordinates(start.x, end.y, start.z);
-                        //indice2 = world_to_screen_coordinates(end.x, end.y, end.z);
-                        //indice3 = world_to_screen_coordinates(end.x, end.y, end.z);
-
-                        material.a = Vec3::new(-indice1.x, -indice1.y, -start.z);
-                        material.b = Vec3::new(-indice2.x, -indice2.y, -end.z);
-                        material.c = Vec3::new(-indice3.x, -indice3.y, -end.z);
-                    }
-                }
+                
 
                 let new_positions = vec![
                     [-indice1.x, -indice1.y, 0.0],
@@ -139,7 +103,7 @@ pub fn render(
             z_ordering += 1.;
         }
 
-        for (mut floor, mut transform, mesh2dhandle, material_handle) in floor_query.iter_mut() {
+        for (mut floor, _transform, mesh2dhandle, material_handle) in floor_query.iter_mut() {
             let mesh_handle = &mesh2dhandle.0;
             let mesh = meshes.get_mut(mesh_handle).unwrap();
 
@@ -148,14 +112,6 @@ pub fn render(
 
             let (a, b, c, screen_a, screen_b, screen_c) = floor.clipping(player);
 
-            /*
-            gizmos.line_2d(Vec2::new(a.position.x, -a.position.z), Vec2::new(b.position.x, -b.position.z), Color::RED);
-            gizmos.line_2d(Vec2::new(a.position.x, -a.position.z), Vec2::new(c.position.x, -c.position.z), Color::RED);
-            gizmos.line_2d(Vec2::new(b.position.x, -b.position.z), Vec2::new(c.position.x, -c.position.z), Color::RED);
-            gizmos.circle_2d(Vec2::new(0., 0.), 1., Color::WHITE);
-            gizmos.line_2d(Vec2::new(-1000., 0.), Vec2::new(1000., 0.), Color::WHITE);
-            */
-            
             if let Some(_positions) = mesh.attribute_mut(Mesh::ATTRIBUTE_POSITION) {
                 mesh.insert_attribute(
                     Mesh::ATTRIBUTE_POSITION,
