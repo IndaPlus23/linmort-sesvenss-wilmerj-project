@@ -146,71 +146,34 @@ pub fn render(
             let material_handle = material_handle.clone();
             let material = custom_materials.get_mut(material_handle).unwrap();
 
-            let (a, b, c, comp_a, comp_b, comp_c, a_uv, b_uv, c_uv, comp_a_uv, comp_b_uv, comp_c_uv) = floor.clipping(player);
+            let (a, b, c, screen_a, screen_b, screen_c) = floor.clipping(player);
 
-            gizmos.line_2d(
-                Vec2::new(comp_a.x, -comp_a.z),
-                Vec2::new(comp_b.x, -comp_b.z),
-                Color::BLUE,
-            ); // ab
-            gizmos.line_2d(
-                Vec2::new(comp_a.x, -comp_a.z),
-                Vec2::new(comp_c.x, -comp_c.z),
-                Color::BLUE,
-            ); // ac
-            gizmos.line_2d(
-                Vec2::new(comp_b.x, -comp_b.z),
-                Vec2::new(comp_c.x, -comp_c.z),
-                Color::BLUE,
-            ); // bc
-
-            gizmos.line_2d(Vec2::new(a.x, -a.z), Vec2::new(b.x, -b.z), Color::RED); // ab
-            gizmos.line_2d(Vec2::new(a.x, -a.z), Vec2::new(c.x, -c.z), Color::RED); // ac
-            gizmos.line_2d(Vec2::new(b.x, -b.z), Vec2::new(c.x, -c.z), Color::RED); // bc
-
+            /*
+            gizmos.line_2d(Vec2::new(a.position.x, -a.position.z), Vec2::new(b.position.x, -b.position.z), Color::RED);
+            gizmos.line_2d(Vec2::new(a.position.x, -a.position.z), Vec2::new(c.position.x, -c.position.z), Color::RED);
+            gizmos.line_2d(Vec2::new(b.position.x, -b.position.z), Vec2::new(c.position.x, -c.position.z), Color::RED);
             gizmos.circle_2d(Vec2::new(0., 0.), 1., Color::WHITE);
             gizmos.line_2d(Vec2::new(-1000., 0.), Vec2::new(1000., 0.), Color::WHITE);
-
+            */
+            
             if let Some(_positions) = mesh.attribute_mut(Mesh::ATTRIBUTE_POSITION) {
-                let (mut indice1, mut indice2, mut indice3) = (Vec2::ZERO, Vec2::ZERO, Vec2::ZERO);
-
-                if floor.complement == false {
-                    indice1 = world_to_screen_coordinates(a.x, a.y, a.z);
-                    indice2 = world_to_screen_coordinates(b.x, b.y, b.z);
-                    indice3 = world_to_screen_coordinates(c.x, c.y, c.z);
-                } else if floor.complement == true {
-                    indice1 = world_to_screen_coordinates(comp_a.x, comp_a.y, comp_a.z);
-                    indice2 = world_to_screen_coordinates(comp_b.x, comp_b.y, comp_b.z);
-                    indice3 = world_to_screen_coordinates(comp_c.x, comp_c.y, comp_c.z);
-                }
-
                 mesh.insert_attribute(
                     Mesh::ATTRIBUTE_POSITION,
                     vec![
-                        [-indice1.x, -indice1.y, 0.0],
-                        [-indice2.x, -indice2.y, 0.0],
-                        [-indice3.x, -indice3.y, 0.0],
+                        [screen_a.x, screen_a.y, 0.0],
+                        [screen_b.x, screen_b.y, 0.0],
+                        [screen_c.x, screen_c.y, 0.0],
                     ],
                 );
 
                 // Gets sent to shader for correct uv mapping
-                material.a = Vec3::new(-indice1.x, -indice1.y, -a.z);
-                material.b = Vec3::new(-indice2.x, -indice2.y, -b.z);
-                material.c = Vec3::new(-indice3.x, -indice3.y, -c.z);
-
-                if floor.complement == false {
-                    material.a_uv = a_uv;
-                    material.b_uv = b_uv;
-                    material.c_uv = c_uv;
-                } else if floor.complement == true {
-                    material.a_uv = comp_a_uv;
-                    material.b_uv = comp_b_uv;
-                    material.c_uv = comp_c_uv;
-                }
-
+                material.a = Vec3::new(screen_a.x, screen_a.y, -a.position.z);
+                material.b = Vec3::new(screen_b.x, screen_b.y, -b.position.z);
+                material.c = Vec3::new(screen_c.x, screen_c.y, -c.position.z);
+                material.a_uv = a.uv;
+                material.b_uv = b.uv;
+                material.c_uv = c.uv;
             }
-
-            //println!("a:{}, b:{}, c:{}", material.a_uv, material.b_uv, material.c_uv);
         }
     }
 }

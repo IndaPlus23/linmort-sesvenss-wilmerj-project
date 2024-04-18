@@ -22,6 +22,40 @@ use crate::structures::Wall;
 mod floor;
 use crate::floor::Floor;
 
+#[derive(Clone, Copy)]
+pub struct Vertice {
+    position: Vec3,
+    original_uv: Vec2,
+    uv: Vec2, 
+}
+
+impl Vertice {
+    pub fn new(position: Vec3, uv: Vec2) -> Self {
+        let original_uv = uv;
+        Self {
+            position,
+            original_uv,
+            uv,
+        }
+    }
+
+    pub fn zero() -> Self {
+        let position = Vec3::ZERO;
+        let original_uv = Vec2::ZERO;
+        let uv = Vec2::ZERO;
+        Self {
+            position,
+            original_uv,
+            uv
+        }
+    }
+
+    pub fn new_position(&mut self, position: Vec3) {
+        let position = position;
+        self.position = position;
+    }
+}
+
 #[derive(Component, Asset, TypePath, AsBindGroup, Debug, Clone)]
 pub struct CustomMaterial {
     #[texture(0)]
@@ -117,12 +151,9 @@ fn setup(
         &mut meshes,
         &mut custom_materials,
         &mut asset_server,
-        Vec3::new(-20., -5., -50.),
-        Vec3::new(-20., -5., -100.),
-        Vec3::new(50., -5., -50.),
-        Vec2::new(0., 1.),
-        Vec2::new(0., 0.,),
-        Vec2::new(1., 1.),
+        Vertice::new(Vec3::new(0., -5., -100.), Vec2::new(0., 0.)),
+        Vertice::new(Vec3::new(0., -5., -50.), Vec2::new(0., 1.)),
+        Vertice::new(Vec3::new(50., -5., -50.), Vec2::new(1., 1.)),
     );
 }
 

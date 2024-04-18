@@ -1,29 +1,24 @@
 use bevy::{prelude::*, render::mesh::Mesh, sprite::MaterialMesh2dBundle};
 use std::f32::consts::PI;
 
+use crate::Vertice;
 use crate::CustomMaterial;
 use crate::Player;
 
 #[derive(Component, Clone)]
 pub struct Floor {
-    pub a: Vec3,
-    pub b: Vec3,
-    pub c: Vec3,
-    pub a_uv: Vec2,
-    pub b_uv: Vec2,
-    pub c_uv: Vec2,
+    pub a: Vertice,
+    pub b: Vertice,
+    pub c: Vertice,
     pub complement: bool,
 }
 
 impl Floor {
-    pub fn new(a: Vec3, b: Vec3, c: Vec3, a_uv: Vec2, b_uv: Vec2, c_uv: Vec2, complement: bool) -> Self {
+    pub fn new(a: Vertice, b: Vertice, c: Vertice, complement: bool) -> Self {
         Self {
             a,
             b,
             c,
-            a_uv,
-            b_uv,
-            c_uv,
             complement,
         }
     }
@@ -33,15 +28,12 @@ impl Floor {
         meshes: &mut ResMut<Assets<Mesh>>,
         custom_materials: &mut ResMut<Assets<CustomMaterial>>,
         asset_server: &mut Res<AssetServer>,
-        a: Vec3,
-        b: Vec3,
-        c: Vec3,
-        a_uv: Vec2,
-        b_uv: Vec2,
-        c_uv: Vec2,
+        a: Vertice,
+        b: Vertice,
+        c: Vertice,
     ) {
         commands.spawn((
-            Floor::new(a, b, c, a_uv, b_uv, c_uv, false),
+            Floor::new(a, b, c,  false),
             MaterialMesh2dBundle {
                 mesh: meshes.add(Triangle2d::default()).into(),
                 material: custom_materials.add(CustomMaterial {
@@ -58,7 +50,7 @@ impl Floor {
         ));
 
         commands.spawn((
-            Floor::new(a, b, c, a_uv, b_uv, c_uv, true),
+            Floor::new(a, b, c, true),
             MaterialMesh2dBundle {
                 mesh: meshes.add(Triangle2d::default()).into(),
                 material: custom_materials.add(CustomMaterial {
@@ -75,111 +67,133 @@ impl Floor {
         ));
     }
 
-    pub fn clipping(&mut self, player: &Player) -> (Vec3, Vec3, Vec3, Vec3, Vec3, Vec3, Vec2, Vec2, Vec2, Vec2, Vec2, Vec2) {
-        let mut a = vertices_to_world_coordinates(player, self.a.x, self.a.y, self.a.z);
-        let mut b = vertices_to_world_coordinates(player, self.b.x, self.b.y, self.b.z);
-        let mut c = vertices_to_world_coordinates(player, self.c.x, self.c.y, self.c.z);
+    // Returns clipped vertices and screen coordinates
+    pub fn clipping(&mut self, player: &Player) -> (Vertice, Vertice, Vertice, Vec2, Vec2, Vec2) {
+        let mut a = transform_vertice(player, self.a);
+        let mut b = transform_vertice(player, self.b);
+        let mut c = transform_vertice(player, self.c);
 
         // Copies of original vertices, non mutual
         let (org_a, org_b, org_c) = (a, b, c);
 
-        // Zero vectors for readability
-        let z3 = Vec3::ZERO;
-        let z2 = Vec2::ZERO;
+        // Zero vertice
+        let zero = Vertice::zero();
 
         // All vertices are behind player
-        if a.z > 0. && b.z > 0. && c.z > 0. {
-            return (z3, z3, z3, z3, z3, z3, z2, z2, z2, z2, z2, z2);
+        if a.position.z > 0. && b.position.z > 0. && c.position.z > 0. {
+            return (zero, zero, zero, Vec2::ZERO, Vec2::ZERO, Vec2::ZERO)
         }
 
         // Both A and B are behind player
-        if a.z > 0. && b.z > 0. {
-            (a, c) = clip_line_segment(a, c);
-            (b, c) = clip_line_segment(b, c);
+        if a.position.z > 0. && b.position.z > 0. {
+            (a, c) = clip(a, c);
+            (b, c) = clip(b, c);
 
             // Calculate correct uv coordinates for the clipped vertices
-            let a_per = org_a.z / (org_a.z -org_c.z);
-            let a_uv = ((self.c_uv - self.a_uv) * a_per) + self.a_uv;
-            let b_per = org_b.z / (org_b.z -org_c.z);
-            let b_uv = ((self.c_uv - self.b_uv) * b_per) + self.b_uv;
+            let a_per = org_a.position.z / (org_a.position.z -org_c.position.z);
+            a.uv = ((self.c.original_uv - self.a.original_uv) * a_per) + self.a.original_uv;
+            let b_per = org_b.position.z / (org_b.position.z -org_c.position.z);
+            b.uv = ((self.c.original_uv - self.b.original_uv) * b_per) + self.b.original_uv;
 
-            return (a, b, c, z3, z3, z3, a_uv, b_uv, self.c_uv, z2, z2, z2);
+            return (a, b, c, screen(a), screen(b), screen(c))
         }
 
         // Both A and C are behind player
-        if a.z > 0. && c.z > 0. {
-            (a, b) = clip_line_segment(a, b);
-            (c, b) = clip_line_segment(c, b);
+        if a.position.z > 0. && c.position.z > 0. {
+            (a, b) = clip(a, b);
+            (c, b) = clip(c, b);
 
             // Calculate correct uv coordinates for the clipped vertices
-            let a_per = org_a.z / (org_a.z -org_b.z);
-            let a_uv = ((self.b_uv - self.a_uv) * a_per) + self.a_uv;
-            let c_per = org_c.z / (org_c.z -org_b.z);
-            let c_uv = ((self.b_uv - self.c_uv) * c_per) + self.c_uv;
+            let a_per = org_a.position.z / (org_a.position.z -org_b.position.z);
+            a.uv = ((self.b.original_uv - self.a.original_uv) * a_per) + self.a.original_uv;
+            let c_per = org_c.position.z / (org_c.position.z -org_b.position.z);
+            c.uv = ((self.b.original_uv - self.c.original_uv) * c_per) + self.c.original_uv;
 
-            return (a, b, c, z3, z3, z3, a_uv, self.b_uv, c_uv, z2, z2, z2);
+            return (a, b, c, screen(a), screen(b), screen(c))
         }
 
         // Both B and C are behind player
-        if b.z > 0. && c.z > 0. {
-            (b, a) = clip_line_segment(b, a);
-            (c, a) = clip_line_segment(c, a);
+        if b.position.z > 0. && c.position.z > 0. {
+            (b, a) = clip(b, a);
+            (c, a) = clip(c, a);
 
             // Calculate correct uv coordinates for the clipped vertices
-            let b_per = org_b.z / (org_b.z -org_a.z);
-            let b_uv = ((self.a_uv - self.b_uv) * b_per) + self.b_uv;
-            let c_per = org_c.z / (org_c.z -org_a.z);
-            let c_uv = ((self.a_uv - self.c_uv) * c_per) + self.c_uv;
+            let b_per = org_b.position.z / (org_b.position.z -org_a.position.z);
+            b.uv = ((self.a.original_uv - self.b.original_uv) * b_per) + self.b.original_uv;
+            let c_per = org_c.position.z / (org_c.position.z -org_a.position.z);
+            c.uv = ((self.a.original_uv - self.c.original_uv) * c_per) + self.c.original_uv;
 
-            return (a, b, c, z3, z3, z3, self.a_uv, b_uv, c_uv, z2, z2, z2);
+            return (a, b, c, screen(a), screen(b), screen(c))
         }
 
         // Edge case. A is behind player. Yields complementary triangle
-        if a.z > 0. {
-            (a, b) = clip_line_segment(a, b);
-            let (comp_b, _) = clip_line_segment(org_a, c);
+        if a.position.z > 0. {
+            (a, b) = clip(a, b);
 
-            let a_per = org_a.z / (org_a.z -org_b.z);
-            let a_uv = ((self.b_uv - self.a_uv) * a_per) + self.a_uv;
+            let a_per = org_a.position.z / (org_a.position.z -org_b.position.z);
+            a.uv = ((self.b.original_uv - self.a.original_uv) * a_per) + self.a.original_uv;
 
-            let comp_b_per = org_a.z / (org_a.z -org_c.z);
-            let comp_b_uv = ((self.c_uv - self.a_uv) * comp_b_per) + self.a_uv;
+            if self.complement == true {
+                let (mut comp_b, _) = clip(org_a, c);
 
-            return (a, b, c, a, comp_b, c, self.a_uv, self.b_uv, self.c_uv, z2, z2, z2);
+                let a_per = org_a.position.z / (org_a.position.z -org_c.position.z);
+                comp_b.uv = ((self.c.original_uv - self.a.original_uv) * a_per) + self.a.original_uv;
+
+                return (a, comp_b, c, screen(a), screen(comp_b), screen(c))
+            } else {
+                return (b, a, c, screen(b), screen(a), screen(c))
+            }
         }
 
         // Edge case. B is behind player. Yields complementary triangle
-        if b.z > 0. {
-            (b, c) = clip_line_segment(b, c);
-            let (comp_c, _) = clip_line_segment(org_b, a);
+        if b.position.z > 0. {
+            (b, c) = clip(b, c);
 
-            let b_per = org_b.z / (org_b.z -org_c.z);
-            let b_uv = ((self.c_uv - self.b_uv) * b_per) + self.b_uv;
+            let b_per = org_b.position.z / (org_b.position.z -org_c.position.z);
+            b.uv = ((self.c.original_uv - self.b.original_uv) * b_per) + self.b.original_uv;
 
-            let comp_c_per = org_b.z / (org_b.z -org_a.z);
-            let comp_c_uv = ((self.a_uv - self.b_uv) * comp_c_per) + self.b_uv;
+            if self.complement == true {
+                let (mut comp_c, _) = clip(org_b, a);
 
-            let x = Vec2::new(0., 1.);
-            let y = Vec2::new(0., 0.,);
-            let z = Vec2::new(1., 1.);
+                let b_per = org_b.position.z / (org_b.position.z -org_a.position.z);
+                comp_c.uv = ((self.a.original_uv - self.b.original_uv) * b_per) + self.b.original_uv;
 
-            return (a, b, c, a, comp_c, b, self.a_uv, b_uv, self.c_uv, x, y, z);
+                return (a, b, comp_c, screen(a), screen(b), screen(comp_c))
+            } else {
+                return (a, b, c, screen(a), screen(b), screen(c))
+            }
         }
 
         // Edge case. C is behind player. Yields complementary triangle
-        if c.z > 0. {
-            (c, a) = clip_line_segment(c, a);
-            let (comp_a, _) = clip_line_segment(org_c, b);
-            return (a, b, c, comp_a, b, c, self.a_uv, self.b_uv, self.c_uv, z2, z2, z2);
+        if c.position.z > 0. {
+            (c, a) = clip(c, a);
+
+            let c_per = org_c.position.z / (org_c.position.z -org_a.position.z);
+            c.uv = ((self.a.original_uv - self.c.original_uv) * c_per) + self.c.original_uv;
+
+            if self.complement == true {
+                let (mut comp_a, _) = clip(org_c, b);
+
+                let c_per = org_c.position.z / (org_c.position.z -org_b.position.z);
+                comp_a.uv = ((self.b.original_uv - self.c.original_uv) * c_per) + self.c.original_uv;
+
+                return (comp_a, b, c, screen(comp_a), screen(b), screen(c))
+            } else {
+                return (a, b, c, screen(a), screen(b), screen(c))
+            }
         }
 
         // No vertices are behind player
-        return (a, b, c, Vec3::ZERO, Vec3::ZERO, Vec3::ZERO, self.a_uv, self.b_uv, self.c_uv, z2, z2, z2);
+        return (a, b, c, screen(a), screen(b), screen(c))
     }
 }
 
-// Converts vertices to world coordinates based on player rotation and position.
-fn vertices_to_world_coordinates(player: &Player, mut x: f32, mut y: f32, mut z: f32) -> Vec3 {
+// Apply transformation based on player rotation and position.
+fn transform_vertice(player: &Player, vertice: Vertice) -> Vertice {
+    let mut x = vertice.position.x;
+    let mut y = vertice.position.y;
+    let mut z = vertice.position.z;
+    
     let cos = player.yaw.cos();
     let sin = player.yaw.sin();
 
@@ -187,36 +201,40 @@ fn vertices_to_world_coordinates(player: &Player, mut x: f32, mut y: f32, mut z:
     y -= player.y;
     z -= player.z;
 
-    let world_x = x * cos + z * sin;
-    let world_z = z * cos - x * sin;
-    let world_y = y + (player.pitch * world_z);
+    let new_x = x * cos + z * sin;
+    let new_z = z * cos - x * sin;
+    let new_y = y + (player.pitch * new_z);
 
-    Vec3::new(world_x, world_y, world_z)
+    Vertice::new(Vec3::new(new_x, new_y, new_z), vertice.uv)
 }
 
 // Starting point is behind the player
 // Clip the starting point so it never is behind the player
-fn clip_line_segment(start: Vec3, end: Vec3) -> (Vec3, Vec3) {
-    let delta_z = end.z - start.z;
-    let delta_x = end.x - start.x;
-    let delta_y = end.y - start.y;
+fn clip(mut start: Vertice, end: Vertice) -> (Vertice, Vertice) {
+    let delta_z = end.position.z - start.position.z;
+    let delta_x = end.position.x - start.position.x;
+    let delta_y = end.position.y - start.position.y;
 
     let k = delta_z / delta_x;
-    let m = start.z - (k * start.x);
+    let m = start.position.z - (k * start.position.x);
     let new_start_x = -m / k;
 
     let k = delta_z / delta_y;
-    let m = start.z - (k * start.y);
+    let m = start.position.z - (k * start.position.y);
     let new_start_y = -m / k;
 
-    let new_start = Vec3::new(new_start_x, new_start_y, -0.01);
-    return (new_start, end);
+    start.new_position(Vec3::new(new_start_x, new_start_y, -0.01));
+    return (start, end)
 }
 
-// Converts world 3d coordinates to 2d screen coordinates
-fn world_to_screen_coordinates(world_x: f32, world_y: f32, world_z: f32) -> Vec2 {
+// Converts vertice coordinates to 2d screen coordinates
+fn screen(vertice: Vertice) -> Vec2 {
+    let world_x = vertice.position.x;
+    let world_y = vertice.position.y;
+    let world_z = vertice.position.z;
+
     let screen_x = world_x * 1500. / world_z;
     let screen_y = world_y * 1500. / world_z;
 
-    Vec2::new(screen_x, screen_y)
+    Vec2::new(-screen_x, -screen_y)
 }
