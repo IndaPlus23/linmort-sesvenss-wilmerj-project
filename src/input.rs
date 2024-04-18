@@ -55,59 +55,75 @@ pub fn keyboard_input(
 
         movement = movement.normalize_or_zero() * speed * time.delta_seconds();
 
-        /*
-        WALL COLLISION
+        
+        
 
-        CHECK IF 
-
-        player.x + movement.x
-        player.y + movement.y
-        player.z + movement.z
-
-        IS THE SAME VALUE AS WALL POSITION + PADDING
-
-        IF SAME SET movement.z TO 0
-
-        TODO: 
-        clean up code 
-        make sure collision works with floor and ceiling (when added)
-
-         */
-        let padding = 1.0;
-
-        // CHECKS EVERY WALL
+        // CHECKS EVERY WALL FOR COLLISION
          for (wall, _transform, _mesh2dhandle) in wall_query.iter_mut() {
-
-            let mut x_hit = false;
-            let mut y_hit = false;
-            let mut z_hit = false;
-
-            // positiv X åt höger
-            if player.x + movement.x > wall.start.x - padding && player.x + movement.x < wall.end.x + padding {
-                x_hit = true
-            }
-            //positiv Y uppåt
-            if player.y + movement.y > wall.start.y - padding && player.y + movement.y < wall.end.y + wall.height + padding {
-                y_hit = true
-            }
-            // -Z i framåtriktningen
-            if player.z + movement.z > wall.start.z - padding && player.z + movement.z < wall.end.z + padding {
-                z_hit = true;
-            }
-
-            // DEBUGING
-            //println!("START: {:?} END: {:?} PLAYER: ({:?}, {:?}, {:?} HIT: {:?} {:?} {:?})",wall.start, wall.end, player.x, player.y, player.z, x_hit, y_hit, z_hit);
-
-            if x_hit && y_hit && z_hit {
-                movement.x = 0.0;
-                movement.y = 0.0;
-                movement.z = 0.0;
-            }
+            wall_collision(&wall, &mut movement, &player);
          }
 
         player.x += movement.x;
         player.y += movement.y;
         player.z += movement.z;
+    }
+}
+
+/*
+    WALL COLLISION
+
+    CHECK IF 
+
+    player.x + movement.x
+    player.y + movement.y
+    player.z + movement.z
+
+    IS THE SAME VALUE AS WALL POSITION + PADDING
+
+    IF SAME SET movement.z TO 0
+
+    TODO: 
+    clean up code 
+    make sure collision works with floor and ceiling (when added)
+
+*/
+
+pub fn wall_collision(wall: &Mut<'_, Wall>, movement: &mut bevy::prelude::Vec3, player: &bevy::prelude::Mut<'_, Player>) {
+    let padding = 1.0;
+
+    let mut x_hit = false;
+    let mut y_hit = false;
+    let mut z_hit = false;
+
+    // positiv X åt höger
+    if player.x + movement.x > wall.start.x - padding && player.x + movement.x < wall.end.x + padding {
+        x_hit = true
+    }
+    //positiv Y uppåt
+    if player.y + movement.y > wall.start.y - padding && player.y + movement.y < wall.end.y + wall.height + padding {
+        y_hit = true
+    }
+    // -Z i framåtriktningen
+    if player.z + movement.z > wall.start.z - padding && player.z + movement.z < wall.end.z + padding {
+        z_hit = true;
+    }
+
+    // DEBUGING
+    //println!("START: {:?} END: {:?} PLAYER: ({:?}, {:?}, {:?} HIT: {:?} {:?} {:?})",wall.start, wall.end, player.x, player.y, player.z, x_hit, y_hit, z_hit);
+
+
+    if x_hit && y_hit && z_hit {
+        
+        // logic so that a player can "slide" against the wall
+        if wall.start.x - wall.end.x == 0. {
+            movement[0] = 0.
+        }
+        if wall.start.y - wall.end.y == 0. {
+            movement[1] = 0.
+        }
+        if wall.start.z - wall.end.z == 0. {
+            movement[2] = 0.
+        }
     }
 }
 
