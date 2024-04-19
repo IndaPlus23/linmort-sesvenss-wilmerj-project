@@ -16,7 +16,6 @@ use crate::player::Player;
 mod render;
 use crate::render::render;
 mod wall;
-use crate::wall::Triangle;
 use crate::wall::Wall;
 mod floor;
 use crate::floor::Floor;
@@ -107,9 +106,8 @@ fn setup(
         &mut meshes,
         &mut custom_materials,
         &mut asset_server,
-        Vec3::new(0., -5., -50.),
-        Vec3::new(50., -5., -50.),
-        10.
+        Vertice::new(Vec3::new(0., -5., -50.), Vec2::new(0., 1.)),
+        Vertice::new(Vec3::new(50., -5., -50.), Vec2::new(1., 0.)),
     );
 
     Floor::spawn(

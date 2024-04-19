@@ -1,30 +1,22 @@
 use bevy::{prelude::*, render::mesh::Mesh, sprite::MaterialMesh2dBundle};
-use std::f32::consts::PI;
 
 use crate::CustomMaterial;
 use crate::Player;
-
-#[derive(Clone, PartialEq)]
-pub enum Triangle {
-    Upper,
-    Lower,
-}
+use crate::Vertice;
 
 #[derive(Component, Clone)]
 pub struct Wall {
-    pub start: Vec3,
-    pub end: Vec3,
-    pub height: f32,
-    pub triangle: Triangle,
+    pub start: Vertice,
+    pub end: Vertice,
+    pub upper_triangle: bool,
 }
 
 impl Wall {
-    pub fn new(start: Vec3, end: Vec3, height: f32, triangle: Triangle) -> Self {
+    pub fn new(start: Vertice, end: Vertice, upper_triangle: bool) -> Self {
         Self {
             start,
             end,
-            height,
-            triangle,
+            upper_triangle,
         }
     }
 
@@ -33,12 +25,11 @@ impl Wall {
         meshes: &mut ResMut<Assets<Mesh>>,
         custom_materials: &mut ResMut<Assets<CustomMaterial>>,
         asset_server: &mut Res<AssetServer>,
-        start: Vec3,
-        end: Vec3,
-        height: f32,
+        start: Vertice,
+        end: Vertice,
     ) {
         commands.spawn((
-            Wall::new(start, end, height, Triangle::Upper),
+            Wall::new(start, end, true),
             MaterialMesh2dBundle {
                 mesh: meshes.add(Triangle2d::default()).into(),
                 material: custom_materials.add(CustomMaterial {
@@ -55,7 +46,7 @@ impl Wall {
         ));
 
         commands.spawn((
-            Wall::new(start, end, height, Triangle::Lower),
+            Wall::new(start, end, false),
             MaterialMesh2dBundle {
                 mesh: meshes.add(Triangle2d::default()).into(),
                 material: custom_materials.add(CustomMaterial {
@@ -72,72 +63,66 @@ impl Wall {
         ));
     }
 
-    pub fn clipping(&self, player: &Player) -> (Vec3, Vec3) {
-        let world_start =
-            vertices_to_world_coordinates(player, self.start.x, self.start.y, self.start.z);
+    // Returns clipped vertices and screen coordinates
+    pub fn clipping(&mut self, player: &Player) -> (Vertice, Vertice, Vertice, Vec2, Vec2, Vec2) {
+        let mut start = self.start.transform_vertice(player);
+        let mut end = self.end.transform_vertice(player);
 
-        let world_end = vertices_to_world_coordinates(player, self.end.x, self.end.y, self.end.z);
-
-        if world_start.z > 0. && world_end.z > 0. {
-            // Both wall's starting and end points are behind the player
-            // The wall does not have to be rendered
-            return (Vec3::new(0., 0., 0.), Vec3::new(0., 0., 0.));
-        } else if world_start.z > 0. {
-            // Wall starting point is behind the player
-            // Clip the starting point so it never is behind the player
-            clip_line_segment(world_start, world_end)
-        } else if world_end.z > 0. {
-            // Wall end point is behind the player
-            // Clip the end point so it never is behind the player
-            clip_line_segment(world_end, world_start)
-        } else {
-            // No point is behind the player
-            return (world_start, world_end);
+        // Both wall's starting and end points are behind the player
+        // The wall does not have to be rendered
+        if start.position.z > 0. && end.position.z > 0. {
+            return (Vertice::zero(), Vertice::zero(), Vertice::zero(), Vec2::ZERO, Vec2::ZERO, Vec2::ZERO)
         }
+
+        let (mut a, mut b, mut c) = (Vertice::zero(), Vertice::zero(), Vertice::zero());
+        let (original_start, original_end) = (start, end);
+        let mut percentage = 0.;
+        
+        // Wall starting point is behind the player
+        if start.position.z > 0. {
+            percentage = start.position.z / (start.position.z - end.position.z);
+            start.clip(end);
+        } 
+        
+        // Wall end point is behind the player
+        if end.position.z > 0. {
+            percentage = end.position.z / (end.position.z - start.position.z);
+            end.clip(start);
+        }
+
+        if self.upper_triangle == true {
+            a = Vertice::new(Vec3::new(start.position.x, start.position.y, start.position.z), Vec2::new(0., 1.));
+            b = Vertice::new(Vec3::new(start.position.x, start.position.y + 10., start.position.z), Vec2::new(0., 0.));
+            c = Vertice::new(Vec3::new(end.position.x, end.position.y + 10., end.position.z), Vec2::new(1., 0.));
+        } else {
+            a = Vertice::new(Vec3::new(end.position.x, end.position.y + 10., end.position.z), Vec2::new(1., 0.));
+            b = Vertice::new(Vec3::new(start.position.x, start.position.y, start.position.z), Vec2::new(0., 1.));
+            c = Vertice::new(Vec3::new(end.position.x, end.position.y, end.position.z), Vec2::new(1., 1.));
+        }
+
+        // Calculate correct uv coordinates for the clipped vertices
+        if original_start.position.z > 0. {
+            if self.upper_triangle == true {
+                b.uv = ((c.uv - b.uv) * percentage) + b.uv;
+                let c_uv = Vec2::new(1., 1.);
+                a.uv = ((c_uv - a.uv) * percentage) + a.uv;
+            } else {
+                let c_uv = Vec2::new(1., 1.);
+                b.uv = ((c_uv - b.uv) * percentage) + b.uv;
+            }
+        } 
+        
+        // Calculate correct uv coordinates for the clipped vertices
+        if original_end.position.z > 0. {
+            if self.upper_triangle == true {
+                c.uv = ((b.uv - c.uv) * percentage) + c.uv;
+            } else {
+                c.uv = ((b.uv - c.uv) * percentage) + c.uv;
+                let b_uv = Vec2::new(0., 0.);
+                a.uv = ((b_uv - a.uv) * percentage) + a.uv;
+            }
+        }
+        
+        return(a, b, c, a.screen(), b.screen(), c.screen())
     }
-}
-
-// Converts vertices to world coordinates based on player rotation and position.
-fn vertices_to_world_coordinates(player: &Player, mut x: f32, mut y: f32, mut z: f32) -> Vec3 {
-    let cos = player.yaw.cos();
-    let sin = player.yaw.sin();
-
-    x -= player.x;
-    y -= player.y;
-    z -= player.z;
-
-    let world_x = x * cos + z * sin;
-    let world_z = z * cos - x * sin;
-    let world_y = y + (player.pitch * world_z);
-
-    Vec3::new(world_x, world_y, world_z)
-}
-
-pub fn clipping_vertice(player: &Player, x: f32, y: f32, z: f32, reference_z: f32) -> Vec3 {
-    let world = vertices_to_world_coordinates(player, x, y, z);
-
-    if world.z > 0. && reference_z > 0. {
-        return Vec3::new(0., 0., 0.);
-    } else if world.z > 0. {
-        return Vec3::new(world.x, world.y, -1.);
-    } else {
-        return world;
-    }
-}
-
-fn clip_line_segment(start: Vec3, end: Vec3) -> (Vec3, Vec3) {
-    let delta_z = end.z - start.z;
-    let delta_x = end.x - start.x;
-    let delta_y = end.y - start.y;
-
-    let k = delta_z / delta_x;
-    let m = start.z - (k * start.x);
-    let new_start_x = -m / k;
-
-    let k = delta_z / delta_y;
-    let m = start.z - (k * start.y);
-    let new_start_y = -m / k;
-
-    let new_start = Vec3::new(new_start_x, new_start_y, -0.01);
-    return (new_start, end);
 }

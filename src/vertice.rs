@@ -56,7 +56,7 @@ impl Vertice {
 
     // Starting point is behind the player
     // Clip the starting point so it never is behind the player
-    pub fn clip(&mut self, mut with: Vertice) {
+    pub fn clip(&mut self, with: Vertice) {
         let delta_z = with.position.z - self.position.z;
         let delta_x = with.position.x - self.position.x;
         let delta_y = with.position.y - self.position.y;
