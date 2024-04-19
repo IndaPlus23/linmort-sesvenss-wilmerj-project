@@ -14,7 +14,7 @@ impl Plugin for AssetLoaderPlugin {
     }
 }
 
-/// load_assets loads assets from asset folder and populates AssetScene, making them available
+/// Loads assets from asset folder and populates AssetScene, making them available
 /// for usage without having multiple handles reference various copies of the same asset.
 fn load_assets(mut scene_assets: ResMut<SceneAssets>, asset_server: Res<AssetServer>) {
     *scene_assets = SceneAssets {
