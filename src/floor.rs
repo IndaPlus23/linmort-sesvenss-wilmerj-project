@@ -1,9 +1,9 @@
 use bevy::{prelude::*, render::mesh::Mesh, sprite::MaterialMesh2dBundle};
 
-use crate::SceneAssets;
 use crate::vertice::Vertice;
 use crate::CustomMaterial;
 use crate::Player;
+use crate::SceneAssets;
 
 #[derive(Component, Clone)]
 pub struct Floor {

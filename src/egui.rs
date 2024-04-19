@@ -1,18 +1,15 @@
+use crate::CustomMaterial;
+use crate::SceneAssets;
 use crate::Wall;
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts};
-use crate::SceneAssets;
-use crate::CustomMaterial;
 
 pub fn ui_example_system(
     mut contexts: EguiContexts,
     mut custom_materials: ResMut<Assets<CustomMaterial>>,
     asset_server: Res<SceneAssets>,
-    mut wall_query: Query<(
-    &mut Wall,
-    &mut Transform,
-    &mut Handle<CustomMaterial>,
-)>,) {
+    mut wall_query: Query<(&mut Wall, &mut Transform, &mut Handle<CustomMaterial>)>,
+) {
     egui::Window::new("Editor").show(contexts.ctx_mut(), |ui| {
         let mut start_transformation = Vec3::new(0., 0., 0.);
         let mut end_transformation = Vec3::new(0., 0., 0.);
@@ -62,30 +59,36 @@ pub fn ui_example_system(
                 ui.label("Start");
                 ui.horizontal(|ui| {
                     ui.label("x:");
-                    ui.add(egui::DragValue::new(&mut start_transformation.x)
-                        .custom_formatter(|n, _| {
-                            let displayed = n as f32 + current_start.x;
-                            format!("{displayed}")
-                        })
-                        .speed(1.0));
+                    ui.add(
+                        egui::DragValue::new(&mut start_transformation.x)
+                            .custom_formatter(|n, _| {
+                                let displayed = n as f32 + current_start.x;
+                                format!("{displayed}")
+                            })
+                            .speed(1.0),
+                    );
                 });
                 ui.horizontal(|ui| {
                     ui.label("y:");
-                    ui.add(egui::DragValue::new(&mut start_transformation.y)
-                        .custom_formatter(|n, _| {
-                            let displayed = n as f32 + current_start.y;
-                            format!("{displayed}")
-                        })
-                        .speed(1.0));
+                    ui.add(
+                        egui::DragValue::new(&mut start_transformation.y)
+                            .custom_formatter(|n, _| {
+                                let displayed = n as f32 + current_start.y;
+                                format!("{displayed}")
+                            })
+                            .speed(1.0),
+                    );
                 });
                 ui.horizontal(|ui| {
                     ui.label("z:");
-                    ui.add(egui::DragValue::new(&mut start_transformation.z)
-                        .custom_formatter(|n, _| {
-                            let displayed = n as f32 + current_start.z;
-                            format!("{displayed}")
-                        })
-                        .speed(1.0));
+                    ui.add(
+                        egui::DragValue::new(&mut start_transformation.z)
+                            .custom_formatter(|n, _| {
+                                let displayed = n as f32 + current_start.z;
+                                format!("{displayed}")
+                            })
+                            .speed(1.0),
+                    );
                 });
                 ui.horizontal(|ui| {
                     ui.label("   ");
@@ -98,30 +101,36 @@ pub fn ui_example_system(
                 ui.label("End");
                 ui.horizontal(|ui| {
                     ui.label("x:");
-                    ui.add(egui::DragValue::new(&mut end_transformation.x)
-                        .custom_formatter(|n, _| {
-                            let displayed = n as f32 + current_end.x;
-                            format!("{displayed}")
-                        })
-                        .speed(1.0));
+                    ui.add(
+                        egui::DragValue::new(&mut end_transformation.x)
+                            .custom_formatter(|n, _| {
+                                let displayed = n as f32 + current_end.x;
+                                format!("{displayed}")
+                            })
+                            .speed(1.0),
+                    );
                 });
                 ui.horizontal(|ui| {
                     ui.label("y:");
-                    ui.add(egui::DragValue::new(&mut end_transformation.y)
-                        .custom_formatter(|n, _| {
-                            let displayed = n as f32 + current_end.y;
-                            format!("{displayed}")
-                        })
-                        .speed(1.0));
+                    ui.add(
+                        egui::DragValue::new(&mut end_transformation.y)
+                            .custom_formatter(|n, _| {
+                                let displayed = n as f32 + current_end.y;
+                                format!("{displayed}")
+                            })
+                            .speed(1.0),
+                    );
                 });
                 ui.horizontal(|ui| {
                     ui.label("z:");
-                    ui.add(egui::DragValue::new(&mut end_transformation.z)
-                        .custom_formatter(|n, _| {
-                            let displayed = n as f32 + current_end.z;
-                            format!("{displayed}")
-                        })
-                        .speed(1.0));
+                    ui.add(
+                        egui::DragValue::new(&mut end_transformation.z)
+                            .custom_formatter(|n, _| {
+                                let displayed = n as f32 + current_end.z;
+                                format!("{displayed}")
+                            })
+                            .speed(1.0),
+                    );
                 });
                 ui.horizontal(|ui| {
                     ui.label("   ");
@@ -172,11 +181,15 @@ pub fn ui_example_system(
             .selected_text(format!("Texture"))
             .show_ui(ui, |ui| {
                 for (i, texture) in texture_paths.iter().enumerate() {
-                    ui.selectable_value(&mut material.texture, asset_server.textures[i].clone(), texture);
+                    ui.selectable_value(
+                        &mut material.texture,
+                        asset_server.textures[i].clone(),
+                        texture,
+                    );
                 }
             });
 
-        for (mut wall, mut transform, _) in wall_query.iter_mut() {
+        for (mut wall, _transform, _) in wall_query.iter_mut() {
             wall.start.transformation = start_transformation;
             wall.start.position = wall.start.original_position + start_transformation;
 

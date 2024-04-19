@@ -93,21 +93,4 @@ impl Vertice {
 
         Vec2::new(-screen_x, -screen_y)
     }
-
-    pub fn uv_scale(&mut self, scalar: Vec2) {
-        fn normalize_float(x: f32) -> f32 {
-            let fractional_part = x % 1.0;
-            if fractional_part < 0.0 {
-                fractional_part + 1.0
-            } else {
-                fractional_part
-            }
-        }
-
-        self.uv.x *= scalar.x;
-        self.uv.y *= scalar.y;
-
-        self.uv.x = normalize_float(self.uv.x);
-        self.uv.y = normalize_float(self.uv.y);
-    }
 }
