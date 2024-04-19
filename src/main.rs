@@ -30,7 +30,6 @@ fn main() {
             press_coords: Vec::new(),
         })
         .add_plugins(AssetLoaderPlugin)
-        .add_plugins(SpritePlugin)
         .add_plugins((
             DefaultPlugins.set(WindowPlugin {
                 primary_window: Some(Window {
@@ -58,6 +57,7 @@ fn main() {
         .add_systems(Update, mouse_input)
         .add_systems(Update, render)
         .add_systems(Update, change_title)
+        .add_plugins(SpritePlugin)
         .run();
 }
 
