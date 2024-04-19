@@ -1,7 +1,6 @@
 use bevy::asset::LoadedAsset;
 use bevy::prelude::*;
-
-const SAMPLE_ASSETS: Vec<String> = Vec::new();
+use std::path::PathBuf;
 
 /// SceneAssets stores handles for assets used in the scene.
 #[derive(Resource, Debug, Default)]
@@ -21,9 +20,13 @@ impl Plugin for AssetLoaderPlugin {
 /// Loads assets from asset folder and populates AssetScene, making them available
 /// for usage without having multiple handles reference various copies of the same asset.
 fn load_assets(mut scene_assets: ResMut<SceneAssets>, asset_server: Res<AssetServer>) {
+
+    // TODO: Replace with a more permanent solution
+    let sample_assets = vec![String::from("grass_front.png")];
+
     *scene_assets = SceneAssets {
         enemy: asset_server.load("models/Rock.glb#Scene0"),
-        textures: load_textures_from_folder(SAMPLE_ASSETS, asset_server),
+        textures: load_textures_from_folder(sample_assets, asset_server),
     }
 }
 
@@ -32,8 +35,10 @@ fn load_textures_from_folder(assets: Vec<String>, asset_server: Res<AssetServer>
     let mut image_handles: Vec<Handle<Image>> = Vec::new();
 
     for asset in assets.iter() {
+        let mut path = PathBuf::from("textures/");
+        path.push(asset);
         // Unchecked loading
-        let asset: Handle<Image> = asset_server.load(format!("{}{}", "textures/", asset));
+        let asset: Handle<Image> = asset_server.load(path);
         image_handles.push(asset);
     }
 
