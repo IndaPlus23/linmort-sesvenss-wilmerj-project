@@ -1,12 +1,13 @@
 [package]
-name = "raycaster_rewritten"
+name = "linmort-sesvenss-wilmerj-project"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = "0.13.1"
+bevy = "0.13.2"
+bevy_egui = "0.27.0"
 nalgebra = "0.32.4"
 
 # Enable only a small amount of optimization in debug mode
