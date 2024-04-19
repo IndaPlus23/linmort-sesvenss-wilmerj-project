@@ -7,6 +7,7 @@ use bevy::{
     sprite::{Material2d, Material2dPlugin},
     window::{PresentMode, WindowTheme},
 };
+use bevy_egui::EguiPlugin;
 use std::f32::consts::PI;
 
 mod input;
@@ -21,6 +22,11 @@ mod floor;
 use crate::floor::Floor;
 mod vertice;
 use crate::vertice::Vertice;
+mod egui;
+use crate::egui::ui_example_system;
+mod asset_loader;
+use crate::asset_loader::AssetLoaderPlugin;
+use crate::asset_loader::{load_assets, SceneAssets};
 
 #[derive(Component, Asset, TypePath, AsBindGroup, Debug, Clone)]
 pub struct CustomMaterial {
@@ -39,6 +45,12 @@ pub struct CustomMaterial {
     b_uv: Vec2,
     #[uniform(7)]
     c_uv: Vec2,
+    #[uniform(8)]
+    uv_scalar: Vec2,
+    #[uniform(9)]
+    uv_offset: Vec2,
+    #[uniform(10)]
+    uv_rotation: f32,
 }
 
 impl Material2d for CustomMaterial {
@@ -53,36 +65,40 @@ fn main() {
         .insert_resource(MouseState {
             press_coords: Vec::new(),
         })
+        .add_plugins(AssetLoaderPlugin)
         .add_plugins((
-            DefaultPlugins.set(
-                WindowPlugin {
-                primary_window: Some(Window {
-                    title: "Raycaster".into(),
-                    name: Some("Raycaster".into()),
-                    resolution: (1280., 720.).into(),
-                    present_mode: PresentMode::AutoVsync,
-                    // Tells wasm not to override default event handling, like F5, Ctrl+R etc.
-                    prevent_default_event_handling: false,
-                    window_theme: Some(WindowTheme::Dark),
-                    enabled_buttons: bevy::window::EnabledButtons {
-                        maximize: false,
-                        ..Default::default()
-                    },
+            DefaultPlugins
+                .set(WindowPlugin {
+                    primary_window: Some(Window {
+                        title: "Raycaster".into(),
+                        name: Some("Raycaster".into()),
+                        resolution: (1280., 720.).into(),
+                        present_mode: PresentMode::AutoVsync,
+                        // Tells wasm not to override default event handling, like F5, Ctrl+R etc.
+                        prevent_default_event_handling: false,
+                        window_theme: Some(WindowTheme::Dark),
+                        enabled_buttons: bevy::window::EnabledButtons {
+                            maximize: false,
+                            ..Default::default()
+                        },
+                        ..default()
+                    }),
                     ..default()
-                }),
-                ..default()
-            })
-            .set(ImagePlugin::default_nearest()),
+                })
+                .set(ImagePlugin::default_nearest()),
             //FrameTimeDiagnosticsPlugin,
             //LogDiagnosticsPlugin::default(),
             //bevy::diagnostic::SystemInformationDiagnosticsPlugin::default()
         ))
         .add_plugins(Material2dPlugin::<CustomMaterial>::default())
+        .add_plugins(EguiPlugin)
+        .add_systems(PreStartup, load_assets)
         .add_systems(Startup, setup)
         .add_systems(Update, keyboard_input)
         .add_systems(Update, mouse_input)
         .add_systems(Update, render)
         .add_systems(Update, change_title)
+        .add_systems(Update, ui_example_system)
         .run();
 }
 
@@ -91,7 +107,7 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut custom_materials: ResMut<Assets<CustomMaterial>>,
     //mut standard_materials: ResMut<Assets<StandardMaterial>>,
-    mut asset_server: Res<AssetServer>,
+    mut asset_server: Res<SceneAssets>,
 ) {
     commands.spawn(Camera2dBundle {
         transform: Transform::from_xyz(0.0, 0.0, 0.0)
@@ -101,13 +117,14 @@ fn setup(
 
     commands.spawn((Player::new(0., 0., 0., 0., 0.),));
 
-    Wall::spawn_wall(
+    Wall::spawn(
         &mut commands,
         &mut meshes,
         &mut custom_materials,
         &mut asset_server,
         Vertice::new(Vec3::new(0., -5., -50.), Vec2::new(0., 1.)),
         Vertice::new(Vec3::new(50., -5., -50.), Vec2::new(1., 0.)),
+        10.,
     );
 
     Floor::spawn(
@@ -117,6 +134,16 @@ fn setup(
         &mut asset_server,
         Vertice::new(Vec3::new(0., -5., -100.), Vec2::new(0., 0.)),
         Vertice::new(Vec3::new(0., -5., -50.), Vec2::new(0., 1.)),
+        Vertice::new(Vec3::new(50., -5., -50.), Vec2::new(1., 1.)),
+    );
+
+    Floor::spawn(
+        &mut commands,
+        &mut meshes,
+        &mut custom_materials,
+        &mut asset_server,
+        Vertice::new(Vec3::new(0., -5., -100.), Vec2::new(0., 0.)),
+        Vertice::new(Vec3::new(50., -5., -100.), Vec2::new(1., 0.)),
         Vertice::new(Vec3::new(50., -5., -50.), Vec2::new(1., 1.)),
     );
 }
