@@ -4,6 +4,7 @@ use crate::Wall;
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts};
 
+
 pub fn ui_example_system(
     mut contexts: EguiContexts,
     mut custom_materials: ResMut<Assets<CustomMaterial>>,
@@ -202,7 +203,8 @@ pub fn ui_example_system(
             wall.uv_offset = uv_offset;
             wall.uv_rotation = uv_rotation;
 
-            wall.texture = material.texture.clone();
+            //wall.texture = material.texture.clone();
         }
+ 
     });
 }

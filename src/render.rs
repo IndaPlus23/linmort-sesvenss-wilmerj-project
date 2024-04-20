@@ -35,7 +35,7 @@ pub fn render(
             let material_handle = material_handle.clone();
             let material = custom_materials.get_mut(material_handle).unwrap();
 
-            let (a, b, c, screen_a, screen_b, screen_c) = wall.transform(player);
+            let (a, b, c, _, screen_a, screen_b, screen_c, screen_d) = wall.transform(player);
 
             // Gets sent to shader for correct uv mapping
             material.a = Vec3::new(screen_a.x, screen_a.y, -a.position.z);
@@ -47,7 +47,7 @@ pub fn render(
             material.uv_scalar = wall.uv_scalar;
             material.uv_offset = wall.uv_offset;
             material.uv_rotation = wall.uv_rotation;
-            material.texture = wall.texture.clone();
+            //material.texture = wall.texture.clone();
 
             if let Some(_positions) = mesh.attribute_mut(Mesh::ATTRIBUTE_POSITION) {
                 mesh.insert_attribute(
@@ -56,6 +56,7 @@ pub fn render(
                         [screen_a.x, screen_a.y, 0.0],
                         [screen_b.x, screen_b.y, 0.0],
                         [screen_c.x, screen_c.y, 0.0],
+                        [screen_d.x, screen_d.y, 0.0],
                     ],
                 );
             }

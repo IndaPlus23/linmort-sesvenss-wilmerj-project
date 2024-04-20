@@ -27,6 +27,7 @@ use crate::egui::ui_example_system;
 mod asset_loader;
 use crate::asset_loader::AssetLoaderPlugin;
 use crate::asset_loader::{load_assets, SceneAssets};
+mod map;
 
 #[derive(Component, Asset, TypePath, AsBindGroup, Debug, Clone)]
 pub struct CustomMaterial {
@@ -125,6 +126,7 @@ fn setup(
         Vertice::new(Vec3::new(0., -5., -50.), Vec2::new(0., 1.)),
         Vertice::new(Vec3::new(50., -5., -50.), Vec2::new(1., 0.)),
         10.,
+        0,
     );
 
     Floor::spawn(
