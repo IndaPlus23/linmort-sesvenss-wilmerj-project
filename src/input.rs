@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 use bevy::{
     input::mouse::MouseMotion,
     sprite::Mesh2dHandle, // ADDED FOR BASIC WALL COLLISION
@@ -7,6 +8,12 @@ use std::f32::consts::PI;
 use crate::Player;
 use crate::structures::Wall; // ADDED FOR BASIC WALL COLLISION
 
+=======
+use crate::Player;
+use bevy::window::{CursorGrabMode, PrimaryWindow};
+use bevy::{input::mouse::MouseMotion, prelude::*};
+use std::f32::consts::PI;
+>>>>>>> dev
 
 #[derive(Default)]
 pub struct MouseState {
@@ -16,6 +23,7 @@ pub struct MouseState {
 impl Resource for MouseState {}
 
 pub fn keyboard_input(
+    mut window_query: Query<&mut Window, With<PrimaryWindow>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut query: Query<&mut Player>,
     time: Res<'_, Time<Real>>,
@@ -25,6 +33,22 @@ pub fn keyboard_input(
 ) {
     if keyboard_input.just_pressed(KeyCode::Escape) {
         std::process::exit(0);
+    }
+
+    if keyboard_input.just_pressed(KeyCode::Tab) {
+        let mut primary_window = window_query.single_mut();
+
+        if primary_window.cursor.grab_mode == CursorGrabMode::Locked {
+            primary_window.cursor.grab_mode = CursorGrabMode::None;
+            primary_window.cursor.visible = true;
+        } else {
+            // for a game that doesn't use the cursor (like a shooter):
+            // use `Locked` mode to keep the cursor in one place
+            primary_window.cursor.grab_mode = CursorGrabMode::Locked;
+
+            // also hide the cursor
+            primary_window.cursor.visible = false;
+        }
     }
 
     for mut player in query.iter_mut() {
@@ -131,25 +155,29 @@ pub fn mouse_input(
     mut mouse_motion_events: EventReader<MouseMotion>,
     mouse_button_input: Res<ButtonInput<MouseButton>>,
     mut mouse_state: ResMut<MouseState>,
-    mut windows: Query<&mut Window>,
+    mut window_query: Query<&mut Window, With<PrimaryWindow>>,
     mut query: Query<&mut Player>,
 ) {
     for event in mouse_motion_events.read() {
-        let delta = event.delta;
-        for mut player in query.iter_mut() {
-            let sensitivity = 0.005;
+        let primary_window = window_query.single_mut();
 
-            player.yaw += delta.x * sensitivity;
-            player.yaw = player.yaw.rem_euclid(2.0 * PI);
-            player.pitch -= delta.y * sensitivity;
-            player.pitch = player.pitch.clamp(-PI / 2.0, PI / 2.0);
+        if primary_window.cursor.grab_mode == CursorGrabMode::Locked {
+            let delta = event.delta;
+            for mut player in query.iter_mut() {
+                let sensitivity = 0.005;
+
+                player.yaw += delta.x * sensitivity;
+                player.yaw = player.yaw.rem_euclid(2.0 * PI);
+                player.pitch -= delta.y * sensitivity;
+                player.pitch = player.pitch.clamp(-PI / 2.0, PI / 2.0);
+            }
         }
     }
 
     if mouse_button_input.just_pressed(MouseButton::Left) {
         mouse_state.press_coords.clear();
 
-        let window = windows.single_mut();
+        let window = window_query.single_mut();
         let window_pos = window.cursor_position().unwrap();
 
         let mut cursor_world_pos = window_pos;
@@ -166,7 +194,7 @@ pub fn mouse_input(
     }
 
     if mouse_button_input.just_released(MouseButton::Left) {
-        let window = windows.single_mut();
+        let window = window_query.single_mut();
         let window_pos = window.cursor_position().unwrap();
 
         let mut cursor_world_pos = window_pos;
