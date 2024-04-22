@@ -1,7 +1,8 @@
 use crate::{floor, Player};
 use crate::wall::Wall; // wall_collision
 use crate::floor::Floor; // wall_collision
-use crate::CustomMaterial; // wall_collision
+use crate::CustomMaterial; 
+use bevy::core_pipeline::bloom::BloomPlugin;// wall_collision
 use bevy::{prelude::*, render::mesh::Mesh, sprite::Mesh2dHandle}; // wall_collision
 use bevy::window::{CursorGrabMode, PrimaryWindow};
 use bevy::{input::mouse::MouseMotion, prelude::*};
@@ -121,10 +122,13 @@ pub fn keyboard_input(
 
     IF SAME SET movement.z TO 0
 
+    KNOWN BUG:
+    player can get stuck in the wall if they walk in between the padding in wall_collision, 
+    you can still walks alongside the wall but not away from it. This can only happend if  
+    there is an wall that just ends without anything else there.
+
     TODO: 
     clean up code 
-    make sure collision works with floor and ceiling (when added)
-
 */
 
 pub fn wall_collision(wall: &Mut<'_, Wall>, movement: &mut bevy::prelude::Vec3, player: &bevy::prelude::Mut<'_, Player>) {
@@ -182,6 +186,7 @@ pub fn wall_collision(wall: &Mut<'_, Wall>, movement: &mut bevy::prelude::Vec3, 
         }
     }
 
+
     if x_hit && y_hit && z_hit {
         
         // logic so that a player can "slide" against the wall
@@ -200,42 +205,51 @@ pub fn wall_collision(wall: &Mut<'_, Wall>, movement: &mut bevy::prelude::Vec3, 
 pub fn floor_collision(floor: &Mut<'_, Floor>, movement: &mut bevy::prelude::Vec3, player: &bevy::prelude::Mut<'_, Player>) {
     let padding = 1.0;
 
-    let mut x_hit = false;
-    let mut y_hit = false;
-    let mut z_hit = false;
-/* 
-    floor.a.position.x
+    //println!("{:?} {:?} {:?}", floor.a.position, floor.b.position, floor.c.position);
 
-    // positiv X åt höger
-    if player.x + movement.x > wall.start.position.x - padding && player.x + movement.x < wall.end.position.x + padding {
-        x_hit = true
-    }
-    //positiv Y uppåt
-    if player.y + movement.y > wall.start.position.y - padding && player.y + movement.y < wall.end.position.y + wall.height + padding {
-        y_hit = true
-    }
-    // -Z i framåtriktningen
-    if player.z + movement.z > wall.start.position.z - padding && player.z + movement.z < wall.end.position.z + padding {
-        z_hit = true;
-    }
+    let position_x = player.x + movement.x;
+    let position_z = player.z + movement.z;
 
-    // DEBUGING
-    //println!("START: {:?} END: {:?} PLAYER: ({:?}, {:?}, {:?} HIT: {:?} {:?} {:?})",wall.start, wall.end, player.x, player.y, player.z, x_hit, y_hit, z_hit);
-
-
-    if x_hit && y_hit && z_hit {
+    
+    if isInside(floor.a.position.x, floor.a.position.z, floor.b.position.x, floor.b.position.z, floor.c.position.x, floor.c.position.z, position_x, position_z) {
         
-        // logic so that a player can "slide" against the wall
-        if wall.start.position.x - wall.end.position.x == 0. {
-            movement[0] = 0.
-        }
-        if wall.start.position.y - wall.end.position.y == 0. {
+        // CHECK IF PLAYER HITS FLOOR IN y DIRECTION
+        // ASUMES THAT ALL y VALUES ARE THE SAME
+        let position_y = player.y + movement.y;
+        let wall_start_y = floor.a.position.y - padding;
+        let wall_end_y = floor.a.position.y + padding;
+
+        if position_y > wall_start_y &&  position_y < wall_end_y {
             movement[1] = 0.
         }
-        if wall.start.position.z - wall.end.position.z == 0. {
-            movement[2] = 0.
-        }
-    } */
+        
+    }
+    
+}
+
+/* A function to check whether point P(x, y) lies inside the triangle formed 
+   by A(x1, y1), B(x2, y2) and C(x3, y3) */
+fn isInside(x1: f32, y1: f32, x2: f32, y2: f32, x3: f32, y3: f32, x: f32, y: f32) -> bool   {   
+    /* Calculate area of triangle ABC */
+    let A: f32 = area(x1, y1, x2, y2, x3, y3);
+    
+    /* Calculate area of triangle PBC */ 
+    let A1: f32 = area(x, y, x2, y2, x3, y3);
+    
+    /* Calculate area of triangle PAC */ 
+    let A2: f32 = area(x1, y1, x, y, x3, y3);
+    
+    /* Calculate area of triangle PAB */  
+    let A3: f32 = area(x1, y1, x2, y2, x, y);
+    
+    /* Check if sum of A1, A2 and A3 is same as A */
+    return A == A1 + A2 + A3;
+}
+
+/* A utility function to calculate area of triangle formed by (x1, y1), 
+   (x2, y2) and (x3, y3) */
+fn area(x1: f32,  y1: f32,  x2: f32,  y2: f32,  x3: f32,  y3: f32) -> f32   {
+    return ((x1*(y2-y3) + x2*(y3-y1)+ x3*(y1-y2))/2.0).abs();
 }
 
 pub fn mouse_input(
