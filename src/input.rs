@@ -122,84 +122,88 @@ pub fn keyboard_input(
 
     IF SAME SET movement.z TO 0
 
-    KNOWN BUG:
-    player can get stuck in the wall if they walk in between the padding in wall_collision, 
-    you can still walks alongside the wall but not away from it. This can only happend if  
-    there is an wall that just ends without anything else there.
+    KNOWN BUGs:
+
+    player can get stuck in the wall if they walk in towards the edge of a wall, 
+    you can still walks alongside the wall but not away from it. 
+
+    At the edge of floor triangels you can get throught the floor
 
     TODO: 
+    fix bugs
     clean up code 
 */
 
 pub fn wall_collision(wall: &Mut<'_, Wall>, movement: &mut bevy::prelude::Vec3, player: &bevy::prelude::Mut<'_, Player>) {
     let padding = 1.5;
 
-    let mut x_hit = false;
-    let mut y_hit = false;
-    let mut z_hit = false;
+    // FIND WHICH WAY THE WALL IS FACING ASUMING THAT ALL WALLS ARE FLAT
     
-    // CHECK IF PLAYER HITS WALL IN x DIRECTION
-    let position_x = player.x + movement.x;
-    let wall_start_x = wall.start.position.x - padding;
-    let wall_end_x = wall.end.position.x + padding;
+    if wall.start.position.x != wall.end.position.x {
+        // WALL IS POINTING IN z DIRECTION
+        // CHECK IF PLAYER IS IN SAME (x,y) AS WALL
+        if is_inside_rectangle(wall.start.position.x, wall.start.position.y, wall.end.position.x, wall.end.position.y + wall.height, player.x + movement.x, player.y + movement.y) {
+            // CHECK IF PLAYER HITS WALL IN z DIRECTION
+            let position_z = player.z + movement.z;
+            let wall_start_z = wall.start.position.z - padding;
+            let wall_end_z = wall.end.position.z + padding;
 
-    // YOU CAN ADD A WALL WHERE THE BEGINING IS SMALLER OR BIGGER THAN THE END, THIS IF/ELSE MAKES SURE WALL COLLISION STILL WORKS THEN
-    if wall_start_x < wall_end_x {
-        if position_x > wall_start_x && position_x < wall_end_x {
-            x_hit = true
+            // CHECK IF THE PLAYER IS GOING TO MOVE THROUGH THE WALL
+            if position_z > wall_start_z &&  position_z < wall_end_z {
+                movement[2] = 0.
+            }
+        }
+    }
+    else if wall.start.position.z != wall.end.position.z {
+        // WALL IS POINTING IN x DIRECTION
+        // CHECK IF PLAYER IS IN SAME (z,y) AS WALL
+        if is_inside_rectangle(wall.start.position.z, wall.start.position.y, wall.end.position.z, wall.end.position.y + wall.height, player.z + movement.z, player.y + movement.y) {
+            // CHECK IF PLAYER HITS WALL IN x DIRECTION
+            let position_x = player.x + movement.x;
+            let wall_start_x = wall.start.position.x - padding;
+            let wall_end_x = wall.end.position.x + padding;
+
+            // CHECK IF THE PLAYER IS GOING TO MOVE THROUGH THE WALL
+            if position_x > wall_start_x &&  position_x < wall_end_x {
+                movement[0] = 0.
+            }
+        }
+    }
+}
+
+// function to find if given point
+// lies inside a given rectangle or not.
+fn is_inside_rectangle(x1: f32, y1: f32, x2: f32, y2: f32, x: f32, y: f32) -> bool {
+    let mut check_x = false;
+    let mut check_y = false;
+
+    if x1 < x2 {
+        if x > x1 && x < x2 {
+            check_x = true
         }
     } else {
-        if position_x < wall_start_x && position_x > wall_end_x {
-            x_hit = true
+        if x < x1 && x > x2 {
+            check_x = true
         }
     }
-
-    // CHECK IF PLAYER HITS WALL IN y DIRECTION
-    let position_y = player.y + movement.y;
-    let wall_start_y = wall.start.position.y - padding;
-    let wall_end_y = wall.end.position.y + wall.height + padding;
-    
-    // YOU CAN ADD A WALL WHERE THE BEGINING IS SMALLER OR BIGGER THAN THE END, THIS IF/ELSE MAKES SURE WALL COLLISION STILL WORKS THEN
-    if wall_start_y < wall_end_y {
-        if position_y > wall_start_y && position_y < wall_end_y {
-            y_hit = true
+    if y1 < y2 {
+        if y > y1 && y < y2 {
+            check_y = true
         }
     } else {
-        if position_y < wall_start_y && position_y > wall_end_y {
-            y_hit = true
-        }
-    }
-    
-    // CHECK IF PLAYER HITS WALL IN z DIRECTION
-    let position_z = player.z + movement.z;
-    let wall_start_z = wall.start.position.z - padding;
-    let wall_end_z = wall.end.position.z + padding;
-
-    // YOU CAN ADD A WALL WHERE THE BEGINING IS SMALLER OR BIGGER THAN THE END, THIS IF/ELSE MAKES SURE WALL COLLISION STILL WORKS THEN
-    if wall_start_z < wall_end_z {
-        if position_z > wall_start_z && position_z < wall_end_z {
-            z_hit = true;
-        }
-    } else {
-        if position_z < wall_start_z && position_z > wall_end_z {
-            z_hit = true;
+        if y < y1 && y > y2 {
+            check_y = true
         }
     }
 
-
-    if x_hit && y_hit && z_hit {
-        
-        // logic so that a player can "slide" against the wall
-        if wall.start.position.x - wall.end.position.x == 0. {
-            movement[0] = 0.
-        }
-        if wall.start.position.y - wall.end.position.y == 0. {
-            movement[1] = 0.
-        }
-        if wall.start.position.z - wall.end.position.z == 0. {
-            movement[2] = 0.
-        }
+    if check_x && check_y {
+        return true;
     }
+    return false; 
+    /* if x > x1 && x < x2 && y > y1 && y < y2 {
+        return true;
+    }      
+    return false; */
 }
 
 pub fn floor_collision(floor: &Mut<'_, Floor>, movement: &mut bevy::prelude::Vec3, player: &bevy::prelude::Mut<'_, Player>) {
@@ -210,11 +214,11 @@ pub fn floor_collision(floor: &Mut<'_, Floor>, movement: &mut bevy::prelude::Vec
     let position_x = player.x + movement.x;
     let position_z = player.z + movement.z;
 
-    
-    if isInside(floor.a.position.x, floor.a.position.z, floor.b.position.x, floor.b.position.z, floor.c.position.x, floor.c.position.z, position_x, position_z) {
+    // BEGIN BY CHECKING IF THE PLAYER IS ON THE FLOOR
+    if is_inside_triangle(floor.a.position.x, floor.a.position.z, floor.b.position.x, floor.b.position.z, floor.c.position.x, floor.c.position.z, position_x, position_z) {
         
         // CHECK IF PLAYER HITS FLOOR IN y DIRECTION
-        // ASUMES THAT ALL y VALUES ARE THE SAME
+        // ASUMES THAT ALL y VALUES ARE THE SAME AND THAT THE TRIANGLE IS ALWAYS FLAT
         let position_y = player.y + movement.y;
         let wall_start_y = floor.a.position.y - padding;
         let wall_end_y = floor.a.position.y + padding;
@@ -228,22 +232,24 @@ pub fn floor_collision(floor: &Mut<'_, Floor>, movement: &mut bevy::prelude::Vec
 }
 
 /* A function to check whether point P(x, y) lies inside the triangle formed 
-   by A(x1, y1), B(x2, y2) and C(x3, y3) */
-fn isInside(x1: f32, y1: f32, x2: f32, y2: f32, x3: f32, y3: f32, x: f32, y: f32) -> bool   {   
+   by A(x1, y1), B(x2, y2) and C(x3, y3) 
+   shamelessly stolen from: https://www.geeksforgeeks.org/check-whether-a-given-point-lies-inside-a-triangle-or-not/
+*/
+fn is_inside_triangle(x1: f32, y1: f32, x2: f32, y2: f32, x3: f32, y3: f32, x: f32, y: f32) -> bool   {   
     /* Calculate area of triangle ABC */
-    let A: f32 = area(x1, y1, x2, y2, x3, y3);
+    let entire_area: f32 = area(x1, y1, x2, y2, x3, y3);
     
     /* Calculate area of triangle PBC */ 
-    let A1: f32 = area(x, y, x2, y2, x3, y3);
+    let area_1: f32 = area(x, y, x2, y2, x3, y3);
     
     /* Calculate area of triangle PAC */ 
-    let A2: f32 = area(x1, y1, x, y, x3, y3);
+    let area_2: f32 = area(x1, y1, x, y, x3, y3);
     
     /* Calculate area of triangle PAB */  
-    let A3: f32 = area(x1, y1, x2, y2, x, y);
+    let area_3: f32 = area(x1, y1, x2, y2, x, y);
     
     /* Check if sum of A1, A2 and A3 is same as A */
-    return A == A1 + A2 + A3;
+    return entire_area == area_1 + area_2 + area_3;
 }
 
 /* A utility function to calculate area of triangle formed by (x1, y1), 
