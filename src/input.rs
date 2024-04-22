@@ -124,10 +124,10 @@ pub fn keyboard_input(
 
     KNOWN BUGs:
 
-    player can get stuck in the wall if they walk in towards the edge of a wall, 
+    1. player can get stuck in the wall if they walk in towards the edge of a wall, 
     you can still walks alongside the wall but not away from it. 
 
-    At the edge of floor triangels you can get throught the floor
+    2. At the edge of floor triangels you can get throught the floor
 
     TODO: 
     fix bugs
@@ -199,17 +199,13 @@ fn is_inside_rectangle(x1: f32, y1: f32, x2: f32, y2: f32, x: f32, y: f32) -> bo
     if check_x && check_y {
         return true;
     }
-    return false; 
-    /* if x > x1 && x < x2 && y > y1 && y < y2 {
-        return true;
-    }      
-    return false; */
+    return false;
 }
 
 pub fn floor_collision(floor: &Mut<'_, Floor>, movement: &mut bevy::prelude::Vec3, player: &bevy::prelude::Mut<'_, Player>) {
-    let padding = 1.0;
 
-    //println!("{:?} {:?} {:?}", floor.a.position, floor.b.position, floor.c.position);
+    let padding = 1.5;
+
 
     let position_x = player.x + movement.x;
     let position_z = player.z + movement.z;
