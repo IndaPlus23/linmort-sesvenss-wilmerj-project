@@ -1,6 +1,8 @@
 use bevy::asset::LoadedAsset;
 use bevy::prelude::*;
 use std::path::PathBuf;
+use serde_json;
+use std::fs;
 
 /// SceneAssets stores handles for assets used in the scene.
 #[derive(Resource, Debug, Default)]
@@ -64,4 +66,8 @@ fn load_textures_from_folder(
     }
 
     return image_handles;
+}
+
+fn load_enemies() {
+    // TODO: Load enemies from file
 }
