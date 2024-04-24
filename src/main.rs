@@ -27,6 +27,7 @@ use crate::egui::ui_example_system;
 mod asset_loader;
 use crate::asset_loader::AssetLoaderPlugin;
 use crate::asset_loader::{load_assets, SceneAssets};
+mod collision_detection;
 
 #[derive(Component, Asset, TypePath, AsBindGroup, Debug, Clone)]
 pub struct CustomMaterial {
@@ -124,6 +125,15 @@ fn setup(
         &mut asset_server,
         Vertice::new(Vec3::new(0., -5., -50.), Vec2::new(0., 1.)),
         Vertice::new(Vec3::new(50., -5., -50.), Vec2::new(1., 0.)),
+        10.,
+    );
+    Wall::spawn(
+        &mut commands,
+        &mut meshes,
+        &mut custom_materials,
+        &mut asset_server,
+        Vertice::new(Vec3::new(0., -5., -50.), Vec2::new(0., 1.)),
+        Vertice::new(Vec3::new(0., -5., 0.), Vec2::new(1., 0.)),
         10.,
     );
 
