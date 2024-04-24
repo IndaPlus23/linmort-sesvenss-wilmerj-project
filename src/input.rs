@@ -94,22 +94,8 @@ pub fn mouse_input(
         }
     }
 
-    if mouse_button_input.just_pressed(MouseButton::Left) {
-
-        let window = window_query.single_mut();
-        let window_pos = window.cursor_position().unwrap();
-        
+    if mouse_button_input.just_pressed(MouseButton::Left) {        
         shoot_the_gun(query)
-    }
-
-    if mouse_button_input.just_released(MouseButton::Left) {
-        let window = window_query.single_mut();
-
-        if window.cursor_position() == None {
-            return
-        }
-
-        let window_pos = window.cursor_position().unwrap();
     }
 }
 

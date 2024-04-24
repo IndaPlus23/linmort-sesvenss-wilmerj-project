@@ -8,6 +8,7 @@ use bevy::{
     window::{PresentMode, WindowTheme},
 };
 use bevy_egui::EguiPlugin;
+use gun::Holster;
 use std::f32::consts::PI;
 
 mod input;
@@ -116,7 +117,7 @@ fn setup(
         ..Default::default()
     });
 
-    commands.spawn((Player::new(0., 0., 0., 0., 0.),));
+    commands.spawn((Player::new(0., 0., 0., 0., 0., Holster::new()),));
 
     Wall::spawn(
         &mut commands,
