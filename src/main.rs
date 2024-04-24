@@ -27,6 +27,7 @@ use crate::egui::ui_example_system;
 mod asset_loader;
 use crate::asset_loader::AssetLoaderPlugin;
 use crate::asset_loader::{load_assets, SceneAssets};
+mod gun;
 
 #[derive(Component, Asset, TypePath, AsBindGroup, Debug, Clone)]
 pub struct CustomMaterial {
