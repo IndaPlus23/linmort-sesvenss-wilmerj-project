@@ -27,6 +27,8 @@ use crate::egui::ui_example_system;
 mod asset_loader;
 mod sprites;
 mod movement;
+mod utility;
+mod enemy;
 
 use crate::asset_loader::AssetLoaderPlugin;
 use crate::asset_loader::{load_assets, SceneAssets};

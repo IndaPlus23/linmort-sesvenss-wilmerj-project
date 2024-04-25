@@ -10,6 +10,7 @@ pub struct SceneAssets {
     pub enemy: Handle<Scene>,
     pub textures: Vec<Handle<Image>>,
     pub texture_paths: Vec<String>,
+    spaceship:
 }
 
 pub struct AssetLoaderPlugin;
