@@ -7,10 +7,9 @@ use std::fs;
 /// SceneAssets stores handles for assets used in the scene.
 #[derive(Resource, Debug, Default)]
 pub struct SceneAssets {
-    pub enemy: Handle<Scene>,
+    pub enemies: Vec<Handle<Scene>>,
     pub textures: Vec<Handle<Image>>,
     pub texture_paths: Vec<String>,
-    spaceship:
 }
 
 pub struct AssetLoaderPlugin;
@@ -71,4 +70,6 @@ fn load_textures_from_folder(
 
 fn load_enemies() {
     // TODO: Load enemies from file
+    let data = fs::read_to_string("enemies.json").except("Unable to read file");
+    serde_json::from_str(&data).except("JSON was incorrectly formatted");
 }

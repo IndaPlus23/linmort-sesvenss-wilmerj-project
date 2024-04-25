@@ -9,6 +9,7 @@ use crate::Vertice;
 use crate::Wall;
 use bevy::prelude::*;
 use bevy::sprite::MaterialMesh2dBundle;
+use crate::enemy::Enemy;
 
 #[derive(Component, Clone)]
 pub struct Map {
@@ -17,6 +18,7 @@ pub struct Map {
     pub camera: Vec<f32>,
     pub player: Player,
     pub walls: Vec<Wall>,
+    pub enemies: Vec<Enemy>,
 }
 
 impl Map {
@@ -26,12 +28,14 @@ impl Map {
         let camera = Vec::new();
         let player = Player::new(0., 0., 0., 0., 0.);
         let walls = Vec::new();
+        let enemies = Vec::new();
         Self {
             filename,
             selected_id,
             camera,
             player,
             walls,
+            enemies,
         }
     }
 
@@ -65,8 +69,14 @@ impl Map {
                 },
             ));
         }
+
+        // Spawn enemies
+        for enemy in self.enemies {
+            Enemy::spawn_enemy(commands, asset_server, enemy);
+        }
     }
 
+    // TODO: Implement some way of saving enemies to file
     pub fn save(&self) -> Option<()> {
         let path = Path::new("assets\\maps\\").join(&self.filename);
 
@@ -142,6 +152,17 @@ pub fn load_from_file(filename: &str) -> Option<Map> {
             data[13] as usize,
         );
         map.walls.push(wall);
+    }
+
+    for _ in 0..read_integer(&mut reader) {
+        let data = read_vector(&mut reader);
+
+        let enemy = Enemy::new(
+         data[0] as usize,
+            Vec3::new(data[1], data[2], data[3]),
+ data[4] as usize,
+        );
+        map.enemies.push(enemy);
     }
 
     Some(map)

@@ -3,16 +3,19 @@ use serde::{Deserialize, Serialize};
 use crate::asset_loader::SceneAssets;
 use crate::movement::{Acceleration, MovingObjectBundle, Velocity};
 
+#[derive(Clone)]
 enum EnemyState {
-    Walking,
+    Dormant,
     Attacking,
     Dying,
     Dead,
 }
 
 // Enemy stats are stored in JSON format.
-#[derive(Serialize, Deserialize)]
-struct Enemy {
+#[derive(Component, Clone, Serialize, Deserialize)]
+pub struct Enemy {
+    id: usize,
+    position: Vec3,
     state: EnemyState,
     reaction_speed: usize,
     speed: usize,
@@ -21,21 +24,46 @@ struct Enemy {
     range: usize,
     respawn_time: Option<usize>, // If true, usize
     projectile_speed: usize,
-    sprite_sheet: SpriteSheetBundle,
+    sprite_sheet: Handle<Scene>,
 }
 pub struct EnemyPlugin;
 
 impl Plugin for EnemyPlugin {
     fn build(&self, app: &mut App) {
-            app.add_systems(PostStartup, spawn_enemies)
-                .add_systems(Update, act);
+            app.add_systems(Update, act);
     }
 }
 
-/// Populates map with enemies
-fn spawn_enemies(mut commands: Commands, scene_assets: Res<SceneAssets>) {
-    // TODO: Loop over enemies in map and determine position and type of enemy
-    for enemy in todo!() {
+impl Enemy {
+
+    /// Creates a new enemy with an associated sprite and
+    pub fn new(id: usize, position: Vec3, enemy_type: usize) -> Self {
+
+        let mut sprite: Sprite;
+
+        // TODO: Load enemy data from file depending on the enemy_type
+        match enemy_type {
+            1 => {todo!()},
+            _ => error!("Couldn't recognize enemy type: {} from file.", enemy_type)
+        }
+
+        Enemy {
+            id,
+            position,
+            state: EnemyState::Dormant,
+            reaction_speed: 0,
+            speed: 0,
+            hp: 0,
+            attack: 0,
+            range: 0,
+            respawn_time: None,
+            projectile_speed: 0,
+            sprite_sheet: Default::default(),
+        }
+    }
+
+    /// Populates map with enemies
+    pub fn spawn_enemy(commands: &mut Commands, scene_assets: &mut Res<SceneAssets>, enemy: Enemy) {
         commands.spawn((
             MovingObjectBundle {
                 velocity: Velocity::new(Vec3::ZERO),
@@ -50,7 +78,9 @@ fn spawn_enemies(mut commands: Commands, scene_assets: Res<SceneAssets>) {
     }
 }
 
-/// The "AI" of enemies.
+
+
+/// The "AI" of enemies. Loops over all enemies in
 fn act(mut commands: Commands, mut query: Query<(&mut Transform, &mut Velocity), With<Enemy>>) {
     for (mut transform, mut velocity) in query.iter() {
         // TODO: Loop over available enemies, and check their state. Take different actions depending on state.
@@ -58,3 +88,5 @@ fn act(mut commands: Commands, mut query: Query<(&mut Transform, &mut Velocity),
         // TODO: Follow walk in random directions based on walls around the enemy
     }
 }
+
+//TODO: Delete enemy. Removes from act loop and from game once killed
