@@ -29,7 +29,7 @@ pub fn load_assets(mut scene_assets: ResMut<SceneAssets>, asset_server: Res<Asse
     let texture_paths = vec![String::from("grass_front.png"), String::from("SFLR6_4.png")];
 
     *scene_assets = SceneAssets {
-        enemy: asset_server.load("models/Rock.glb#Scene0"),
+        enemy: asset_server.load(""),
         textures: load_textures_from_folder(texture_paths.clone(), asset_server),
         texture_paths: texture_paths,
     }

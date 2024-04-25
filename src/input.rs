@@ -2,6 +2,7 @@ use crate::Player;
 use bevy::window::{CursorGrabMode, PrimaryWindow};
 use bevy::{input::mouse::MouseMotion, prelude::*};
 use std::f32::consts::PI;
+use crate::map::Map;
 
 #[derive(Default)]
 pub struct MouseState {
@@ -11,6 +12,7 @@ pub struct MouseState {
 impl Resource for MouseState {}
 
 pub fn keyboard_input(
+    map_query: Query<&mut Map>,
     mut window_query: Query<&mut Window, With<PrimaryWindow>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut query: Query<&mut Player>,
@@ -18,6 +20,13 @@ pub fn keyboard_input(
 ) {
     if keyboard_input.just_pressed(KeyCode::Escape) {
         std::process::exit(0);
+    }
+
+    if keyboard_input.just_pressed(KeyCode::Enter) {
+        for map in map_query.iter() {
+            map.save();
+            println!("saved");
+        }
     }
 
     if keyboard_input.just_pressed(KeyCode::Tab) {

@@ -1,14 +1,52 @@
-use bevy::{prelude::*, render::mesh::Mesh, sprite::Mesh2dHandle};
+use bevy::{
+    prelude::*,
+    reflect::TypePath,
+    render::mesh::Mesh,
+    render::render_resource::{AsBindGroup, ShaderRef},
+    sprite::{Material2d, Mesh2dHandle},
+};
 
 use crate::floor::Floor;
 use crate::wall::Wall;
-use crate::CustomMaterial;
 use crate::Player;
+use crate::SceneAssets;
+
+#[derive(Component, Asset, TypePath, AsBindGroup, Debug, Clone)]
+pub struct CustomMaterial {
+    #[texture(0)]
+    #[sampler(1)]
+    pub texture: Handle<Image>,
+    #[uniform(2)]
+    pub a: Vec3,
+    #[uniform(3)]
+    pub b: Vec3,
+    #[uniform(4)]
+    pub c: Vec3,
+    #[uniform(5)]
+    pub a_uv: Vec2,
+    #[uniform(6)]
+    pub b_uv: Vec2,
+    #[uniform(7)]
+    pub c_uv: Vec2,
+    #[uniform(8)]
+    pub uv_scalar: Vec2,
+    #[uniform(9)]
+    pub uv_offset: Vec2,
+    #[uniform(10)]
+    pub uv_rotation: f32,
+}
+
+impl Material2d for CustomMaterial {
+    fn fragment_shader() -> ShaderRef {
+        "shaders/custom_material.wgsl".into()
+    }
+}
 
 pub fn render(
     mut query: Query<&Player>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut custom_materials: ResMut<Assets<CustomMaterial>>,
+    asset_server: Res<SceneAssets>,
     mut wall_query: Query<(
         &mut Wall,
         &mut Transform,
@@ -35,7 +73,7 @@ pub fn render(
             let material_handle = material_handle.clone();
             let material = custom_materials.get_mut(material_handle).unwrap();
 
-            let (a, b, c, screen_a, screen_b, screen_c) = wall.transform(player);
+            let (a, b, c, _, screen_a, screen_b, screen_c, screen_d) = wall.transform(player);
 
             // Gets sent to shader for correct uv mapping
             material.a = Vec3::new(screen_a.x, screen_a.y, -a.position.z);
@@ -47,7 +85,7 @@ pub fn render(
             material.uv_scalar = wall.uv_scalar;
             material.uv_offset = wall.uv_offset;
             material.uv_rotation = wall.uv_rotation;
-            material.texture = wall.texture.clone();
+            material.texture = asset_server.textures[wall.texture_id].clone();
 
             if let Some(_positions) = mesh.attribute_mut(Mesh::ATTRIBUTE_POSITION) {
                 mesh.insert_attribute(
@@ -56,6 +94,7 @@ pub fn render(
                         [screen_a.x, screen_a.y, 0.0],
                         [screen_b.x, screen_b.y, 0.0],
                         [screen_c.x, screen_c.y, 0.0],
+                        [screen_d.x, screen_d.y, 0.0],
                     ],
                 );
             }
