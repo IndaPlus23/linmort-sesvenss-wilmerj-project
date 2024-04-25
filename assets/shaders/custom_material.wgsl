@@ -2,15 +2,18 @@
 
 @group(2) @binding(0) var color_texture: texture_2d<f32>;
 @group(2) @binding(1) var color_sampler: sampler;
-@group(2) @binding(2) var<uniform> a: vec3<f32>;
-@group(2) @binding(3) var<uniform> b: vec3<f32>;
-@group(2) @binding(4) var<uniform> c: vec3<f32>;
-@group(2) @binding(5) var<uniform> a_uv: vec2<f32>;
-@group(2) @binding(6) var<uniform> b_uv: vec2<f32>;
-@group(2) @binding(7) var<uniform> c_uv: vec2<f32>;
-@group(2) @binding(8) var<uniform> uv_scalar: vec2<f32>;
-@group(2) @binding(9) var<uniform> uv_offset: vec2<f32>;
-@group(2) @binding(10) var<uniform> uv_rotation: f32;
+@group(2) @binding(2) var mask_texture: texture_2d<f32>;
+@group(2) @binding(3) var mask_sampler: sampler;
+@group(2) @binding(4) var<uniform> window_size: vec2<f32>;
+@group(2) @binding(5) var<uniform> a: vec3<f32>;
+@group(2) @binding(6) var<uniform> b: vec3<f32>;
+@group(2) @binding(7) var<uniform> c: vec3<f32>;
+@group(2) @binding(8) var<uniform> a_uv: vec2<f32>;
+@group(2) @binding(9) var<uniform> b_uv: vec2<f32>;
+@group(2) @binding(10) var<uniform> c_uv: vec2<f32>;
+@group(2) @binding(11) var<uniform> uv_scalar: vec2<f32>;
+@group(2) @binding(12) var<uniform> uv_offset: vec2<f32>;
+@group(2) @binding(13) var<uniform> uv_rotation: f32;
 
 // Compute barycentric coordinates (b1, b2, b3) for point p with respect to triangle (a, b, c)
 fn barycentric(p: vec2<f32>, a: vec2<f32>, b: vec2<f32>, c: vec2<f32>) -> vec3<f32>{
@@ -35,7 +38,7 @@ fn barycentric(p: vec2<f32>, a: vec2<f32>, b: vec2<f32>, c: vec2<f32>) -> vec3<f
 fn normalize_float(x: f32) -> f32 {
     var fractional_part: f32 = x - floor(x);
 
-    if (fractional_part < 0.0) {
+    if fractional_part < 0.0 {
         fractional_part = fractional_part + 1.0;
     }
 
@@ -71,5 +74,14 @@ fn fragment(mesh: VertexOutput) -> @location(0) vec4<f32> {
     //https://computergraphics.stackexchange.com/questions/1866/how-to-map-square-texture-to-triangle
     //https://stackoverflow.com/questions/12360023/barycentric-coordinates-texture-mapping
 
-    return textureSample(color_texture, color_sampler, normalized_uv);
+    // Sample the color texture
+    var sampled_color: vec4<f32> = textureSample(color_texture, color_sampler, normalized_uv);
+
+    let world_coord: vec3<f32> = (bary[0] * a) + (bary[1] * b) + (bary[2] * c);
+    let distance = length(world_coord);
+
+    // Modify the alpha channel (opacity) here (e.g., set it to 0.5 for semi-transparency)
+    // sampled_color[3] = 0.5; // Set alpha to 0.5 (50% opacity)
+
+    return sampled_color;
 }

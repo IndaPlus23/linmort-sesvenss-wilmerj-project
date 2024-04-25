@@ -1,9 +1,13 @@
 use bevy::prelude::*;
 use std::path::PathBuf;
+use std::path::Path;
+use std::fs;
+use crate::render::new_mask;
 
 /// SceneAssets stores handles for assets used in the scene.
 #[derive(Resource, Debug, Default)]
 pub struct SceneAssets {
+    pub mask: Handle<Image>,
     pub enemy: Handle<Scene>,
     pub textures: Vec<Handle<Image>>,
     pub texture_paths: Vec<String>,
@@ -20,11 +24,16 @@ impl Plugin for AssetLoaderPlugin {
 
 /// Loads assets from asset folder and populates AssetScene, making them available
 /// for usage without having multiple handles reference various copies of the same asset.
-pub fn load_assets(mut scene_assets: ResMut<SceneAssets>, asset_server: Res<AssetServer>) {
-    // TODO: Replace with a more permanent solution
-    let texture_paths = vec![String::from("grass_front.png"), String::from("SFLR6_4.png")];
+pub fn load_assets(mut scene_assets: ResMut<SceneAssets>, asset_server: Res<AssetServer>, mut window_query: Query<&mut Window>) {
+    let texture_paths = texture_paths("assets\\textures\\");
+
+    let window = window_query.single_mut();
+    
+    let mask = new_mask(window.width(), window.height());
+    let mask_handle: Handle<Image> = asset_server.add(mask);
 
     *scene_assets = SceneAssets {
+        mask: mask_handle,
         enemy: asset_server.load(""),
         textures: load_textures_from_folder(texture_paths.clone(), asset_server),
         texture_paths: texture_paths,
@@ -47,4 +56,55 @@ fn load_textures_from_folder(
     }
 
     return image_handles;
+}
+
+fn texture_paths(folder: &str) -> Vec<String> {
+    let mut paths: Vec<String> = Vec::new();
+
+    // Convert the folder path to a PathBuf for manipulation
+    let folder_path = Path::new(folder);
+
+    // Recursively visit all files and directories within the specified folder
+    visit_folder(folder_path, PathBuf::new(), &mut paths);
+
+    paths
+}
+
+fn visit_folder(folder_path: &Path, relative_path: PathBuf, paths: &mut Vec<String>) {
+    if let Ok(entries) = fs::read_dir(folder_path) {
+        for entry in entries {
+            if let Ok(entry) = entry {
+                let path = entry.path();
+
+                // Print debug information about the processed entry
+                // println!("Processing: {:?}", path);
+
+                if path.is_file() {
+                    // Check if the file has a .png extension
+                    if let Some(ext) = path.extension() {
+                        if ext == "png" {
+                            // Construct the relative path to the file
+                            let file_name = path.file_name().unwrap().to_string_lossy().into_owned();
+                            let mut file_path = relative_path.clone();
+                            file_path.push(&file_name);
+
+                            // Convert the path to a string
+                            if let Some(file_str) = file_path.to_str() {
+                                paths.push(file_str.to_string());
+                            }
+                        }
+                    }
+                } else if path.is_dir() {
+                    // Recursively visit subdirectories
+                    let mut next_relative_path = relative_path.clone();
+                    next_relative_path.push(path.file_name().unwrap());
+
+                    visit_folder(&path, next_relative_path, paths);
+                }
+            }
+        }
+    } else {
+        // Handle read_dir error
+        println!("Failed to read directory: {:?}", folder_path);
+    }
 }

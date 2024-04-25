@@ -2,7 +2,7 @@ use crate::Player;
 use bevy::math::{Vec2, Vec3};
 
 #[derive(Clone, Copy)]
-pub struct Vertice {
+pub struct Vertex {
     pub original_position: Vec3,
     pub position: Vec3,
     pub original_uv: Vec2,
@@ -10,7 +10,7 @@ pub struct Vertice {
     pub transformation: Vec3,
 }
 
-impl Vertice {
+impl Vertex {
     pub fn new(position: Vec3, uv: Vec2) -> Self {
         let original_position = position;
         let original_uv = uv;
@@ -39,13 +39,8 @@ impl Vertice {
         }
     }
 
-    pub fn new_position(&mut self, position: Vec3) {
-        let position = position;
-        self.position = position;
-    }
-
     // Apply transformation based on player rotation and position.
-    pub fn transform_vertice(&self, player: &Player) -> Vertice {
+    pub fn transform_vertice(&self, player: &Player) -> Vertex {
         let mut x = self.position.x;
         let mut y = self.position.y;
         let mut z = self.position.z;
@@ -61,12 +56,34 @@ impl Vertice {
         let new_z = z * cos - x * sin;
         let new_y = y + (player.pitch * new_z);
 
-        Vertice::new(Vec3::new(new_x, new_y, new_z), self.uv)
+        Vertex::new(Vec3::new(new_x, new_y, new_z), self.uv)
     }
+
+    pub fn reverse_transform_vertice(&self, player: &Player) -> Vertex {
+        let new_x = self.position.x;
+        let mut new_y = self.position.y;
+        let new_z = self.position.z;
+
+        // Invert the pitch rotation
+        new_y -= player.pitch * new_z;
+
+        // Invert the yaw rotation  
+        let cos = player.yaw.cos();
+        let sin = player.yaw.sin();
+        let mut old_x = new_x * cos - new_z * sin;
+        let mut old_z = new_z * cos + new_x * sin;
+
+        // Invert the translation
+        old_x += player.x;
+        old_z += player.z;
+        new_y += player.y;
+
+        Vertex::new(Vec3::new(old_x, new_y, old_z), self.uv)
+}
 
     // Starting point is behind the player
     // Clip the starting point so it never is behind the player
-    pub fn clip(&mut self, with: Vertice) {
+    pub fn clip(&mut self, with: Vertex) {
         let delta_z = with.position.z - self.position.z;
         let delta_x = with.position.x - self.position.x;
         let delta_y = with.position.y - self.position.y;
@@ -79,7 +96,7 @@ impl Vertice {
         let m = self.position.z - (k * self.position.y);
         let new_start_y = -m / k;
 
-        self.new_position(Vec3::new(new_start_x, new_start_y, -0.01));
+        self.position = Vec3::new(new_start_x, new_start_y, -0.01);
     }
 
     // Converts vertice coordinates to 2d screen coordinates

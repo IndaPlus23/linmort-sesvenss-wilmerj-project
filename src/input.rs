@@ -1,8 +1,8 @@
+use crate::map::Map;
 use crate::Player;
 use bevy::window::{CursorGrabMode, PrimaryWindow};
 use bevy::{input::mouse::MouseMotion, prelude::*};
 use std::f32::consts::PI;
-use crate::map::Map;
 
 #[derive(Default)]
 pub struct MouseState {
@@ -106,36 +106,16 @@ pub fn mouse_input(
         mouse_state.press_coords.clear();
 
         let window = window_query.single_mut();
-        let window_pos = window.cursor_position().unwrap();
-
-        let mut cursor_world_pos = window_pos;
-        for player in query.iter_mut() {
-            cursor_world_pos.x -= window.width() / 2.0 - player.x;
-            cursor_world_pos.y -= window.height() / 2.0 + player.y;
-            cursor_world_pos.y *= -1.;
-        }
-
-        cursor_world_pos.x = (cursor_world_pos.x / 25.0).round() * 25.0;
-        cursor_world_pos.y = (cursor_world_pos.y / 25.0).round() * 25.0;
-
-        mouse_state.press_coords.push(cursor_world_pos);
+        let _window_pos = window.cursor_position().unwrap();
     }
 
     if mouse_button_input.just_released(MouseButton::Left) {
         let window = window_query.single_mut();
-        let window_pos = window.cursor_position().unwrap();
 
-        let mut cursor_world_pos = window_pos;
-
-        for player in query.iter_mut() {
-            cursor_world_pos.x -= window.width() / 2.0 - player.x;
-            cursor_world_pos.y -= window.height() / 2.0 + player.y;
-            cursor_world_pos.y *= -1.;
+        if window.cursor_position() == None {
+            return
         }
 
-        cursor_world_pos.x = (cursor_world_pos.x / 25.0).round() * 25.0;
-        cursor_world_pos.y = (cursor_world_pos.y / 25.0).round() * 25.0;
-
-        let _starting_position = mouse_state.press_coords.last().unwrap().clone();
+        let _window_pos = window.cursor_position().unwrap();
     }
 }

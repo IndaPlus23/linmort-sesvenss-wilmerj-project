@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-#[derive(Component, Clone)]
+#[derive(Default, Component, Clone, PartialEq)]
 pub struct Player {
     pub x: f32,
     pub y: f32,

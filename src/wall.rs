@@ -1,18 +1,16 @@
 use bevy::render::mesh::Indices;
 use bevy::render::render_asset::RenderAssetUsages;
 use bevy::render::render_resource::PrimitiveTopology;
-use bevy::{prelude::*, render::mesh::Mesh, sprite::MaterialMesh2dBundle};
+use bevy::{prelude::*, render::mesh::Mesh};
 
-use crate::CustomMaterial;
 use crate::Player;
-use crate::SceneAssets;
-use crate::Vertice;
+use crate::vertex::Vertex;
 
 #[derive(Component, Clone)]
 pub struct Wall {
     pub id: usize,
-    pub start: Vertice,
-    pub end: Vertice,
+    pub start: Vertex,
+    pub end: Vertex,
     pub height: f32,
     pub uv_scalar: Vec2,
     pub uv_offset: Vec2,
@@ -23,8 +21,8 @@ pub struct Wall {
 impl Wall {
     pub fn new(
         id: usize,
-        start: Vertice,
-        end: Vertice,
+        start: Vertex,
+        end: Vertex,
         height: f32,
         uv_scalar: Vec2,
         uv_offset: Vec2,
@@ -43,50 +41,7 @@ impl Wall {
         }
     }
 
-    pub fn spawn(
-        commands: &mut Commands,
-        meshes: &mut ResMut<Assets<Mesh>>,
-        custom_materials: &mut ResMut<Assets<CustomMaterial>>,
-        asset_server: &mut Res<SceneAssets>,
-        id: usize,
-        start: Vertice,
-        end: Vertice,
-        height: f32,
-        texture_id: usize,
-    ) {
-        let texture = asset_server.textures[texture_id].clone();
-
-        commands.spawn((
-            Wall::new(
-                id,
-                start,
-                end,
-                height,
-                Vec2::new(1., 1.),
-                Vec2::new(0., 0.),
-                0.,
-                texture_id,
-            ),
-            MaterialMesh2dBundle {
-                mesh: meshes.add(Self::new_wall_mesh()).into(),
-                material: custom_materials.add(CustomMaterial {
-                    texture: texture.clone(),
-                    a: Vec3::new(0., 0., 0.),
-                    b: Vec3::new(0., 0., 0.),
-                    c: Vec3::new(0., 0., 0.),
-                    a_uv: Vec2::new(0., 0.),
-                    b_uv: Vec2::new(0., 0.),
-                    c_uv: Vec2::new(0., 0.),
-                    uv_scalar: Vec2::new(1., 1.),
-                    uv_offset: Vec2::new(0., 0.),
-                    uv_rotation: 0.,
-                }),
-                ..Default::default()
-            },
-        ));
-    }
-
-    pub fn new_wall_mesh() -> Mesh {
+    pub fn mesh() -> Mesh {
         Mesh::new(
             PrimitiveTopology::TriangleList,
             RenderAssetUsages::default(),
@@ -115,7 +70,7 @@ impl Wall {
     pub fn transform(
         &mut self,
         player: &Player,
-    ) -> (Vertice, Vertice, Vertice, Vertice, Vec2, Vec2, Vec2, Vec2) {
+    ) -> (Vertex, Vertex, Vertex, Vertex, Vec2, Vec2, Vec2, Vec2) {
         let mut start = self.start.transform_vertice(player);
         let mut end = self.end.transform_vertice(player);
 
@@ -123,10 +78,10 @@ impl Wall {
         // The wall does not have to be rendered
         if start.position.z > 0. && end.position.z > 0. {
             return (
-                Vertice::zero(),
-                Vertice::zero(),
-                Vertice::zero(),
-                Vertice::zero(),
+                Vertex::zero(),
+                Vertex::zero(),
+                Vertex::zero(),
+                Vertex::zero(),
                 Vec2::ZERO,
                 Vec2::ZERO,
                 Vec2::ZERO,
@@ -151,11 +106,11 @@ impl Wall {
         }
 
         // Define four corner vertices A, B, C and D
-        let mut a = Vertice::new(
+        let mut a = Vertex::new(
             Vec3::new(start.position.x, start.position.y, start.position.z),
             Vec2::new(0., 1.),
         );
-        let mut b = Vertice::new(
+        let mut b = Vertex::new(
             Vec3::new(
                 start.position.x,
                 start.position.y + self.height,
@@ -163,11 +118,11 @@ impl Wall {
             ),
             Vec2::new(0., 0.),
         );
-        let mut c = Vertice::new(
+        let mut c = Vertex::new(
             Vec3::new(end.position.x, end.position.y + self.height, end.position.z),
             Vec2::new(1., 0.),
         );
-        let mut d = Vertice::new(
+        let mut d = Vertex::new(
             Vec3::new(end.position.x, end.position.y, end.position.z),
             Vec2::new(1., 1.),
         );
