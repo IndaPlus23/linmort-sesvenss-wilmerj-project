@@ -3,6 +3,7 @@ use crate::Player;
 use bevy::window::{CursorGrabMode, PrimaryWindow};
 use bevy::{input::mouse::MouseMotion, prelude::*};
 use std::f32::consts::PI;
+use crate::map::Map;
 
 #[derive(Default)]
 pub struct MouseState {
