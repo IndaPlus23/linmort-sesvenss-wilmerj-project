@@ -3,13 +3,18 @@ use bevy::prelude::*;
 use std::path::PathBuf;
 use serde_json;
 use std::fs;
+use crate::enemy::Enemy;
 
 /// SceneAssets stores handles for assets used in the scene.
 #[derive(Resource, Debug, Default)]
 pub struct SceneAssets {
-    pub enemies: Vec<Handle<Scene>>,
+    pub enemy_assets: Vec<Handle<Scene>>,
     pub textures: Vec<Handle<Image>>,
     pub texture_paths: Vec<String>,
+}
+
+pub struct EnemyStates {
+
 }
 
 pub struct AssetLoaderPlugin;

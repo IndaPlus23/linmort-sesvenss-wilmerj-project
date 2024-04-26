@@ -30,6 +30,7 @@ mod sprites;
 mod movement;
 mod utility;
 mod enemy;
+mod sound;
 
 use crate::asset_loader::AssetLoaderPlugin;
 use crate::asset_loader::{load_assets, SceneAssets};

@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use crate::asset_loader::SceneAssets;
 use crate::movement::{Acceleration, MovingObjectBundle, Velocity};
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 enum EnemyState {
     Dormant,
     Attacking,
@@ -12,7 +12,7 @@ enum EnemyState {
 }
 
 // Enemy stats are stored in JSON format.
-#[derive(Component, Clone, Serialize, Deserialize)]
+#[derive(Component, Clone, Debug, Serialize, Deserialize)]
 pub struct Enemy {
     id: usize,
     position: Vec3,
@@ -38,8 +38,6 @@ impl Enemy {
 
     /// Creates a new enemy with an associated sprite and
     pub fn new(id: usize, position: Vec3, enemy_type: usize) -> Self {
-
-        let mut sprite: Sprite;
 
         // TODO: Load enemy data from file depending on the enemy_type
         match enemy_type {
