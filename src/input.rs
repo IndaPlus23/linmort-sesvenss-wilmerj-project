@@ -1,9 +1,5 @@
-use crate::{floor, Player};
-use crate::wall::Wall;
-use crate::floor::Floor;
-use crate::CustomMaterial; 
-use crate::collision_detection::*;
-use bevy::{prelude::*, render::mesh::Mesh, sprite::Mesh2dHandle};
+use crate::map::Map;
+use crate::Player;
 use bevy::window::{CursorGrabMode, PrimaryWindow};
 use bevy::{input::mouse::MouseMotion, prelude::*};
 use std::f32::consts::PI;
@@ -16,30 +12,21 @@ pub struct MouseState {
 impl Resource for MouseState {}
 
 pub fn keyboard_input(
+    map_query: Query<&mut Map>,
     mut window_query: Query<&mut Window, With<PrimaryWindow>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut query: Query<&mut Player>,
     time: Res<'_, Time<Real>>,
-
-    // ADDED wall_query TO CHECK IF POSITION OF PLAYER IS THE SAME AS WALL/FLOOR FOR BASIC WALL COLLISION
-    mut wall_query: Query<(
-        &mut Wall,
-        &mut Transform,
-        &mut Mesh2dHandle,
-        &mut Handle<CustomMaterial>,
-    )>,
-    mut floor_query: Query<
-        (
-            &mut Floor,
-            &mut Transform,
-            &mut Mesh2dHandle,
-            &mut Handle<CustomMaterial>,
-        ),
-        Without<Wall>,
-    >,
 ) {
     if keyboard_input.just_pressed(KeyCode::Escape) {
         std::process::exit(0);
+    }
+
+    if keyboard_input.just_pressed(KeyCode::Enter) {
+        for map in map_query.iter() {
+            map.save();
+            println!("saved");
+        }
     }
 
     if keyboard_input.just_pressed(KeyCode::Tab) {
@@ -56,10 +43,6 @@ pub fn keyboard_input(
             // also hide the cursor
             primary_window.cursor.visible = false;
         }
-    }
-
-    if keyboard_input.just_pressed(KeyCode::KeyN) {
-
     }
 
     for mut player in query.iter_mut() {
@@ -89,15 +72,6 @@ pub fn keyboard_input(
         }
 
         movement = movement.normalize_or_zero() * speed * time.delta_seconds();
-
-        // CHECKS EVERY WALL FOR COLLISION
-        for (wall, _transform, _mesh2dhandle, _material_handle) in wall_query.iter_mut() {
-            wall_collision(&wall, &mut movement, &player);
-        }
-        // CHECKS EVERY FLOOR FOR COLLISION
-        for (floor, _transform, _mesh2dhandle, _material_handle) in floor_query.iter_mut() {
-            floor_collision(&floor, &mut movement, &player);
-        }
 
         player.x += movement.x;
         player.y += movement.y;
@@ -132,36 +106,16 @@ pub fn mouse_input(
         mouse_state.press_coords.clear();
 
         let window = window_query.single_mut();
-        let window_pos = window.cursor_position().unwrap();
-
-        let mut cursor_world_pos = window_pos;
-        for player in query.iter_mut() {
-            cursor_world_pos.x -= window.width() / 2.0 - player.x;
-            cursor_world_pos.y -= window.height() / 2.0 + player.y;
-            cursor_world_pos.y *= -1.;
-        }
-
-        cursor_world_pos.x = (cursor_world_pos.x / 25.0).round() * 25.0;
-        cursor_world_pos.y = (cursor_world_pos.y / 25.0).round() * 25.0;
-
-        mouse_state.press_coords.push(cursor_world_pos);
+        let _window_pos = window.cursor_position().unwrap();
     }
 
     if mouse_button_input.just_released(MouseButton::Left) {
         let window = window_query.single_mut();
-        let window_pos = window.cursor_position().unwrap();
 
-        let mut cursor_world_pos = window_pos;
-
-        for player in query.iter_mut() {
-            cursor_world_pos.x -= window.width() / 2.0 - player.x;
-            cursor_world_pos.y -= window.height() / 2.0 + player.y;
-            cursor_world_pos.y *= -1.;
+        if window.cursor_position() == None {
+            return
         }
 
-        cursor_world_pos.x = (cursor_world_pos.x / 25.0).round() * 25.0;
-        cursor_world_pos.y = (cursor_world_pos.y / 25.0).round() * 25.0;
-
-        let _starting_position = mouse_state.press_coords.last().unwrap().clone();
+        let _window_pos = window.cursor_position().unwrap();
     }
 }
