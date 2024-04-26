@@ -30,6 +30,7 @@ mod sprites;
 mod movement;
 mod utility;
 mod enemy;
+mod collision_detection;
 mod sound;
 
 use crate::asset_loader::AssetLoaderPlugin;

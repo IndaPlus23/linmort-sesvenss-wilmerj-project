@@ -1,7 +1,9 @@
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 use crate::asset_loader::SceneAssets;
+use crate::collision_detection::Collider;
 use crate::movement::{Acceleration, MovingObjectBundle, Velocity};
+use crate::sound::Sound;
 
 #[derive(Clone, Debug)]
 enum EnemyState {
@@ -84,6 +86,17 @@ fn act(mut commands: Commands, mut query: Query<(&mut Transform, &mut Velocity),
         // TODO: Loop over available enemies, and check their state. Take different actions depending on state.
         // TODO: Detect sounds
         // TODO: Follow walk in random directions based on walls around the enemy
+    }
+}
+
+fn handle_enemy_sound_collisions(
+    mut commands: Commands,
+    query: Query<(Entity, &Collider), With<Sound>>
+) {
+    for (entity, collider) in query.iter() {
+        for &collided_entity in collider.colliding_entities.iter() {
+            // TODO: Deal with collisions
+        }
     }
 }
 
