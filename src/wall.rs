@@ -3,8 +3,8 @@ use bevy::render::render_asset::RenderAssetUsages;
 use bevy::render::render_resource::PrimitiveTopology;
 use bevy::{prelude::*, render::mesh::Mesh};
 
-use crate::Player;
 use crate::vertex::Vertex;
+use crate::Player;
 
 #[derive(Component, Clone)]
 pub struct Wall {
@@ -68,7 +68,7 @@ impl Wall {
 
     // Returns clipped vertices and screen coordinates
     pub fn transform(
-        &mut self,
+        &self,
         player: &Player,
     ) -> (Vertex, Vertex, Vertex, Vertex, Vec2, Vec2, Vec2, Vec2) {
         let mut start = self.start.transform_vertice(player);

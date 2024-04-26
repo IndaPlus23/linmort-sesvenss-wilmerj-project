@@ -113,7 +113,7 @@ pub fn mouse_input(
         let window = window_query.single_mut();
 
         if window.cursor_position() == None {
-            return
+            return;
         }
 
         let _window_pos = window.cursor_position().unwrap();

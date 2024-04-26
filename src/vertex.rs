@@ -67,7 +67,7 @@ impl Vertex {
         // Invert the pitch rotation
         new_y -= player.pitch * new_z;
 
-        // Invert the yaw rotation  
+        // Invert the yaw rotation
         let cos = player.yaw.cos();
         let sin = player.yaw.sin();
         let mut old_x = new_x * cos - new_z * sin;
@@ -79,7 +79,7 @@ impl Vertex {
         new_y += player.y;
 
         Vertex::new(Vec3::new(old_x, new_y, old_z), self.uv)
-}
+    }
 
     // Starting point is behind the player
     // Clip the starting point so it never is behind the player

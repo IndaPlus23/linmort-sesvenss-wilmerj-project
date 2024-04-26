@@ -1,14 +1,14 @@
-use bevy::prelude::*;
-use bevy_egui::{egui, EguiContexts};
-use std::f32::consts::PI;
+use crate::floor::Floor;
 use crate::map::Map;
 use crate::Player;
 use crate::SceneAssets;
 use crate::Wall;
-use crate::floor::Floor;
+use bevy::prelude::*;
+use bevy_egui::{egui, EguiContexts};
+use std::f32::consts::PI;
 
 pub fn ui_example_system(
-    mut player_query:  Query<&mut Player>,
+    mut player_query: Query<&mut Player>,
     mut map_query: Query<&mut Map>,
     mut contexts: EguiContexts,
     asset_server: Res<SceneAssets>,
@@ -48,53 +48,64 @@ pub fn ui_example_system(
                 ui.horizontal(|ui| {
                     ui.horizontal(|ui| {
                         ui.label("     x:");
-                        ui.add(egui::DragValue::new(&mut player_transformation.x).speed(1.0)
-                        .custom_formatter(|n, _| {
-                            format!("{:.0}", n)
-                        }));
+                        ui.add(
+                            egui::DragValue::new(&mut player_transformation.x)
+                                .speed(1.0)
+                                .custom_formatter(|n, _| format!("{:.0}", n)),
+                        );
                     });
                     ui.horizontal(|ui| {
                         ui.label("       y:");
-                        ui.add(egui::DragValue::new(&mut player_transformation.y).speed(1.0)
-                        .custom_formatter(|n, _| {
-                            format!("{:.0}", n)
-                        }));
+                        ui.add(
+                            egui::DragValue::new(&mut player_transformation.y)
+                                .speed(1.0)
+                                .custom_formatter(|n, _| format!("{:.0}", n)),
+                        );
                     });
                     ui.horizontal(|ui| {
                         ui.label("z:");
-                        ui.add(egui::DragValue::new(&mut player_transformation.z).speed(1.0)
-                        .custom_formatter(|n, _| {
-                            format!("{:.0}", n)
-                        }));
+                        ui.add(
+                            egui::DragValue::new(&mut player_transformation.z)
+                                .speed(1.0)
+                                .custom_formatter(|n, _| format!("{:.0}", n)),
+                        );
                     });
                 });
 
                 ui.horizontal(|ui| {
                     ui.horizontal(|ui| {
                         ui.label("Yaw:");
-                        ui.add(egui::DragValue::new(&mut player_transformation.yaw)
-                        .speed(PI / 180.)
-                        .custom_formatter(|n, _| {
-                            let n = n as f32;
-                            let degrees = n.rem_euclid(2.0 * PI) as f32 * 180. / PI;
-                            format!("{:.0}", degrees)
-                        })
-                        .suffix("°"));
+                        ui.add(
+                            egui::DragValue::new(&mut player_transformation.yaw)
+                                .speed(PI / 180.)
+                                .custom_formatter(|n, _| {
+                                    let n = n as f32;
+                                    let degrees = n.rem_euclid(2.0 * PI) as f32 * 180. / PI;
+                                    format!("{:.0}", degrees)
+                                })
+                                .suffix("°"),
+                        );
                     });
                     ui.horizontal(|ui| {
                         ui.label("Pitch:");
-                        ui.add(egui::DragValue::new(&mut player_transformation.pitch)
-                        .speed(PI / 180.)
-                        .custom_formatter(|n, _| {
-                            let n = n as f32;
-                            let degrees = n.clamp(-PI / 2.0, PI / 2.0) as f32 * 180. / PI;
-                            format!("{:.0}", degrees)
-                        })
-                        .suffix("°"));
+                        ui.add(
+                            egui::DragValue::new(&mut player_transformation.pitch)
+                                .speed(PI / 180.)
+                                .custom_formatter(|n, _| {
+                                    let n = n as f32;
+                                    let degrees = n.clamp(-PI / 2.0, PI / 2.0) as f32 * 180. / PI;
+                                    format!("{:.0}", degrees)
+                                })
+                                .suffix("°"),
+                        );
                     });
                     ui.horizontal(|ui| {
                         ui.label("   ");
-                        egui::reset_button_with(ui, &mut player_transformation, Player::new(0., 5., 0., 0., 0.));
+                        egui::reset_button_with(
+                            ui,
+                            &mut player_transformation,
+                            Player::new(0., 5., 0., 0., 0.),
+                        );
                     });
                 });
                 ui.separator();
@@ -287,7 +298,7 @@ pub fn ui_example_system(
                     map.walls[wall.id].texture_id = wall.texture_id;
                 }
             }
-        
+
             for mut floor in floor_query.iter_mut() {
                 if floor.id == map.selected_id {
                     let mut a_transformation = floor.a.transformation;
@@ -470,22 +481,14 @@ pub fn ui_example_system(
                     ui.heading("World aligned UV");
                     ui.horizontal(|ui| {
                         let text = match floor.world_aligned_uv {
-                            true => {
-                                "On"
-                            }
-                            false => {
-                                "Off"
-                            }
+                            true => "On",
+                            false => "Off",
                         };
                         ui.label("Toggle:");
                         if ui.button(text).clicked() {
                             match floor.world_aligned_uv {
-                                true => {
-                                    floor.world_aligned_uv = false
-                                }
-                                false => {
-                                    floor.world_aligned_uv = true
-                                }
+                                true => floor.world_aligned_uv = false,
+                                false => floor.world_aligned_uv = true,
                             }
                         }
                     });

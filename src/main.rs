@@ -9,8 +9,8 @@ mod vertex;
 mod wall;
 
 use bevy::{
-    prelude::*,
     core::FrameCount,
+    prelude::*,
     render::mesh::Mesh,
     sprite::Material2dPlugin,
     window::{PresentMode, WindowTheme},

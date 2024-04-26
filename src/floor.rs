@@ -71,7 +71,7 @@ impl Floor {
 
     // Returns clipped vertices and screen coordinates
     pub fn transform(
-        &mut self,
+        &self,
         player: &Player,
     ) -> (Vertex, Vertex, Vertex, Vertex, Vec2, Vec2, Vec2, Vec2) {
         let mut a = self.a.transform_vertice(player);
@@ -190,5 +190,74 @@ impl Floor {
 
         // No vertices are behind player
         return (a, b, c, c, a.screen(), b.screen(), c.screen(), c.screen());
+    }
+
+    // Helps with calculating mask for z-buffering, same principle as transform
+    pub fn mask(
+        &self,
+        player: &Player,
+    ) -> (Vertex, Vertex, Vertex, Vertex, Vertex, Vertex,) {
+        let mut a = self.a.transform_vertice(player);
+        let mut b = self.b.transform_vertice(player);
+        let mut c = self.c.transform_vertice(player);
+
+        // Copies of original vertices, non mutual
+        let (org_a, org_b, org_c) = (a, b, c);
+
+        // Zero vertex
+        let zero = Vertex::zero();
+
+        // All vertices are behind player
+        if a.position.z > 0. && b.position.z > 0. && c.position.z > 0. {
+            return (zero, zero, zero, zero, zero, zero,);
+        }
+
+        // Both A and B are behind player
+        if a.position.z > 0. && b.position.z > 0. {
+            a.clip(c);
+            b.clip(c);
+            return (a, b, c, zero, zero, zero);
+        }
+
+        // Both A and C are behind player
+        if a.position.z > 0. && c.position.z > 0. {
+            a.clip(b);
+            c.clip(b);
+            return (a, b, c, zero, zero, zero);
+        }
+
+        // Both B and C are behind player
+        if b.position.z > 0. && c.position.z > 0. {
+            b.clip(a);
+            c.clip(a);
+            return (a, b, c, zero, zero, zero);
+        }
+
+        // Edge case. A is behind player. Yields complementary vertice
+        if a.position.z > 0. {
+            a.clip(b);
+            let mut d = org_a;
+            d.clip(c);
+            return (a, d, c, b, c, a);
+        }
+
+        // Edge case. B is behind player. Yields complementary vertice
+        if b.position.z > 0. {
+            b.clip(c);
+            let mut d = org_b;
+            d.clip(a);
+            return (a, d, b, a, b, c);
+        }
+
+        // Edge case. C is behind player. Yields complementary vertice
+        if c.position.z > 0. {
+            c.clip(a);
+            let mut d = org_c;
+            d.clip(b);
+            return (d, b, c, a, b, c);
+        }
+
+        // No vertices are behind player
+        return (a, b, c, zero, zero, zero);
     }
 }

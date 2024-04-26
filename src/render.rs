@@ -6,33 +6,36 @@ use bevy::{
     sprite::{Material2d, Mesh2dHandle},
 };
 
-use bevy::render::texture::Image;
+use bevy::render::render_asset::RenderAssetUsages;
 use bevy::render::render_resource::Extent3d;
 use bevy::render::render_resource::TextureDimension;
 use bevy::render::render_resource::TextureFormat;
-use bevy::render::render_asset::RenderAssetUsages;
+use bevy::render::texture::Image;
 
 use crate::floor::Floor;
 use crate::wall::Wall;
 use crate::Player;
 use crate::SceneAssets;
 
+pub const MAX_STRUCTURES: usize = 1000;
+
 #[derive(Component, Asset, TypePath, AsBindGroup, Debug, Clone)]
 pub struct CustomMaterial {
     #[texture(0)]
     #[sampler(1)]
     pub texture: Handle<Image>,
-    #[texture(2)]
-    #[sampler(3)]
-    pub mask: Handle<Image>,
+    #[uniform(2)]
+    pub id: f32,
+    #[uniform(3)]
+    pub mask: [Vec3; MAX_STRUCTURES],
     #[uniform(4)]
-    pub window_size: Vec2,
+    pub mask_len: i32,
     #[uniform(5)]
-    pub a: Vec3,
+    pub a_screen: Vec3,
     #[uniform(6)]
-    pub b: Vec3,
+    pub b_screen: Vec3,
     #[uniform(7)]
-    pub c: Vec3,
+    pub c_screen: Vec3,
     #[uniform(8)]
     pub a_uv: Vec2,
     #[uniform(9)]
@@ -45,6 +48,14 @@ pub struct CustomMaterial {
     pub uv_offset: Vec2,
     #[uniform(13)]
     pub uv_rotation: f32,
+    #[uniform(14)]
+    pub a_position: Vec3,
+    #[uniform(15)]
+    pub b_position: Vec3,
+    #[uniform(16)]
+    pub c_position: Vec3,
+    #[uniform(17)]
+    pub pitch: f32,
 }
 
 pub fn new_mask(width: f32, height: f32) -> Image {
@@ -52,13 +63,13 @@ pub fn new_mask(width: f32, height: f32) -> Image {
         Extent3d {
             width: width as u32,
             height: height as u32,
-            depth_or_array_layers: 1
-            }, 
-            TextureDimension::D2, 
-            &[255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],             
-            TextureFormat::Rgba32Float,
-            RenderAssetUsages::RENDER_WORLD,
-        )
+            depth_or_array_layers: 1,
+        },
+        TextureDimension::D2,
+        &[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        TextureFormat::Rgba32Float,
+        RenderAssetUsages::RENDER_WORLD,
+    )
 }
 
 impl Material2d for CustomMaterial {
@@ -89,7 +100,53 @@ pub fn render(
     >,
 ) {
     for player in query.iter_mut() {
-        for (mut wall, _, mesh2dhandle, material_handle) in wall_query.iter_mut() {
+        // Calculate mask for z-buffering
+        let mut mask: [Vec3; 1000] = [Vec3::new(0., 0., 0.); 1000];
+        let mut i = 0;
+
+        // Very ugly but gets the job done for now
+        for (wall, _, _, _) in wall_query.iter_mut() {
+            let (a, b, c, d, a_screen, b_screen, c_screen, d_screen) = wall.transform(player);
+            mask[i] = Vec3::new(wall.id as f32, wall.id as f32, wall.id as f32);
+            mask[i + 1] = a.position;
+            mask[i + 2] = Vec3::new(a_screen[0], a_screen[1], -a.position.z);
+            mask[i + 3] = b.position;
+            mask[i + 4] = Vec3::new(b_screen[0], b_screen[1], -b.position.z);
+            mask[i + 5] = c.position;
+            mask[i + 6] = Vec3::new(c_screen[0], c_screen[1], -c.position.z);
+            i += 7;
+            mask[i] = Vec3::new(wall.id as f32, wall.id as f32, wall.id as f32);
+            mask[i + 1] = a.position;
+            mask[i + 2] = Vec3::new(a_screen[0], a_screen[1], -a.position.z);
+            mask[i + 3] = c.position;
+            mask[i + 4] = Vec3::new(c_screen[0], c_screen[1], -c.position.z);
+            mask[i + 5] = d.position;
+            mask[i + 6] = Vec3::new(d_screen[0], d_screen[1], -d.position.z);
+            i += 7;
+        }
+
+        for (floor, _, _, _) in floor_query.iter_mut() {
+            let (a, b, c, d, e, f) = floor.mask(player);
+            mask[i] = Vec3::new(floor.id as f32, floor.id as f32, floor.id as f32);
+            mask[i + 1] = a.position;
+            mask[i + 2] = Vec3::new(a.screen()[0], a.screen()[1], -a.position.z);
+            mask[i + 3] = b.position;
+            mask[i + 4] = Vec3::new(b.screen()[0], b.screen()[1], -b.position.z);
+            mask[i + 5] = c.position;
+            mask[i + 6] = Vec3::new(c.screen()[0], c.screen()[1], -c.position.z);
+            i += 7;
+            mask[i] = Vec3::new(floor.id as f32, floor.id as f32, floor.id as f32);
+            mask[i + 1] = d.position;
+            mask[i + 2] = Vec3::new(d.screen()[0], d.screen()[1], -d.position.z);
+            mask[i + 3] = e.position;
+            mask[i + 4] = Vec3::new(e.screen()[0], e.screen()[1], -e.position.z);
+            mask[i + 5] = f.position;
+            mask[i + 6] = Vec3::new(f.screen()[0], f.screen()[1], -f.position.z);
+            i += 7;
+        }
+
+        // Render walls with calculated mask
+        for (wall, _, mesh2dhandle, material_handle) in wall_query.iter_mut() {
             let mesh_handle = &mesh2dhandle.0;
             let mesh = meshes.get_mut(mesh_handle).unwrap();
 
@@ -99,9 +156,9 @@ pub fn render(
             let (a, b, c, _, a_screen, b_screen, c_screen, d_screen) = wall.transform(player);
 
             // Gets sent to shader for correct uv mapping
-            material.a = Vec3::new(a_screen.x, a_screen.y, -a.position.z);
-            material.b = Vec3::new(b_screen.x, b_screen.y, -b.position.z);
-            material.c = Vec3::new(c_screen.x, c_screen.y, -c.position.z);
+            material.a_screen = Vec3::new(a_screen.x, a_screen.y, -a.position.z);
+            material.b_screen = Vec3::new(b_screen.x, b_screen.y, -b.position.z);
+            material.c_screen = Vec3::new(c_screen.x, c_screen.y, -c.position.z);
             material.a_uv = a.uv;
             material.b_uv = b.uv;
             material.c_uv = c.uv;
@@ -109,6 +166,14 @@ pub fn render(
             material.uv_offset = wall.uv_offset;
             material.uv_rotation = wall.uv_rotation;
             material.texture = asset_server.textures[wall.texture_id].clone();
+            material.a_position = a.position;
+            material.b_position = b.position;
+            material.c_position = c.position;
+            material.pitch = player.pitch;
+
+            material.id = wall.id as f32;
+            material.mask = mask;
+            material.mask_len = i as i32;
 
             if let Some(_positions) = mesh.attribute_mut(Mesh::ATTRIBUTE_POSITION) {
                 mesh.insert_attribute(
@@ -123,27 +188,39 @@ pub fn render(
             }
         }
 
-        for (mut floor, _, mesh2dhandle, material_handle) in floor_query.iter_mut() {
+        // Render floors with calculated mask
+        for (floor, _, mesh2dhandle, material_handle) in floor_query.iter_mut() {
             let mesh_handle = &mesh2dhandle.0;
             let mesh = meshes.get_mut(mesh_handle).unwrap();
 
             let material_handle = material_handle.clone();
             let material = custom_materials.get_mut(material_handle).unwrap();
 
-            let (mut a, mut b, mut c, _, a_screen, b_screen, c_screen, d_screen) = floor.transform(player);
+            let (mut a, mut b, mut c, _, a_screen, b_screen, c_screen, d_screen) =
+                floor.transform(player);
 
             // Gets sent to shader for correct uv mapping
-            material.a = Vec3::new(a_screen.x, a_screen.y, -a.position.z);
-            material.b = Vec3::new(b_screen.x, b_screen.y, -b.position.z);
-            material.c = Vec3::new(c_screen.x, c_screen.y, -c.position.z);
- 
+            material.a_screen = Vec3::new(a_screen.x, a_screen.y, -a.position.z);
+            material.b_screen = Vec3::new(b_screen.x, b_screen.y, -b.position.z);
+            material.c_screen = Vec3::new(c_screen.x, c_screen.y, -c.position.z);
+
             // World aligned uv
             if floor.world_aligned_uv {
-                a.uv = Vec2::new(a.reverse_transform_vertice(player).position.x / 10., a.reverse_transform_vertice(player).position.z / 10.);
-                b.uv = Vec2::new(b.reverse_transform_vertice(player).position.x / 10., b.reverse_transform_vertice(player).position.z/ 10.);
-                c.uv = Vec2::new(c.reverse_transform_vertice(player).position.x / 10., c.reverse_transform_vertice(player).position.z/ 10.);
+                a.uv = Vec2::new(
+                    a.reverse_transform_vertice(player).position.x / 10.,
+                    a.reverse_transform_vertice(player).position.z / 10.,
+                );
+                b.uv = Vec2::new(
+                    b.reverse_transform_vertice(player).position.x / 10.,
+                    b.reverse_transform_vertice(player).position.z / 10.,
+                );
+                c.uv = Vec2::new(
+                    c.reverse_transform_vertice(player).position.x / 10.,
+                    c.reverse_transform_vertice(player).position.z / 10.,
+                );
             }
 
+            // Gets sent to shader
             material.a_uv = a.uv;
             material.b_uv = b.uv;
             material.c_uv = c.uv;
@@ -151,6 +228,14 @@ pub fn render(
             material.uv_offset = floor.uv_offset;
             material.uv_rotation = floor.uv_rotation;
             material.texture = asset_server.textures[floor.texture_id].clone();
+            material.a_position = a.position;
+            material.b_position = b.position;
+            material.c_position = c.position;
+            material.pitch = player.pitch;
+
+            material.id = floor.id as f32;
+            material.mask = mask;
+            material.mask_len = i as i32;
 
             if let Some(_positions) = mesh.attribute_mut(Mesh::ATTRIBUTE_POSITION) {
                 mesh.insert_attribute(

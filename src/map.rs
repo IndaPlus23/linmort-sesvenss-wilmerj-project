@@ -3,10 +3,11 @@ use std::io::{BufRead, BufReader, BufWriter, Write};
 use std::path::Path;
 
 use crate::floor::Floor;
+use crate::render::MAX_STRUCTURES;
+use crate::vertex::Vertex;
 use crate::CustomMaterial;
 use crate::Player;
 use crate::SceneAssets;
-use crate::vertex::Vertex;
 use crate::Wall;
 use bevy::prelude::*;
 use bevy::sprite::MaterialMesh2dBundle;
@@ -58,17 +59,22 @@ impl Map {
                     mesh: meshes.add(Wall::mesh()).into(),
                     material: custom_materials.add(CustomMaterial {
                         texture: asset_server.textures[wall.texture_id].clone(),
-                        mask: asset_server.mask.clone(),
-                        window_size: Vec2::new(window.width(), window.height()),
-                        a: Vec3::new(0., 0., 0.),
-                        b: Vec3::new(0., 0., 0.),
-                        c: Vec3::new(0., 0., 0.),
+                        id: -1.,
+                        mask: [Vec3::new(0., 0., 0.); MAX_STRUCTURES],
+                        mask_len: 0,
+                        a_screen: Vec3::new(0., 0., 0.),
+                        b_screen: Vec3::new(0., 0., 0.),
+                        c_screen: Vec3::new(0., 0., 0.),
                         a_uv: Vec2::new(0., 0.),
                         b_uv: Vec2::new(0., 0.),
                         c_uv: Vec2::new(0., 0.),
                         uv_scalar: Vec2::new(1., 1.),
                         uv_offset: Vec2::new(0., 0.),
                         uv_rotation: 0.,
+                        a_position: Vec3::new(0., 0., 0.),
+                        b_position: Vec3::new(0., 0., 0.),
+                        c_position: Vec3::new(0., 0., 0.),
+                        pitch: 0.0,
                     }),
                     ..Default::default()
                 },
@@ -82,17 +88,22 @@ impl Map {
                     mesh: meshes.add(Floor::mesh()).into(),
                     material: custom_materials.add(CustomMaterial {
                         texture: asset_server.textures[floor.texture_id].clone(),
-                        mask: asset_server.mask.clone(),
-                        window_size: Vec2::new(window.width(), window.height()),
-                        a: Vec3::new(0., 0., 0.),
-                        b: Vec3::new(0., 0., 0.),
-                        c: Vec3::new(0., 0., 0.),
+                        id: -1.,
+                        mask: [Vec3::new(0., 0., 0.); MAX_STRUCTURES],
+                        mask_len: 0,
+                        a_screen: Vec3::new(0., 0., 0.),
+                        b_screen: Vec3::new(0., 0., 0.),
+                        c_screen: Vec3::new(0., 0., 0.),
                         a_uv: Vec2::new(0., 0.),
                         b_uv: Vec2::new(0., 0.),
                         c_uv: Vec2::new(0., 0.),
                         uv_scalar: Vec2::new(1., 1.),
                         uv_offset: Vec2::new(0., 0.),
                         uv_rotation: 0.,
+                        a_position: Vec3::new(0., 0., 0.),
+                        b_position: Vec3::new(0., 0., 0.),
+                        c_position: Vec3::new(0., 0., 0.),
+                        pitch: 0.0,
                     }),
                     ..Default::default()
                 },
@@ -108,7 +119,7 @@ impl Map {
             Err(_) => {
                 println!("Could not open {}", &self.filename);
                 return None;
-            },
+            }
         };
 
         let mut writer = BufWriter::new(file);
@@ -133,7 +144,6 @@ impl Map {
 
         // Walls
         for wall in &self.walls {
-            println!("{}", wall.height);
             let data = vec![
                 wall.id as f32,
                 wall.start.position.x,

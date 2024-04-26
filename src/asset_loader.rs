@@ -1,8 +1,8 @@
-use bevy::prelude::*;
-use std::path::PathBuf;
-use std::path::Path;
-use std::fs;
 use crate::render::new_mask;
+use bevy::prelude::*;
+use std::fs;
+use std::path::Path;
+use std::path::PathBuf;
 
 /// SceneAssets stores handles for assets used in the scene.
 #[derive(Resource, Debug, Default)]
@@ -24,11 +24,15 @@ impl Plugin for AssetLoaderPlugin {
 
 /// Loads assets from asset folder and populates AssetScene, making them available
 /// for usage without having multiple handles reference various copies of the same asset.
-pub fn load_assets(mut scene_assets: ResMut<SceneAssets>, asset_server: Res<AssetServer>, mut window_query: Query<&mut Window>) {
+pub fn load_assets(
+    mut scene_assets: ResMut<SceneAssets>,
+    asset_server: Res<AssetServer>,
+    mut window_query: Query<&mut Window>,
+) {
     let texture_paths = texture_paths("assets\\textures\\");
 
     let window = window_query.single_mut();
-    
+
     let mask = new_mask(window.width(), window.height());
     let mask_handle: Handle<Image> = asset_server.add(mask);
 
@@ -84,7 +88,8 @@ fn visit_folder(folder_path: &Path, relative_path: PathBuf, paths: &mut Vec<Stri
                     if let Some(ext) = path.extension() {
                         if ext == "png" {
                             // Construct the relative path to the file
-                            let file_name = path.file_name().unwrap().to_string_lossy().into_owned();
+                            let file_name =
+                                path.file_name().unwrap().to_string_lossy().into_owned();
                             let mut file_path = relative_path.clone();
                             file_path.push(&file_name);
 
