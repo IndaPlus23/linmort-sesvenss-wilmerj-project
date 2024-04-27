@@ -1,5 +1,6 @@
-use crate::Player;
 use bevy::math::{Vec2, Vec3};
+
+use crate::Player;
 
 #[derive(Clone, Copy)]
 pub struct Vertex {
@@ -24,6 +25,7 @@ impl Vertex {
         }
     }
 
+    /// Returns all zero vertex.
     pub fn zero() -> Self {
         let original_position = Vec3::ZERO;
         let position = Vec3::ZERO;
@@ -39,7 +41,7 @@ impl Vertex {
         }
     }
 
-    // Apply transformation based on player rotation and position.
+    /// Apply transformation based on player rotation and position.
     pub fn transform_vertice(&self, player: &Player) -> Vertex {
         let mut x = self.position.x;
         let mut y = self.position.y;
@@ -59,6 +61,7 @@ impl Vertex {
         Vertex::new(Vec3::new(new_x, new_y, new_z), self.uv)
     }
 
+    /// Apply reverse transformation based on player rotation and position.
     pub fn reverse_transform_vertice(&self, player: &Player) -> Vertex {
         let new_x = self.position.x;
         let mut new_y = self.position.y;
@@ -81,8 +84,8 @@ impl Vertex {
         Vertex::new(Vec3::new(old_x, new_y, old_z), self.uv)
     }
 
-    // Starting point is behind the player
-    // Clip the starting point so it never is behind the player
+    /// Starting point is behind the player.
+    /// Clip the starting point so it never is behind the player.
     pub fn clip(&mut self, with: Vertex) {
         let delta_z = with.position.z - self.position.z;
         let delta_x = with.position.x - self.position.x;
@@ -99,7 +102,7 @@ impl Vertex {
         self.position = Vec3::new(new_start_x, new_start_y, -0.001);
     }
 
-    // Converts vertice coordinates to 2d screen coordinates
+    /// Converts vertice coordinates to 2d screen coordinates.
     pub fn screen(&self) -> Vec2 {
         let world_x = self.position.x;
         let world_y = self.position.y;

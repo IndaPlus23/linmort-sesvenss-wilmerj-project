@@ -1,13 +1,12 @@
-use crate::render::new_mask;
 use bevy::prelude::*;
-use std::fs;
-use std::path::Path;
-use std::path::PathBuf;
+use std::{
+    fs,
+    path::{Path, PathBuf},
+};
 
 /// SceneAssets stores handles for assets used in the scene.
 #[derive(Resource, Debug, Default)]
 pub struct SceneAssets {
-    pub mask: Handle<Image>,
     pub enemy: Handle<Scene>,
     pub textures: Vec<Handle<Image>>,
     pub texture_paths: Vec<String>,
@@ -31,20 +30,14 @@ pub fn load_assets(
 ) {
     let texture_paths = texture_paths("assets\\textures\\");
 
-    let window = window_query.single_mut();
-
-    let mask = new_mask(window.width(), window.height());
-    let mask_handle: Handle<Image> = asset_server.add(mask);
-
     *scene_assets = SceneAssets {
-        mask: mask_handle,
         enemy: asset_server.load(""),
         textures: load_textures_from_folder(texture_paths.clone(), asset_server),
         texture_paths: texture_paths,
     }
 }
 
-/// Loads folder of textures and upgrades into handle of image
+/// Loads folder of textures and upgrades into handle of image.
 fn load_textures_from_folder(
     texture_paths: Vec<String>,
     asset_server: Res<AssetServer>,
@@ -74,6 +67,7 @@ fn texture_paths(folder: &str) -> Vec<String> {
     paths
 }
 
+/// Recursively visits subfolders and pushes files with certain extentions.
 fn visit_folder(folder_path: &Path, relative_path: PathBuf, paths: &mut Vec<String>) {
     if let Ok(entries) = fs::read_dir(folder_path) {
         for entry in entries {

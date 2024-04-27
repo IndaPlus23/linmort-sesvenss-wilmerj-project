@@ -1,10 +1,13 @@
-use bevy::render::mesh::Indices;
-use bevy::render::render_asset::RenderAssetUsages;
-use bevy::render::render_resource::PrimitiveTopology;
-use bevy::{prelude::*, render::mesh::Mesh};
+use bevy::{
+    prelude::*,
+    render::{
+        mesh::{Indices, Mesh},
+        render_asset::RenderAssetUsages,
+        render_resource::PrimitiveTopology,
+    },
+};
 
-use crate::vertex::Vertex;
-use crate::Player;
+use crate::{vertex::Vertex, Player};
 
 #[derive(Component, Clone)]
 pub struct Floor {
@@ -44,6 +47,7 @@ impl Floor {
         }
     }
 
+    /// Returns empty TriangleList mesh.
     pub fn mesh() -> Mesh {
         Mesh::new(
             PrimitiveTopology::TriangleList,
@@ -69,7 +73,7 @@ impl Floor {
         .with_inserted_indices(Indices::U32(vec![0, 3, 1, 1, 3, 2]))
     }
 
-    // Returns clipped vertices and screen coordinates
+    /// Returns clipped vertices and screen coordinates.
     pub fn transform(
         &self,
         player: &Player,
@@ -192,11 +196,8 @@ impl Floor {
         return (a, b, c, c, a.screen(), b.screen(), c.screen(), c.screen());
     }
 
-    // Helps with calculating mask for z-buffering, same principle as transform
-    pub fn mask(
-        &self,
-        player: &Player,
-    ) -> (Vertex, Vertex, Vertex, Vertex, Vertex, Vertex,) {
+    /// Helps with calculating mask for z-buffering, same principle as transform.
+    pub fn mask(&self, player: &Player) -> (Vertex, Vertex, Vertex, Vertex, Vertex, Vertex) {
         let mut a = self.a.transform_vertice(player);
         let mut b = self.b.transform_vertice(player);
         let mut c = self.c.transform_vertice(player);
@@ -209,7 +210,7 @@ impl Floor {
 
         // All vertices are behind player
         if a.position.z > 0. && b.position.z > 0. && c.position.z > 0. {
-            return (zero, zero, zero, zero, zero, zero,);
+            return (zero, zero, zero, zero, zero, zero);
         }
 
         // Both A and B are behind player

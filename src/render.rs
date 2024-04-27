@@ -1,21 +1,16 @@
 use bevy::{
     prelude::*,
     reflect::TypePath,
-    render::mesh::Mesh,
-    render::render_resource::{AsBindGroup, ShaderRef},
+    render::{
+        mesh::Mesh,
+        render_asset::RenderAssetUsages,
+        render_resource::{AsBindGroup, Extent3d, ShaderRef, TextureDimension, TextureFormat},
+        texture::Image,
+    },
     sprite::{Material2d, Mesh2dHandle},
 };
 
-use bevy::render::render_asset::RenderAssetUsages;
-use bevy::render::render_resource::Extent3d;
-use bevy::render::render_resource::TextureDimension;
-use bevy::render::render_resource::TextureFormat;
-use bevy::render::texture::Image;
-
-use crate::floor::Floor;
-use crate::wall::Wall;
-use crate::Player;
-use crate::SceneAssets;
+use crate::{floor::Floor, wall::Wall, Player, SceneAssets};
 
 pub const MAX_STRUCTURES: usize = 1000;
 
@@ -56,20 +51,6 @@ pub struct CustomMaterial {
     pub c_position: Vec3,
     #[uniform(17)]
     pub pitch: f32,
-}
-
-pub fn new_mask(width: f32, height: f32) -> Image {
-    Image::new_fill(
-        Extent3d {
-            width: width as u32,
-            height: height as u32,
-            depth_or_array_layers: 1,
-        },
-        TextureDimension::D2,
-        &[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        TextureFormat::Rgba32Float,
-        RenderAssetUsages::RENDER_WORLD,
-    )
 }
 
 impl Material2d for CustomMaterial {
@@ -251,10 +232,26 @@ pub fn render(
             }
 
             gizmos.circle_2d(Vec2::new(0., 0.), 1., Color::WHITE);
-            gizmos.line_2d(Vec2::new(a.position.x, -a.position.z), Vec2::new(b.position.x, -b.position.z), Color::BLUE);
-            gizmos.line_2d(Vec2::new(b.position.x, -b.position.z), Vec2::new(c.position.x, -c.position.z), Color::BLUE);
-            gizmos.line_2d(Vec2::new(a.position.x, -a.position.z), Vec2::new(c.position.x, -c.position.z), Color::BLUE);
-            gizmos.line_2d(Vec2::new(a.position.x, -a.position.z), Vec2::new(d.position.x, -d.position.z), Color::BLUE);
+            gizmos.line_2d(
+                Vec2::new(a.position.x, -a.position.z),
+                Vec2::new(b.position.x, -b.position.z),
+                Color::BLUE,
+            );
+            gizmos.line_2d(
+                Vec2::new(b.position.x, -b.position.z),
+                Vec2::new(c.position.x, -c.position.z),
+                Color::BLUE,
+            );
+            gizmos.line_2d(
+                Vec2::new(a.position.x, -a.position.z),
+                Vec2::new(c.position.x, -c.position.z),
+                Color::BLUE,
+            );
+            gizmos.line_2d(
+                Vec2::new(a.position.x, -a.position.z),
+                Vec2::new(d.position.x, -d.position.z),
+                Color::BLUE,
+            );
         }
     }
 }

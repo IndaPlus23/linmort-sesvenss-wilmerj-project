@@ -20,7 +20,7 @@ use std::f32::consts::PI;
 
 use crate::{
     asset_loader::{load_assets, AssetLoaderPlugin, SceneAssets},
-    egui::ui_example_system,
+    egui::editor_ui,
     input::{keyboard_input, mouse_input, MouseState},
     map::load_from_file,
     player::Player,
@@ -43,7 +43,6 @@ fn main() {
                     name: Some("Raycaster".into()),
                     resolution: (1280., 720.).into(),
                     present_mode: PresentMode::AutoVsync,
-                    // Tells wasm not to override default event handling, like F5, Ctrl+R etc.
                     prevent_default_event_handling: false,
                     window_theme: Some(WindowTheme::Dark),
                     visible: false,
@@ -61,7 +60,7 @@ fn main() {
         .add_systems(Update, mouse_input)
         .add_systems(Update, render)
         .add_systems(Update, change_title)
-        .add_systems(Update, ui_example_system)
+        .add_systems(Update, editor_ui)
         .run();
 }
 
@@ -107,12 +106,9 @@ fn change_title(mut windows: Query<&mut Window>, time: Res<'_, Time<Real>>, quer
     }
 }
 
+/// At this point the gpu is ready to show the app and make the window visible.
 fn make_visible(mut window: Query<&mut Window>, frames: Res<FrameCount>) {
-    // The delay may be different for your app or system.
     if frames.0 == 3 {
-        // At this point the gpu is ready to show the app so we can make the window visible.
-        // Alternatively, you could toggle the visibility in Startup.
-        // It will work, but it will have one white frame before it starts rendering
         window.single_mut().visible = true;
     }
 }

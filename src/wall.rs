@@ -1,10 +1,13 @@
-use bevy::render::mesh::Indices;
-use bevy::render::render_asset::RenderAssetUsages;
-use bevy::render::render_resource::PrimitiveTopology;
-use bevy::{prelude::*, render::mesh::Mesh};
+use bevy::{
+    prelude::*,
+    render::{
+        mesh::{Indices, Mesh},
+        render_asset::RenderAssetUsages,
+        render_resource::PrimitiveTopology,
+    },
+};
 
-use crate::vertex::Vertex;
-use crate::Player;
+use crate::{vertex::Vertex, Player};
 
 #[derive(Component, Clone)]
 pub struct Wall {
@@ -41,6 +44,7 @@ impl Wall {
         }
     }
 
+    /// Returns empty TriangleList mesh.
     pub fn mesh() -> Mesh {
         Mesh::new(
             PrimitiveTopology::TriangleList,
@@ -66,7 +70,7 @@ impl Wall {
         .with_inserted_indices(Indices::U32(vec![0, 3, 1, 1, 3, 2]))
     }
 
-    /// Returns clipped vertices and screen coordinates
+    /// Returns clipped vertices and screen coordinates.
     pub fn transform(
         &self,
         player: &Player,
@@ -139,18 +143,20 @@ impl Wall {
             d.uv = ((a.uv - d.uv) * percentage) + d.uv;
         }
 
-        return (a, b, c, d, a.screen(), b.screen(), c.screen(), d.screen());
+        if original_start.position.z > 0. {
+            return (d, c, b, a, d.screen(), c.screen(), b.screen(), a.screen());
+        } else {
+            return (a, b, c, d, a.screen(), b.screen(), c.screen(), d.screen());
+        }
     }
 
-    /// Helps with calculating mask for z-buffering, same principle as transform
-    pub fn mask(
-        &self,
-        player: &Player,
-    ) -> (Vertex, Vertex, Vertex, Vertex) {
+    /// Helps with calculating mask for z-buffering, same principle as transform.
+    pub fn mask(&self, player: &Player) -> (Vertex, Vertex, Vertex, Vertex) {
         let mut start = self.start.transform_vertice(player);
         let mut end = self.end.transform_vertice(player);
 
-        // Zero vertex
+        // Initialize variables
+        let org_start = start;
         let zero = Vertex::zero();
 
         // Both wall's starting and end points are behind the player
@@ -162,9 +168,6 @@ impl Wall {
         // Wall starting point is behind the player
         if start.position.z > 0. {
             start.clip(end);
-            let copy = end;
-            end = start;
-            start = copy;
         }
 
         // Wall end point is behind the player
@@ -194,6 +197,10 @@ impl Wall {
             Vec2::new(1., 1.),
         );
 
-        return (a, b, c, d);
+        if org_start.position.z > 0. {
+            return (d, c, b, a);
+        } else {
+            return (a, b, c, d);
+        }
     }
 }

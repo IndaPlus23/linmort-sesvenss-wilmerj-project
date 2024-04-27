@@ -1,13 +1,10 @@
-use crate::floor::Floor;
-use crate::map::Map;
-use crate::Player;
-use crate::SceneAssets;
-use crate::Wall;
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts};
 use std::f32::consts::PI;
 
-pub fn ui_example_system(
+use crate::{floor::Floor, map::Map, Player, SceneAssets, Wall};
+
+pub fn editor_ui(
     mut player_query: Query<&mut Player>,
     mut map_query: Query<&mut Map>,
     mut contexts: EguiContexts,

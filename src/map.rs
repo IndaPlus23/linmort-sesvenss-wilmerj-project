@@ -1,16 +1,14 @@
-use std::fs::File;
-use std::io::{BufRead, BufReader, BufWriter, Write};
-use std::path::Path;
-
-use crate::floor::Floor;
-use crate::render::MAX_STRUCTURES;
-use crate::vertex::Vertex;
-use crate::CustomMaterial;
-use crate::Player;
-use crate::SceneAssets;
-use crate::Wall;
 use bevy::prelude::*;
 use bevy::sprite::MaterialMesh2dBundle;
+use std::{
+    fs::File,
+    io::{BufRead, BufReader, BufWriter, Write},
+    path::Path,
+};
+
+use crate::{
+    floor::Floor, render::MAX_STRUCTURES, vertex::Vertex, CustomMaterial, Player, SceneAssets, Wall,
+};
 
 #[derive(Component, Clone)]
 pub struct Map {
@@ -48,7 +46,7 @@ impl Map {
         asset_server: &mut Res<SceneAssets>,
         mut window_query: Query<&Window>,
     ) {
-        let window = window_query.single_mut();
+        let _window = window_query.single_mut();
 
         commands.spawn(self.player.clone());
 
