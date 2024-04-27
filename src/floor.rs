@@ -109,7 +109,7 @@ impl Floor {
             let b_per = org_b.position.z / (org_b.position.z - org_c.position.z);
             b.uv = ((self.c.original_uv - self.b.original_uv) * b_per) + self.b.original_uv;
 
-            return (a, b, c, c, a.screen(), b.screen(), c.screen(), c.screen());
+            return (c, a, b, b, c.screen(), a.screen(), b.screen(), b.screen());
         }
 
         // Both A and C are behind player
@@ -123,7 +123,7 @@ impl Floor {
             let c_per = org_c.position.z / (org_c.position.z - org_b.position.z);
             c.uv = ((self.b.original_uv - self.c.original_uv) * c_per) + self.c.original_uv;
 
-            return (a, b, c, c, a.screen(), b.screen(), c.screen(), c.screen());
+            return (b, c, a, a, b.screen(), c.screen(), a.screen(), a.screen());
         }
 
         // Both B and C are behind player
@@ -153,7 +153,7 @@ impl Floor {
             let d_per = org_a.position.z / (org_a.position.z - org_c.position.z);
             d.uv = ((self.c.original_uv - self.a.original_uv) * d_per) + self.a.original_uv;
 
-            return (a, d, c, b, a.screen(), d.screen(), c.screen(), b.screen());
+            return (c, d, a, b, c.screen(), d.screen(), a.screen(), b.screen());
         }
 
         // Edge case. B is behind player. Yields complementary vertice
@@ -185,7 +185,7 @@ impl Floor {
             let d_per = org_c.position.z / (org_c.position.z - org_b.position.z);
             d.uv = ((self.b.original_uv - self.c.original_uv) * d_per) + self.c.original_uv;
 
-            return (d, b, c, a, d.screen(), b.screen(), c.screen(), a.screen());
+            return (b, d, c, a, b.screen(), d.screen(), c.screen(), a.screen());
         }
 
         // No vertices are behind player
@@ -216,21 +216,21 @@ impl Floor {
         if a.position.z > 0. && b.position.z > 0. {
             a.clip(c);
             b.clip(c);
-            return (a, b, c, zero, zero, zero);
+            return (c, a, b, b, b, b);
         }
 
         // Both A and C are behind player
         if a.position.z > 0. && c.position.z > 0. {
             a.clip(b);
             c.clip(b);
-            return (a, b, c, zero, zero, zero);
+            return (b, c, a, a, a, a);
         }
 
         // Both B and C are behind player
         if b.position.z > 0. && c.position.z > 0. {
             b.clip(a);
             c.clip(a);
-            return (a, b, c, zero, zero, zero);
+            return (a, b, c, c, c, c);
         }
 
         // Edge case. A is behind player. Yields complementary vertice
@@ -238,7 +238,7 @@ impl Floor {
             a.clip(b);
             let mut d = org_a;
             d.clip(c);
-            return (a, d, c, b, c, a);
+            return (c, d, a, c, a, b);
         }
 
         // Edge case. B is behind player. Yields complementary vertice
@@ -254,7 +254,7 @@ impl Floor {
             c.clip(a);
             let mut d = org_c;
             d.clip(b);
-            return (d, b, c, a, b, c);
+            return (b, d, c, b, c, a);
         }
 
         // No vertices are behind player

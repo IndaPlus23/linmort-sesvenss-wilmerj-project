@@ -96,7 +96,7 @@ impl Vertex {
         let m = self.position.z - (k * self.position.y);
         let new_start_y = -m / k;
 
-        self.position = Vec3::new(new_start_x, new_start_y, -0.01);
+        self.position = Vec3::new(new_start_x, new_start_y, -0.001);
     }
 
     // Converts vertice coordinates to 2d screen coordinates

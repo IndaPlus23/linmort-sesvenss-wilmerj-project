@@ -66,7 +66,7 @@ impl Wall {
         .with_inserted_indices(Indices::U32(vec![0, 3, 1, 1, 3, 2]))
     }
 
-    // Returns clipped vertices and screen coordinates
+    /// Returns clipped vertices and screen coordinates
     pub fn transform(
         &self,
         player: &Player,
@@ -140,5 +140,60 @@ impl Wall {
         }
 
         return (a, b, c, d, a.screen(), b.screen(), c.screen(), d.screen());
+    }
+
+    /// Helps with calculating mask for z-buffering, same principle as transform
+    pub fn mask(
+        &self,
+        player: &Player,
+    ) -> (Vertex, Vertex, Vertex, Vertex) {
+        let mut start = self.start.transform_vertice(player);
+        let mut end = self.end.transform_vertice(player);
+
+        // Zero vertex
+        let zero = Vertex::zero();
+
+        // Both wall's starting and end points are behind the player
+        // The wall does not have to be rendered
+        if start.position.z > 0. && end.position.z > 0. {
+            return (zero, zero, zero, zero);
+        }
+
+        // Wall starting point is behind the player
+        if start.position.z > 0. {
+            start.clip(end);
+            let copy = end;
+            end = start;
+            start = copy;
+        }
+
+        // Wall end point is behind the player
+        if end.position.z > 0. {
+            end.clip(start);
+        }
+
+        // Define four corner vertices A, B, C and D
+        let a = Vertex::new(
+            Vec3::new(start.position.x, start.position.y, start.position.z),
+            Vec2::new(0., 1.),
+        );
+        let b = Vertex::new(
+            Vec3::new(
+                start.position.x,
+                start.position.y + self.height,
+                start.position.z,
+            ),
+            Vec2::new(0., 0.),
+        );
+        let c = Vertex::new(
+            Vec3::new(end.position.x, end.position.y + self.height, end.position.z),
+            Vec2::new(1., 0.),
+        );
+        let d = Vertex::new(
+            Vec3::new(end.position.x, end.position.y, end.position.z),
+            Vec2::new(1., 1.),
+        );
+
+        return (a, b, c, d);
     }
 }

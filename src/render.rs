@@ -79,6 +79,7 @@ impl Material2d for CustomMaterial {
 }
 
 pub fn render(
+    mut gizmos: Gizmos,
     mut query: Query<&Player>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut custom_materials: ResMut<Assets<CustomMaterial>>,
@@ -106,22 +107,22 @@ pub fn render(
 
         // Very ugly but gets the job done for now
         for (wall, _, _, _) in wall_query.iter_mut() {
-            let (a, b, c, d, a_screen, b_screen, c_screen, d_screen) = wall.transform(player);
+            let (a, b, c, d) = wall.mask(player);
             mask[i] = Vec3::new(wall.id as f32, wall.id as f32, wall.id as f32);
             mask[i + 1] = a.position;
-            mask[i + 2] = Vec3::new(a_screen[0], a_screen[1], -a.position.z);
+            mask[i + 2] = Vec3::new(a.screen()[0], a.screen()[1], -a.position.z);
             mask[i + 3] = b.position;
-            mask[i + 4] = Vec3::new(b_screen[0], b_screen[1], -b.position.z);
+            mask[i + 4] = Vec3::new(b.screen()[0], b.screen()[1], -b.position.z);
             mask[i + 5] = c.position;
-            mask[i + 6] = Vec3::new(c_screen[0], c_screen[1], -c.position.z);
+            mask[i + 6] = Vec3::new(c.screen()[0], c.screen()[1], -c.position.z);
             i += 7;
             mask[i] = Vec3::new(wall.id as f32, wall.id as f32, wall.id as f32);
             mask[i + 1] = a.position;
-            mask[i + 2] = Vec3::new(a_screen[0], a_screen[1], -a.position.z);
+            mask[i + 2] = Vec3::new(a.screen()[0], a.screen()[1], -a.position.z);
             mask[i + 3] = c.position;
-            mask[i + 4] = Vec3::new(c_screen[0], c_screen[1], -c.position.z);
+            mask[i + 4] = Vec3::new(c.screen()[0], c.screen()[1], -c.position.z);
             mask[i + 5] = d.position;
-            mask[i + 6] = Vec3::new(d_screen[0], d_screen[1], -d.position.z);
+            mask[i + 6] = Vec3::new(d.screen()[0], d.screen()[1], -d.position.z);
             i += 7;
         }
 
@@ -196,7 +197,7 @@ pub fn render(
             let material_handle = material_handle.clone();
             let material = custom_materials.get_mut(material_handle).unwrap();
 
-            let (mut a, mut b, mut c, _, a_screen, b_screen, c_screen, d_screen) =
+            let (mut a, mut b, mut c, d, a_screen, b_screen, c_screen, d_screen) =
                 floor.transform(player);
 
             // Gets sent to shader for correct uv mapping
@@ -248,6 +249,12 @@ pub fn render(
                     ],
                 );
             }
+
+            gizmos.circle_2d(Vec2::new(0., 0.), 1., Color::WHITE);
+            gizmos.line_2d(Vec2::new(a.position.x, -a.position.z), Vec2::new(b.position.x, -b.position.z), Color::BLUE);
+            gizmos.line_2d(Vec2::new(b.position.x, -b.position.z), Vec2::new(c.position.x, -c.position.z), Color::BLUE);
+            gizmos.line_2d(Vec2::new(a.position.x, -a.position.z), Vec2::new(c.position.x, -c.position.z), Color::BLUE);
+            gizmos.line_2d(Vec2::new(a.position.x, -a.position.z), Vec2::new(d.position.x, -d.position.z), Color::BLUE);
         }
     }
 }

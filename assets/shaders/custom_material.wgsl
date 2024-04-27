@@ -31,7 +31,8 @@ fn barycentric(p: vec2<f32>, a: vec2<f32>, b: vec2<f32>, c: vec2<f32>) -> vec3<f
     let d20 = dot(v2, v0);
     let d21 = dot(v2, v1);
 
-    let denom = d00 * d11 - d01 * d01;
+    let epsilon = 100.0;
+    let denom = d00 * d11 - d01 * d01 + epsilon;
     let b2 = (d11 * d20 - d01 * d21) / denom;
     let b3 = (d00 * d21 - d01 * d20) / denom;
     let b1 = 1.0 - b2 - b3;
@@ -39,23 +40,12 @@ fn barycentric(p: vec2<f32>, a: vec2<f32>, b: vec2<f32>, c: vec2<f32>) -> vec3<f
     return vec3<f32>(b1, b2, b3);
 }
 
-// Normalize UV float to fit after transformations
-fn normalize_float(x: f32) -> f32 {
-    var fractional_part: f32 = x - floor(x);
-
-    if fractional_part < 0.0 {
-        fractional_part = fractional_part + 1.0;
-    }
-
-    return fractional_part;
-}
-
 // Calculate the shortest distance yet rendered at pixel p
 fn shortest_distance(p: vec2<f32>) -> vec2<f32> {
     var shortest_distance = 0x1.fffffep+127;
     var id = -1.0;
 
-    for (var i = 0; i < mask_len; i += 7) {
+    for (var i = 0; i < mask_len + 7; i += 7) {
         let current_id = mask[i];
         var a1_position = mask[i + 1];
         let a1 = mask[i + 2];
@@ -104,24 +94,21 @@ fn fragment(mesh: VertexOutput) -> @location(0) vec4<f32> {
     let uv: vec2<f32> = (bary[0] * a_uv) / a[2] + (bary[1] * b_uv) / b[2] + (bary[2] * c_uv) / c[2];
     let corrected_uv = vec2<f32>(uv[0] / z, uv[1] / z);
 
-    // Transform UV
-    let transformed_uv = vec2<f32>(
-        ((corrected_uv[0] + uv_offset[0]) * uv_scalar[0]), 
-        ((corrected_uv[1] + uv_offset[1]) * uv_scalar[1]));
-
     // Calculate sine and cosine of the rotation angle
     let sin_rot = sin(uv_rotation * 3.14159265359 / 180.0);
     let cos_rot = cos(uv_rotation * 3.14159265359 / 180.0);
 
     // Rotate and normalize UV
     let rotated_uv = vec2<f32>(
-        transformed_uv[0] * cos_rot - transformed_uv[1] * sin_rot, 
-        transformed_uv[0] * sin_rot + transformed_uv[1] * cos_rot);
+        corrected_uv[0] * cos_rot - corrected_uv[1] * sin_rot, 
+        corrected_uv[0] * sin_rot + corrected_uv[1] * cos_rot);
 
-    let normalized_uv = vec2<f32>(
-        normalize_float(rotated_uv[0]),
-        normalize_float(rotated_uv[1])
-    );
+    // Transform UV
+    let transformed_uv = vec2<f32>(
+        ((rotated_uv[0] + uv_offset[0]) * uv_scalar[0]), 
+        ((rotated_uv[1] + uv_offset[1]) * uv_scalar[1]));
+
+    let normalized_uv = fract(transformed_uv);
 
     // Sample color from texture at calculated UV
     var sampled_color: vec4<f32> = textureSample(color_texture, color_sampler, normalized_uv);
@@ -139,7 +126,8 @@ fn fragment(mesh: VertexOutput) -> @location(0) vec4<f32> {
 
     let shortest_distance: vec2<f32> = shortest_distance(p);
 
-    if length(corrected_position) > shortest_distance[0] && id != shortest_distance[1] {
+    // if current distance > shortest distance and current id is not shortest distance's id
+    if length(corrected_position) >= shortest_distance[0] && id != shortest_distance[1] {
         sampled_color[3] = 0.0;
     }
 
