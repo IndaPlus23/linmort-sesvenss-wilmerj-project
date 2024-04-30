@@ -5,6 +5,7 @@ use bevy::{
     render::render_resource::{AsBindGroup, ShaderRef},
     sprite::{Material2d, Mesh2dHandle},
 };
+use crate::enemy::Enemy;
 
 use crate::floor::Floor;
 use crate::wall::Wall;
@@ -61,6 +62,10 @@ pub fn render(
             &mut Handle<CustomMaterial>,
         ),
         Without<Wall>,
+    >,
+    mut enemy_query: Query<(
+        &Transform,
+        With<Enemy>)
     >,
 ) {
     for player in query.iter_mut() {
@@ -130,6 +135,10 @@ pub fn render(
                     ],
                 );
             }
+        }
+
+        for enemy in enemy_query.iter() {
+            // TODO: Render enemy sprite given transformation
         }
     }
 }

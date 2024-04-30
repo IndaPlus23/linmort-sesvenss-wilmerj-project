@@ -8,13 +8,9 @@ use crate::enemy::Enemy;
 /// SceneAssets stores handles for assets used in the scene.
 #[derive(Resource, Debug, Default)]
 pub struct SceneAssets {
-    pub enemy_assets: Vec<Handle<Scene>>,
+    pub enemy: Handle<Scene>,
     pub textures: Vec<Handle<Image>>,
     pub texture_paths: Vec<String>,
-}
-
-pub struct EnemyStates {
-
 }
 
 pub struct AssetLoaderPlugin;
@@ -33,7 +29,7 @@ pub fn load_assets(mut scene_assets: ResMut<SceneAssets>, asset_server: Res<Asse
     let texture_paths = vec![String::from("grass_front.png"), String::from("SFLR6_4.png")];
 
     *scene_assets = SceneAssets {
-        enemy: asset_server.load(""),
+        enemy: asset_server.load("sprites/enemy.png"),
         textures: load_textures_from_folder(texture_paths.clone(), asset_server),
         texture_paths: texture_paths,
     }
@@ -73,8 +69,10 @@ fn load_textures_from_folder(
     return image_handles;
 }
 
+// TODO: Load enemies
 fn load_enemies() {
-    // TODO: Load enemies from file
     let data = fs::read_to_string("enemies.json").except("Unable to read file");
     serde_json::from_str(&data).except("JSON was incorrectly formatted");
+
+
 }

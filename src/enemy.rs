@@ -13,11 +13,12 @@ enum EnemyState {
     Dead,
 }
 
+// TODO: Use the Transform component instead of a custom position
 // Enemy stats are stored in JSON format.
 #[derive(Component, Clone, Debug, Serialize, Deserialize)]
 pub struct Enemy {
     id: usize,
-    position: Vec3,
+    position: Transform,
     state: EnemyState,
     reaction_speed: usize,
     speed: usize,
