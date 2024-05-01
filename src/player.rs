@@ -12,15 +12,15 @@ pub struct Player {
 }
 
 impl Player {
-    pub fn new(x: f32, y: f32, z: f32, yaw: f32, pitch: f32, height: f32, gravity: f32) -> Self {
+    pub fn new(x: f32, y: f32, z: f32, yaw: f32, pitch: f32, height: f32)  -> Self {
         Self {
             x,
             y,
             z,
             yaw,
             pitch,
-            height,
-            gravity
+            height: 10.,
+            gravity: 0.
         }
     }
 }
