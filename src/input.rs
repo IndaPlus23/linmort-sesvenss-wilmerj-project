@@ -1,11 +1,13 @@
-use crate::floor::Floor;
-use crate::Wall;
-use crate::map::Map;
-use crate::Player;
 use crate::collision_detection::{wall_collision, floor_collision};
-use bevy::window::{CursorGrabMode, PrimaryWindow};
-use bevy::{input::mouse::MouseMotion, prelude::*};
+
+use bevy::{
+    input::mouse::MouseMotion,
+    prelude::*,
+    window::{CursorGrabMode, PrimaryWindow},
+};
 use std::f32::consts::PI;
+
+use crate::{map::Map, Player, Wall, floor::Floor};
 
 #[derive(Default)]
 pub struct MouseState {
@@ -17,7 +19,7 @@ impl Resource for MouseState {}
 pub fn keyboard_input(
     map_query: Query<&mut Map>,
     mut window_query: Query<&mut Window, With<PrimaryWindow>>,
-    mut keyboard_input: Res<ButtonInput<KeyCode>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
     mut query: Query<&mut Player>,
     time: Res<'_, Time<Real>>,
     mut wall_query: Query<&mut Wall>,
@@ -149,7 +151,7 @@ pub fn mouse_input(
         let window = window_query.single_mut();
 
         if window.cursor_position() == None {
-            return
+            return;
         }
 
         let _window_pos = window.cursor_position().unwrap();

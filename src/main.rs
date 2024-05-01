@@ -1,15 +1,16 @@
+mod asset_loader;
+mod egui;
+mod floor;
 mod input;
+mod map;
 mod player;
 mod render;
+mod vertex;
 mod wall;
-mod floor;
-mod vertice;
-mod egui;
-mod asset_loader;
-mod map;
 mod collision_detection;
 
 use bevy::{
+    core::FrameCount,
     prelude::*,
     render::mesh::Mesh,
     sprite::Material2dPlugin,
@@ -19,15 +20,14 @@ use bevy_egui::EguiPlugin;
 use std::f32::consts::PI;
 
 use crate::{
+    asset_loader::{load_assets, AssetLoaderPlugin, SceneAssets},
+    egui::editor_ui,
     input::{keyboard_input, mouse_input, MouseState},
+    map::load_from_file,
     player::Player,
     render::render,
-    wall::Wall,
-    vertice::Vertice,
-    egui::ui_example_system,
-    asset_loader::{AssetLoaderPlugin, load_assets, SceneAssets},
-    map::load_from_file,
     render::CustomMaterial,
+    wall::Wall,
 };
 
 fn main() {
@@ -37,39 +37,31 @@ fn main() {
             press_coords: Vec::new(),
         })
         .add_plugins(AssetLoaderPlugin)
-        .add_plugins((
-            DefaultPlugins
-                .set(WindowPlugin {
-                    primary_window: Some(Window {
-                        title: "Raycaster".into(),
-                        name: Some("Raycaster".into()),
-                        resolution: (1280., 720.).into(),
-                        present_mode: PresentMode::AutoVsync,
-                        // Tells wasm not to override default event handling, like F5, Ctrl+R etc.
-                        prevent_default_event_handling: false,
-                        window_theme: Some(WindowTheme::Dark),
-                        enabled_buttons: bevy::window::EnabledButtons {
-                            maximize: false,
-                            ..Default::default()
-                        },
-                        ..default()
-                    }),
+        .add_plugins((DefaultPlugins
+            .set(WindowPlugin {
+                primary_window: Some(Window {
+                    title: "Raycaster".into(),
+                    name: Some("Raycaster".into()),
+                    resolution: (1280., 720.).into(),
+                    present_mode: PresentMode::AutoVsync,
+                    prevent_default_event_handling: false,
+                    window_theme: Some(WindowTheme::Dark),
+                    visible: false,
                     ..default()
-                })
-                .set(ImagePlugin::default_nearest()),
-            //FrameTimeDiagnosticsPlugin,
-            //LogDiagnosticsPlugin::default(),
-            //bevy::diagnostic::SystemInformationDiagnosticsPlugin::default()
-        ))
+                }),
+                ..default()
+            })
+            .set(ImagePlugin::default_nearest()),))
         .add_plugins(Material2dPlugin::<CustomMaterial>::default())
         .add_plugins(EguiPlugin)
         .add_systems(PreStartup, load_assets)
         .add_systems(Startup, setup)
+        .add_systems(Update, (change_title, make_visible))
         .add_systems(Update, keyboard_input)
         .add_systems(Update, mouse_input)
         .add_systems(Update, render)
         .add_systems(Update, change_title)
-        .add_systems(Update, ui_example_system)
+        .add_systems(Update, editor_ui)
         .run();
 }
 
@@ -78,15 +70,15 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut custom_materials: ResMut<Assets<CustomMaterial>>,
     mut asset_server: Res<SceneAssets>,
+    window_query: Query<&Window>,
 ) {
     let map = load_from_file("map.txt").expect("Error: could not open map");
 
     commands.spawn(Camera2dBundle {
-        transform: Transform::from_xyz(map.camera[0], map.camera[1], map.camera[2])
-            .looking_at(
-                Vec3::new(map.camera[3], map.camera[4], map.camera[5]),
-                Vec3::Y,
-            ),
+        transform: Transform::from_xyz(map.camera[0], map.camera[1], map.camera[2]).looking_at(
+            Vec3::new(map.camera[3], map.camera[4], map.camera[5]),
+            Vec3::Y,
+        ),
         ..Default::default()
     });
 
@@ -94,8 +86,10 @@ fn setup(
         &mut commands,
         &mut meshes,
         &mut custom_materials,
-        &mut asset_server);
-    
+        &mut asset_server,
+        window_query,
+    );
+
     commands.spawn(map);
 }
 
@@ -110,5 +104,12 @@ fn change_title(mut windows: Query<&mut Window>, time: Res<'_, Time<Real>>, quer
             player.z,
             player.yaw * (180.0 / PI),
             player.pitch * (180.0 / PI));
+    }
+}
+
+/// At this point the gpu is ready to show the app and make the window visible.
+fn make_visible(mut window: Query<&mut Window>, frames: Res<FrameCount>) {
+    if frames.0 == 3 {
+        window.single_mut().visible = true;
     }
 }

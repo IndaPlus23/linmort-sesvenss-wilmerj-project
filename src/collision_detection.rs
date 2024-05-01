@@ -1,5 +1,4 @@
-use bevy::core_pipeline::bloom::BloomPlugin;
-use bevy::{prelude::*, render::mesh::Mesh, sprite::Mesh2dHandle}; 
+use bevy::prelude::*;
 use crate::wall::Wall;
 use crate::floor::Floor;
 use crate::Player;
@@ -35,7 +34,6 @@ use crate::Player;
 
 pub fn wall_collision(wall: &Mut<'_, Wall>, movement: &mut bevy::prelude::Vec3, player: &mut bevy::prelude::Mut<'_, Player>) {
     let padding = 1.5;
-    let mut hit_wall = false;
 
     // FIND WHICH WAY THE WALL IS FACING ASUMING THAT ALL WALLS ARE FLAT
     
