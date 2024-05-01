@@ -7,6 +7,7 @@ mod vertice;
 mod egui;
 mod asset_loader;
 mod map;
+mod collision_detection;
 
 use bevy::{
     prelude::*,
