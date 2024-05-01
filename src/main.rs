@@ -7,23 +7,14 @@ use bevy::{
     sprite::{Material2d, Material2dPlugin},
     window::{PresentMode, WindowTheme},
 };
-use bevy_egui::EguiPlugin;
-use std::f32::consts::PI;
-
 mod input;
-use crate::input::{keyboard_input, mouse_input, MouseState};
 mod player;
-use crate::player::Player;
 mod render;
-use crate::render::render;
 mod wall;
-use crate::wall::Wall;
 mod floor;
 use crate::floor::Floor;
 mod vertice;
-use crate::vertice::Vertice;
 mod egui;
-use crate::egui::ui_example_system;
 mod asset_loader;
 mod map;
 mod sprites;
@@ -32,16 +23,10 @@ mod utility;
 mod enemy;
 mod collision_detection;
 mod sound;
-
-use crate::asset_loader::AssetLoaderPlugin;
-use crate::asset_loader::{load_assets, SceneAssets};
 use crate::sprites::SpritePlugin;
 
 use bevy::{
     prelude::*,
-    render::mesh::Mesh,
-    sprite::Material2dPlugin,
-    window::{PresentMode, WindowTheme},
 };
 use bevy_egui::EguiPlugin;
 use std::f32::consts::PI;

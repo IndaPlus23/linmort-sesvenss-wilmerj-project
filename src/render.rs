@@ -63,10 +63,6 @@ pub fn render(
         ),
         Without<Wall>,
     >,
-    mut enemy_query: Query<(
-        &Transform,
-        With<Enemy>)
-    >,
 ) {
     for player in query.iter_mut() {
         let mut z_ordering = 0.;
@@ -137,8 +133,8 @@ pub fn render(
             }
         }
 
-        for enemy in enemy_query.iter() {
-            // TODO: Render enemy sprite given transformation
-        }
+        // for enemy in enemy_query.iter() {
+        //     // TODO: Render enemy sprite given transformation
+        // }
     }
 }

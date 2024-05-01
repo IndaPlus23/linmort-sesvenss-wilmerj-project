@@ -15,10 +15,10 @@ enum EnemyState {
 
 // TODO: Use the Transform component instead of a custom position
 // Enemy stats are stored in JSON format.
-#[derive(Component, Clone, Debug, Serialize, Deserialize)]
+#[derive(Component, Clone, Debug)]
 pub struct Enemy {
     id: usize,
-    position: Transform,
+    position: Vec3,
     state: EnemyState,
     reaction_speed: usize,
     speed: usize,
@@ -27,8 +27,9 @@ pub struct Enemy {
     range: usize,
     respawn_time: Option<usize>, // If true, usize
     projectile_speed: usize,
-    sprite_sheet: Handle<Scene>,
+    texture: String, // Used to query texture in SceneBundle
 }
+
 pub struct EnemyPlugin;
 
 impl Plugin for EnemyPlugin {
@@ -40,14 +41,7 @@ impl Plugin for EnemyPlugin {
 impl Enemy {
 
     /// Creates a new enemy with an associated sprite and
-    pub fn new(id: usize, position: Vec3, enemy_type: usize) -> Self {
-
-        // TODO: Load enemy data from file depending on the enemy_type
-        match enemy_type {
-            1 => {todo!()},
-            _ => error!("Couldn't recognize enemy type: {} from file.", enemy_type)
-        }
-
+    pub fn new(id: usize, position: Vec3, enemy_type: String) -> Self {
         Enemy {
             id,
             position,
@@ -59,18 +53,25 @@ impl Enemy {
             range: 0,
             respawn_time: None,
             projectile_speed: 0,
-            sprite_sheet: Default::default(),
+            texture: enemy_type,
         }
     }
 
     /// Populates map with enemies
-    pub fn spawn_enemy(commands: &mut Commands, scene_assets: &mut Res<SceneAssets>, enemy: Enemy) {
+    pub fn spawn_enemy(commands: &mut Commands, scene_assets: &mut Res<SceneAssets>, enemy: &Enemy) {
+
+        let sprite = match enemy.texture.as_str() {
+            "enemy_a" => { scene_assets.enemy.clone()},
+            _ => panic!("Couldn't recognize enemy type: {} from file.", enemy.texture)
+        };
+
+        // TODO: Bundle enemy entity with spawned entity. Currently, there is no indication of enemy type
         commands.spawn((
             MovingObjectBundle {
                 velocity: Velocity::new(Vec3::ZERO),
                 acceleration: Acceleration::new(Vec3::ZERO),
                 model: SceneBundle {
-                    scene: scene_assets.enemy.clone(),
+                    scene: sprite,
                     transform: Transform::from_translation(enemy.position),
                     ..default()
                 },

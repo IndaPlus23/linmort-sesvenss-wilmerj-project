@@ -19,7 +19,7 @@ pub struct SpritePlugin;
 // TODO: Implement sprite spawning at various part of the game
 impl Plugin for SpritePlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(PostStartup, Sprite::spawn_sprite);
+        todo!()
     }
 }
 
@@ -61,23 +61,6 @@ impl Sprite {
                 };
             }
         }
-    }
-
-    /// Calculates position of
-    pub fn transform(sprite: Sprite) -> (Vec2, usize) {
-
-        // The sprite is behind the player and is thus not rendered.
-        if sprite.position.z > 0f32 {
-            return (
-                Vec2::ZERO,
-                0,
-            )
-        }
-
-        // TODO: Create a more realistic scaling function
-        let scale = 2.0 / utility::norm(sprite.position);
-
-        // TODO: Determine position on screen
     }
 
     // TODO: Implement clip

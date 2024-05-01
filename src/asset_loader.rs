@@ -3,6 +3,7 @@ use bevy::prelude::*;
 use std::path::PathBuf;
 use serde_json;
 use std::fs;
+use serde::{Deserialize, Serialize};
 use crate::enemy::Enemy;
 
 /// SceneAssets stores handles for assets used in the scene.
@@ -70,9 +71,26 @@ fn load_textures_from_folder(
 }
 
 // TODO: Load enemies
+#[derive(Serialize, Deserialize)]
+struct EnemyJSON {
+    id: usize,
+    position: Vec3,
+    state: String,
+    reaction_speed: usize,
+    speed: usize,
+    hp: usize,
+    attack: usize,
+    range: usize,
+    respawn_time: Option<usize>, // If true, usize
+    projectile_speed: usize,
+    sprite_sheet: String,
+    columns: usize,
+    rows: usize
+}
+
 fn load_enemies() {
-    let data = fs::read_to_string("enemies.json").except("Unable to read file");
-    serde_json::from_str(&data).except("JSON was incorrectly formatted");
+    let data = fs::read_to_string("enemies.json").expect("Unable to read file");
+    let formatted_data: EnemyJSON = serde_json::from_str(&data).expect("JSON was incorrectly formatted");
 
 
 }
