@@ -26,17 +26,23 @@ use crate::Player;
     TODO: 
     fix bugs
     clean up code 
+
+    // TODO: add padding
+    //      walk up stairs
+    // health bar
+    // gun mabye
 */
 
-pub fn wall_collision(wall: &Mut<'_, Wall>, movement: &mut bevy::prelude::Vec3, player: &bevy::prelude::Mut<'_, Player>) {
+pub fn wall_collision(wall: &Mut<'_, Wall>, movement: &mut bevy::prelude::Vec3, player: &mut bevy::prelude::Mut<'_, Player>) {
     let padding = 1.5;
+    let mut hit_wall = false;
 
     // FIND WHICH WAY THE WALL IS FACING ASUMING THAT ALL WALLS ARE FLAT
     
     if wall.start.position.x != wall.end.position.x {
         // WALL IS POINTING IN z DIRECTION
         // CHECK IF PLAYER IS IN SAME (x,y) AS WALL
-        if is_inside_rectangle(wall.start.position.x, wall.start.position.y, wall.end.position.x, wall.end.position.y + wall.height, player.x + movement.x, player.y + movement.y) {
+        if is_inside_rectangle(wall.start.position.x, wall.start.position.y, wall.end.position.x, wall.end.position.y + wall.height, player.x + movement.x, player.y + movement.y, player.height) {
             // CHECK IF PLAYER HITS WALL IN z DIRECTION
             let position_z = player.z + movement.z;
             let wall_start_z = wall.start.position.z - padding;
@@ -44,30 +50,44 @@ pub fn wall_collision(wall: &Mut<'_, Wall>, movement: &mut bevy::prelude::Vec3, 
 
             // CHECK IF THE PLAYER IS GOING TO MOVE THROUGH THE WALL
             if position_z > wall_start_z &&  position_z < wall_end_z {
-                movement[2] = 0.
+                // walking up stairs
+                if player.height / 5. >= wall.height {
+                    player.y += wall.height + padding + 1.;
+                } else {
+                    movement[2] = 0.;
+                }
+                
             }
         }
     }
     else if wall.start.position.z != wall.end.position.z {
         // WALL IS POINTING IN x DIRECTION
         // CHECK IF PLAYER IS IN SAME (z,y) AS WALL
-        if is_inside_rectangle(wall.start.position.z, wall.start.position.y, wall.end.position.z, wall.end.position.y + wall.height, player.z + movement.z, player.y + movement.y) {
+        if is_inside_rectangle(wall.start.position.z, wall.start.position.y, wall.end.position.z, wall.end.position.y + wall.height, player.z + movement.z, player.y + movement.y, player.height) {
             // CHECK IF PLAYER HITS WALL IN x DIRECTION
             let position_x = player.x + movement.x;
             let wall_start_x = wall.start.position.x - padding;
             let wall_end_x = wall.end.position.x + padding;
-
+            
             // CHECK IF THE PLAYER IS GOING TO MOVE THROUGH THE WALL
             if position_x > wall_start_x &&  position_x < wall_end_x {
-                movement[0] = 0.
+                // walking up stairs
+                if player.height / 5. >= wall.height {
+                    player.y += wall.height + padding + 1.;
+                } else {
+                    movement[0] = 0.;
+                }
+                
             }
         }
     }
+
+    
 }
 
 // function to find if given point
 // lies inside a given rectangle or not.
-fn is_inside_rectangle(x1: f32, y1: f32, x2: f32, y2: f32, x: f32, y: f32) -> bool {
+fn is_inside_rectangle(x1: f32, y1: f32, x2: f32, y2: f32, x: f32, y: f32, height: f32) -> bool {
     let mut check_x = false;
     let mut check_y = false;
 
@@ -81,6 +101,13 @@ fn is_inside_rectangle(x1: f32, y1: f32, x2: f32, y2: f32, x: f32, y: f32) -> bo
         }
     }
     if y1 < y2 {
+
+        if y1 < y && y1 > y - height {
+            
+        }
+
+
+
         if y > y1 && y < y2 {
             check_y = true
         }
@@ -117,7 +144,9 @@ pub fn floor_collision(floor: &Mut<'_, Floor>, movement: &mut bevy::prelude::Vec
             movement[1] = 0.
         }
         
-    }
+    } 
+    
+    
     
 }
 
