@@ -17,11 +17,11 @@ struct AnimationTimer(Timer);
 pub struct SpritePlugin;
 
 // TODO: Implement sprite spawning at various part of the game
-impl Plugin for SpritePlugin {
-    fn build(&self, app: &mut App) {
-        todo!()
-    }
-}
+// impl Plugin for SpritePlugin {
+//     fn build(&self, app: &mut App) {
+//         todo!()
+//     }
+// }
 
 pub struct Sprite {
     position: Vec3,

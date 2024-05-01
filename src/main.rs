@@ -82,7 +82,6 @@ fn main() {
         .add_systems(Update, mouse_input)
         .add_systems(Update, render)
         .add_systems(Update, change_title)
-        .add_plugins(SpritePlugin)
         .add_systems(Update, ui_example_system)
         .run();
 }

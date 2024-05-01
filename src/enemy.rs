@@ -1,3 +1,4 @@
+use bevy::asset::{UntypedAssetId, VisitAssetDependencies};
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 use crate::asset_loader::SceneAssets;
@@ -15,7 +16,7 @@ enum EnemyState {
 
 // TODO: Use the Transform component instead of a custom position
 // Enemy stats are stored in JSON format.
-#[derive(Component, Clone, Debug)]
+#[derive(Component, Clone, Debug, Default)]
 pub struct Enemy {
     id: usize,
     position: Vec3,
@@ -39,7 +40,6 @@ impl Plugin for EnemyPlugin {
 }
 
 impl Enemy {
-
     /// Creates a new enemy with an associated sprite and
     pub fn new(id: usize, position: Vec3, enemy_type: String) -> Self {
         Enemy {
