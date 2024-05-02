@@ -1,8 +1,12 @@
-use crate::Player;
 use crate::gun::shoot_the_gun;
-use bevy::window::{CursorGrabMode, PrimaryWindow};
-use bevy::{input::mouse::MouseMotion, prelude::*};
+use bevy::{
+    input::mouse::MouseMotion,
+    prelude::*,
+    window::{CursorGrabMode, PrimaryWindow},
+};
 use std::f32::consts::PI;
+
+use crate::{map::Map, Player};
 
 #[derive(Default)]
 pub struct MouseState {
@@ -12,6 +16,7 @@ pub struct MouseState {
 impl Resource for MouseState {}
 
 pub fn keyboard_input(
+    map_query: Query<&mut Map>,
     mut window_query: Query<&mut Window, With<PrimaryWindow>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut query: Query<&mut Player>,
@@ -19,6 +24,13 @@ pub fn keyboard_input(
 ) {
     if keyboard_input.just_pressed(KeyCode::Escape) {
         std::process::exit(0);
+    }
+
+    if keyboard_input.just_pressed(KeyCode::Enter) {
+        for map in map_query.iter() {
+            map.save();
+            println!("saved");
+        }
     }
 
     if keyboard_input.just_pressed(KeyCode::Tab) {
@@ -94,8 +106,21 @@ pub fn mouse_input(
         }
     }
 
-    if mouse_button_input.just_pressed(MouseButton::Left) {        
-        shoot_the_gun(query)
+    if mouse_button_input.just_pressed(MouseButton::Left) {
+        mouse_state.press_coords.clear();
+
+        let window = window_query.single_mut();
+        let _window_pos = window.cursor_position().unwrap();
+    }
+
+    if mouse_button_input.just_released(MouseButton::Left) {
+        let window = window_query.single_mut();
+
+        if window.cursor_position() == None {
+            return;
+        }
+
+        let _window_pos = window.cursor_position().unwrap();
     }
 }
 

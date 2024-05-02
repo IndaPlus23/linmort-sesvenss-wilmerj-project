@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use crate::gun::Holster;
 
-#[derive(Component)]
+#[derive(Default, Component, Clone, PartialEq)]
 pub struct Player {
     pub x: f32,
     pub y: f32,

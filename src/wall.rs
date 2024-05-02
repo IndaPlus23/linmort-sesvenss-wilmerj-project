@@ -1,117 +1,80 @@
-use bevy::{prelude::*, render::mesh::Mesh, sprite::MaterialMesh2dBundle};
+use bevy::{
+    prelude::*,
+    render::{
+        mesh::{Indices, Mesh},
+        render_asset::RenderAssetUsages,
+        render_resource::PrimitiveTopology,
+    },
+};
 
-use crate::CustomMaterial;
-use crate::Player;
-use crate::SceneAssets;
-use crate::Vertice;
+use crate::{vertex::Vertex, Player};
 
 #[derive(Component, Clone)]
 pub struct Wall {
-    pub start: Vertice,
-    pub end: Vertice,
+    pub id: usize,
+    pub start: Vertex,
+    pub end: Vertex,
     pub height: f32,
-    pub upper_triangle: bool,
     pub uv_scalar: Vec2,
     pub uv_offset: Vec2,
     pub uv_rotation: f32,
-    pub texture: Handle<Image>,
+    pub texture_id: usize,
 }
 
 impl Wall {
     pub fn new(
-        start: Vertice,
-        end: Vertice,
+        id: usize,
+        start: Vertex,
+        end: Vertex,
         height: f32,
-        upper_triangle: bool,
         uv_scalar: Vec2,
         uv_offset: Vec2,
         uv_rotation: f32,
-        texture: Handle<Image>,
+        texture_id: usize,
     ) -> Self {
         Self {
+            id,
             start,
             end,
             height,
-            upper_triangle,
             uv_scalar,
             uv_offset,
             uv_rotation,
-            texture,
+            texture_id,
         }
     }
 
-    pub fn spawn(
-        commands: &mut Commands,
-        meshes: &mut ResMut<Assets<Mesh>>,
-        custom_materials: &mut ResMut<Assets<CustomMaterial>>,
-        asset_server: &mut Res<SceneAssets>,
-        start: Vertice,
-        end: Vertice,
-        height: f32,
-    ) {
-        let texture = asset_server.textures[0].clone();
-
-        commands.spawn((
-            Wall::new(
-                start,
-                end,
-                height,
-                true,
-                Vec2::new(1., 1.),
-                Vec2::new(0., 0.),
-                0.,
-                texture.clone(),
-            ),
-            MaterialMesh2dBundle {
-                mesh: meshes.add(Triangle2d::default()).into(),
-                material: custom_materials.add(CustomMaterial {
-                    texture: texture.clone(),
-                    a: Vec3::new(0., 0., 0.),
-                    b: Vec3::new(0., 0., 0.),
-                    c: Vec3::new(0., 0., 0.),
-                    a_uv: Vec2::new(0., 0.),
-                    b_uv: Vec2::new(0., 0.),
-                    c_uv: Vec2::new(0., 0.),
-                    uv_scalar: Vec2::new(1., 1.),
-                    uv_offset: Vec2::new(0., 0.),
-                    uv_rotation: 0.,
-                }),
-                ..Default::default()
-            },
-        ));
-
-        commands.spawn((
-            Wall::new(
-                start,
-                end,
-                height,
-                false,
-                Vec2::new(1., 1.),
-                Vec2::new(0., 0.),
-                0.,
-                texture.clone(),
-            ),
-            MaterialMesh2dBundle {
-                mesh: meshes.add(Triangle2d::default()).into(),
-                material: custom_materials.add(CustomMaterial {
-                    texture: texture.clone(),
-                    a: Vec3::new(0., 0., 0.),
-                    b: Vec3::new(0., 0., 0.),
-                    c: Vec3::new(0., 0., 0.),
-                    a_uv: Vec2::new(0., 0.),
-                    b_uv: Vec2::new(0., 0.),
-                    c_uv: Vec2::new(0., 0.),
-                    uv_scalar: Vec2::new(1., 1.),
-                    uv_offset: Vec2::new(0., 0.),
-                    uv_rotation: 0.,
-                }),
-                ..Default::default()
-            },
-        ));
+    /// Returns empty TriangleList mesh.
+    pub fn mesh() -> Mesh {
+        Mesh::new(
+            PrimitiveTopology::TriangleList,
+            RenderAssetUsages::default(),
+        )
+        .with_inserted_attribute(
+            Mesh::ATTRIBUTE_POSITION,
+            vec![[0., 0., 0.], [0., 0., 0.], [0., 0., 0.], [0., 0., 0.]],
+        )
+        .with_inserted_attribute(
+            Mesh::ATTRIBUTE_UV_0,
+            vec![[0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0]],
+        )
+        .with_inserted_attribute(
+            Mesh::ATTRIBUTE_NORMAL,
+            vec![
+                [0.0, 0.0, 1.0],
+                [0.0, 0.0, 1.0],
+                [0.0, 0.0, 1.0],
+                [0.0, 0.0, 1.0],
+            ],
+        )
+        .with_inserted_indices(Indices::U32(vec![0, 3, 1, 1, 3, 2]))
     }
 
-    // Returns clipped vertices and screen coordinates
-    pub fn transform(&mut self, player: &Player) -> (Vertice, Vertice, Vertice, Vec2, Vec2, Vec2) {
+    /// Returns clipped vertices and screen coordinates.
+    pub fn transform(
+        &self,
+        player: &Player,
+    ) -> (Vertex, Vertex, Vertex, Vertex, Vec2, Vec2, Vec2, Vec2) {
         let mut start = self.start.transform_vertice(player);
         let mut end = self.end.transform_vertice(player);
 
@@ -119,9 +82,11 @@ impl Wall {
         // The wall does not have to be rendered
         if start.position.z > 0. && end.position.z > 0. {
             return (
-                Vertice::zero(),
-                Vertice::zero(),
-                Vertice::zero(),
+                Vertex::zero(),
+                Vertex::zero(),
+                Vertex::zero(),
+                Vertex::zero(),
+                Vec2::ZERO,
                 Vec2::ZERO,
                 Vec2::ZERO,
                 Vec2::ZERO,
@@ -129,7 +94,6 @@ impl Wall {
         }
 
         // Initialize variables
-        let (mut a, mut b, mut c);
         let (original_start, original_end) = (start, end);
         let mut percentage = 0.;
 
@@ -145,61 +109,98 @@ impl Wall {
             end.clip(start);
         }
 
-        if self.upper_triangle == true {
-            a = Vertice::new(
-                Vec3::new(start.position.x, start.position.y, start.position.z),
-                Vec2::new(0., 1.),
-            );
-            b = Vertice::new(
-                Vec3::new(
-                    start.position.x,
-                    start.position.y + self.height,
-                    start.position.z,
-                ),
-                Vec2::new(0., 0.),
-            );
-            c = Vertice::new(
-                Vec3::new(end.position.x, end.position.y + self.height, end.position.z),
-                Vec2::new(1., 0.),
-            );
-        } else {
-            a = Vertice::new(
-                Vec3::new(end.position.x, end.position.y + self.height, end.position.z),
-                Vec2::new(1., 0.),
-            );
-            b = Vertice::new(
-                Vec3::new(start.position.x, start.position.y, start.position.z),
-                Vec2::new(0., 1.),
-            );
-            c = Vertice::new(
-                Vec3::new(end.position.x, end.position.y, end.position.z),
-                Vec2::new(1., 1.),
-            );
-        }
+        // Define four corner vertices A, B, C and D
+        let mut a = Vertex::new(
+            Vec3::new(start.position.x, start.position.y, start.position.z),
+            Vec2::new(0., 1.),
+        );
+        let mut b = Vertex::new(
+            Vec3::new(
+                start.position.x,
+                start.position.y + self.height,
+                start.position.z,
+            ),
+            Vec2::new(0., 0.),
+        );
+        let mut c = Vertex::new(
+            Vec3::new(end.position.x, end.position.y + self.height, end.position.z),
+            Vec2::new(1., 0.),
+        );
+        let mut d = Vertex::new(
+            Vec3::new(end.position.x, end.position.y, end.position.z),
+            Vec2::new(1., 1.),
+        );
 
         // Calculate correct uv coordinates for the clipped vertices
         if original_start.position.z > 0. {
-            if self.upper_triangle == true {
-                b.uv = ((c.uv - b.uv) * percentage) + b.uv;
-                let c_uv = Vec2::new(1., 1.);
-                a.uv = ((c_uv - a.uv) * percentage) + a.uv;
-            } else {
-                let c_uv = Vec2::new(1., 1.);
-                b.uv = ((c_uv - b.uv) * percentage) + b.uv;
-            }
+            b.uv = ((c.uv - b.uv) * percentage) + b.uv;
+            a.uv = ((d.uv - a.uv) * percentage) + a.uv;
         }
 
         // Calculate correct uv coordinates for the clipped vertices
         if original_end.position.z > 0. {
-            if self.upper_triangle == true {
-                c.uv = ((b.uv - c.uv) * percentage) + c.uv;
-            } else {
-                c.uv = ((b.uv - c.uv) * percentage) + c.uv;
-                let b_uv = Vec2::new(0., 0.);
-                a.uv = ((b_uv - a.uv) * percentage) + a.uv;
-            }
+            c.uv = ((b.uv - c.uv) * percentage) + c.uv;
+            d.uv = ((a.uv - d.uv) * percentage) + d.uv;
         }
 
-        return (a, b, c, a.screen(), b.screen(), c.screen());
+        if original_start.position.z > 0. {
+            return (d, c, b, a, d.screen(), c.screen(), b.screen(), a.screen());
+        } else {
+            return (a, b, c, d, a.screen(), b.screen(), c.screen(), d.screen());
+        }
+    }
+
+    /// Helps with calculating mask for z-buffering, same principle as transform.
+    pub fn mask(&self, player: &Player) -> (Vertex, Vertex, Vertex, Vertex) {
+        let mut start = self.start.transform_vertice(player);
+        let mut end = self.end.transform_vertice(player);
+
+        // Initialize variables
+        let org_start = start;
+        let zero = Vertex::zero();
+
+        // Both wall's starting and end points are behind the player
+        // The wall does not have to be rendered
+        if start.position.z > 0. && end.position.z > 0. {
+            return (zero, zero, zero, zero);
+        }
+
+        // Wall starting point is behind the player
+        if start.position.z > 0. {
+            start.clip(end);
+        }
+
+        // Wall end point is behind the player
+        if end.position.z > 0. {
+            end.clip(start);
+        }
+
+        // Define four corner vertices A, B, C and D
+        let a = Vertex::new(
+            Vec3::new(start.position.x, start.position.y, start.position.z),
+            Vec2::new(0., 1.),
+        );
+        let b = Vertex::new(
+            Vec3::new(
+                start.position.x,
+                start.position.y + self.height,
+                start.position.z,
+            ),
+            Vec2::new(0., 0.),
+        );
+        let c = Vertex::new(
+            Vec3::new(end.position.x, end.position.y + self.height, end.position.z),
+            Vec2::new(1., 0.),
+        );
+        let d = Vertex::new(
+            Vec3::new(end.position.x, end.position.y, end.position.z),
+            Vec2::new(1., 1.),
+        );
+
+        if org_start.position.z > 0. {
+            return (d, c, b, a);
+        } else {
+            return (a, b, c, d);
+        }
     }
 }
