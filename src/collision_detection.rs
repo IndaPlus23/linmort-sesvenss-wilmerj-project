@@ -20,18 +20,13 @@ use crate::Player;
     1. player can get stuck in the wall if they walk in towards the edge of a wall, 
     you can still walks alongside the wall but not away from it. 
 
-    2. At the edge of floor triangels you can get throught the floor
-
     TODO: 
     fix bugs
     clean up code 
 
-    is_inside_rectangle lägg til height?
+    // TODO: 
+    // walk up stairs (maybe done)
 
-    // TODO: add padding
-    //      walk up stairs
-    // health bar
-    // gun mabye
 */
 
 pub fn wall_collision(wall: &Mut<'_, Wall>, movement: &mut bevy::prelude::Vec3, player: &mut bevy::prelude::Mut<'_, Player>) {
@@ -81,7 +76,9 @@ pub fn wall_collision(wall: &Mut<'_, Wall>, movement: &mut bevy::prelude::Vec3, 
             }
         }
     }
+}
 
+fn infront_of_wall() {
     
 }
 
