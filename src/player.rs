@@ -19,7 +19,7 @@ impl Player {
             z,
             yaw,
             pitch,
-            height: 10.,
+            height: 5.,
             gravity: 0.
         }
     }
