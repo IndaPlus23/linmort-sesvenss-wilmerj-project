@@ -12,7 +12,7 @@ pub struct Player {
 }
 
 impl Player {
-    pub fn new(x: f32, y: f32, z: f32, yaw: f32, pitch: f32, holster: Holster) -> Self {
+    pub fn new(x: f32, y: f32, z: f32, yaw: f32, pitch: f32) -> Self {
 
         Self {
             x,
@@ -20,7 +20,7 @@ impl Player {
             z,
             yaw,
             pitch,
-            holster
+            holster: Holster::new()
         }
     }
 }

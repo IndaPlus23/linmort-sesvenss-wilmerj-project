@@ -1,6 +1,7 @@
 use crate::Player;
 use bevy::prelude::*;
 
+#[derive(Default, Component, Clone, PartialEq)]
 pub struct Holster {
     pub guns: Vec<Gun>,
     pub in_hand: Option<usize>
@@ -27,7 +28,7 @@ impl Holster {
         }
     }
 }
-#[derive(PartialEq)]
+#[derive(Default, Component, Clone, PartialEq)]
 pub struct Gun {
     pub gun_name: String,
     pub gun_type: String,
@@ -70,7 +71,9 @@ pub fn shoot_the_gun(mut query: Query<&mut Player>) {
         //println!("x: {:?} y: {:?} y: {:?}", player.x, player.y, player.z);
 
         //
-        
+        // todo:
+            // health bar
+            // gun mabye
 
         // send out ray in the direction that the player is facing
 
