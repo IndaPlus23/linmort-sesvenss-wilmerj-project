@@ -8,8 +8,9 @@ use bevy::{
 use crate::enemy::Enemy;
 
 use crate::floor::Floor;
+use crate::movement::{Acceleration, MovingObjectBundle, Velocity};
 use crate::wall::Wall;
-use crate::Player;
+use crate::{enemy, Player};
 use crate::SceneAssets;
 
 #[derive(Component, Asset, TypePath, AsBindGroup, Debug, Clone)]
@@ -44,6 +45,7 @@ impl Material2d for CustomMaterial {
 }
 
 pub fn render(
+    mut commands: Commands,
     mut query: Query<&Player>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut custom_materials: ResMut<Assets<CustomMaterial>>,
@@ -63,6 +65,13 @@ pub fn render(
         ),
         Without<Wall>,
     >,
+    mut enemy_query: Query<
+        (
+            &mut Enemy,
+            &mut Transform,
+            &mut Handle<Scene>,
+        )
+    >
 ) {
     for player in query.iter_mut() {
         let mut z_ordering = 0.;
@@ -133,8 +142,18 @@ pub fn render(
             }
         }
 
-        // for enemy in enemy_query.iter() {
-        //     // TODO: Render enemy sprite given transformation
-        // }
+        for (mut enemy, transform, sprite) in enemy_query.iter() {
+            commands.spawn((
+                MovingObjectBundle {
+                    velocity: Velocity::new(Vec3::ZERO),
+                    acceleration: Acceleration::new(Vec3::ZERO),
+                    model: SceneBundle {
+                        scene: enemy.texture.clone(),
+                        transform: Transform::from_translation(enemy.transform(player)),
+                        ..default()
+                    },
+                }, Enemy,
+            ));
+        }
     }
 }

@@ -4,7 +4,9 @@ use serde::{Deserialize, Serialize};
 use crate::asset_loader::SceneAssets;
 use crate::collision_detection::Collider;
 use crate::movement::{Acceleration, MovingObjectBundle, Velocity};
+use crate::player::Player;
 use crate::sound::Sound;
+use crate::vertice::Vertice;
 
 #[derive(Clone, Debug)]
 enum EnemyState {
@@ -16,7 +18,7 @@ enum EnemyState {
 
 // TODO: Use the Transform component instead of a custom position
 // Enemy stats are stored in JSON format.
-#[derive(Component, Clone, Debug, Default)]
+#[derive(Component)]
 pub struct Enemy {
     id: usize,
     position: Vec3,
@@ -28,7 +30,7 @@ pub struct Enemy {
     range: usize,
     respawn_time: Option<usize>, // If true, usize
     projectile_speed: usize,
-    texture: String, // Used to query texture in SceneBundle
+    pub(crate) texture: Handle<Scene>, // Used to query texture in SceneBundle
 }
 
 pub struct EnemyPlugin;
@@ -41,23 +43,40 @@ impl Plugin for EnemyPlugin {
 
 impl Enemy {
     /// Creates a new enemy with an associated sprite and
-    pub fn new(id: usize, position: Vec3, enemy_type: String) -> Self {
+    pub fn new(id: usize,
+               reaction_speed: usize,
+               speed: usize,
+               hp: usize,
+               attack: usize,
+               range: usize,
+               respawn_time: Option<usize>,
+               projectile_speed: usize,
+               enemy_type: String,
+               scene_assets: &Res<SceneAssets>,
+    ) -> Self {
+
+        // TODO: find enemy sprite
+        let sprite_handle = match enemy_type.as_str() {
+            "enemy_a" => { scene_assets.enemy.clone()},
+            _ => panic!("Couldn't recognize enemy type: {} from file.", enemy_type)
+        };
+
         Enemy {
             id,
-            position,
+            position: Vec3::ZERO,
             state: EnemyState::Dormant,
-            reaction_speed: 0,
-            speed: 0,
-            hp: 0,
-            attack: 0,
-            range: 0,
-            respawn_time: None,
-            projectile_speed: 0,
-            texture: enemy_type,
+            reaction_speed,
+            speed,
+            hp,
+            attack,
+            range,
+            respawn_time,
+            projectile_speed,
+            texture: sprite_handle,
         }
     }
 
-    /// Populates map with enemies
+    /// Populates map with enemies<
     pub fn spawn_enemy(commands: &mut Commands, scene_assets: &mut Res<SceneAssets>, enemy: &Enemy) {
 
         let sprite = match enemy.texture.as_str() {
@@ -77,6 +96,52 @@ impl Enemy {
                 },
             }
         ));
+    }
+
+    pub fn transform(
+        &mut self,
+        player: &Player,
+    ) -> Vec2 {
+        let mut x = self.position.x;
+        let mut y = self.position.y;
+        let mut z = self.position.z;
+
+        let cos = player.yaw.cos();
+        let sin = player.yaw.sin();
+
+        x -= player.x;
+        y -= player.y;
+        z -= player.z;
+
+        let new_x = x * cos + z * sin;
+        let new_z = z * cos - x * sin;
+        let new_y = y + (player.pitch * new_z);
+
+        let position = Vec3::new(new_x, new_y, new_z);
+
+        // Enemy is behind player, should not render.
+        if position.z > 0. {
+            return Vec2::ZERO
+        }
+
+        // ------------------------------------ Secured
+
+        // TODO: Might have to deal with clipping
+
+        return position.screen();
+    }
+
+    /// Converts vertice coordinates to 2d screen coordinates
+    /// NOTE: COPY FROM vertice.rs
+    pub fn screen(&self) -> Vec2 {
+        let world_x = self.position.x;
+        let world_y = self.position.y;
+        let world_z = self.position.z;
+
+        let screen_x = world_x * 1500. / world_z;
+        let screen_y = world_y * 1500. / world_z;
+
+        Vec2::new(-screen_x, -screen_y)
     }
 }
 

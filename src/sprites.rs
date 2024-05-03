@@ -1,9 +1,8 @@
 use bevy::prelude::*;
 use crate::asset_loader::SceneAssets;
+use crate::enemy::Enemy;
 use crate::movement::{Acceleration, MovingObjectBundle, Velocity};
-use serde::{Deserialize, Serialize};
-use std::f64;
-use crate::utility;
+use crate::player::Player;
 
 #[derive(Component)]
 struct AnimationIndices {
@@ -25,7 +24,7 @@ pub struct SpritePlugin;
 
 pub struct Sprite {
     position: Vec3,
-    scale: usize,
+    height: usize,
 }
 
 impl Sprite {
@@ -63,7 +62,54 @@ impl Sprite {
         }
     }
 
-    // TODO: Implement clip
+    // Transforms the sprite's position based on the player's position and orientation
+    pub fn transform(
+        &self,
+        player: &Player
+    ) -> Option<(Vec2, Vec2)> {
+        let view_position = self.position - player.position;
+        let view_position = player.orientation * view_position; // Assuming orientation is a Quat or similar
+
+        // Perform simple frustum culling
+        if view_position.z <= 0.0 {
+            // The sprite is behind the player
+            None
+        } else {
+            // Convert 3D position to 2D screen coordinates
+            let screen_x = view_position.x / view_position.z;
+            let screen_y = view_position.y / view_position.z;
+            let screen_position = Vec2::new(screen_x, screen_y);
+
+            // Calculate the size on the screen based on the distance
+            let scale = 1.0 / view_position.z; // Simple perspective scaling
+            let screen_size = self.height * scale;
+
+            Some((screen_position, screen_size))
+        }
+    }
+
+    /// Apply transformation based on player rotation and position.
+    pub fn transform_sprite(&self, player: &Player) -> Enemy {
+
+        // TODO: Query enemies
+
+        let mut x = self.position.x;
+        let mut y = self.position.y;
+        let mut z = self.position.z;
+
+        let cos = player.yaw.cos();
+        let sin = player.yaw.sin();
+
+        x -= player.x;
+        y -= player.y;
+        z -= player.z;
+
+        let new_x = x * cos + z * sin;
+        let new_z = z * cos - x * sin;
+        let new_y = y + (player.pitch * new_z);
+
+        // TODO: Fix return/mod
+    }
 
     // TODO: Make function work on sprites
     fn screen(&self) -> Vec2 {
