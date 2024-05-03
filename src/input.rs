@@ -53,7 +53,7 @@ pub fn keyboard_input(
     }
 
     for mut player in query.iter_mut() {
-        let mut speed = 1./2.;
+        let mut speed = 1./3.;
 
         let mut movement = Vec3::ZERO;
 
