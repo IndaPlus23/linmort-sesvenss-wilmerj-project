@@ -68,6 +68,7 @@ pub fn render(
         ),
         Without<Wall>,
     >,
+    mut enemy_query: Query<(&Enemy, &mut Transform), (Without<Wall>, Without<Floor>)>,
 ) {
     for player in query.iter_mut() {
         let mut z_ordering = 0.;
@@ -138,22 +139,21 @@ pub fn render(
             }
         }
 
-        // for (mut enemy, transform, sprite) in enemy_query.iter_mut() {
-        //
-        //     commands.spawn((
-        //         MovingObjectBundle {
-        //             velocity: Velocity::new(Vec3::ZERO),
-        //             acceleration: Acceleration::new(Vec3::ZERO),
-        //             sprite: SpriteBundle {
-        //                 texture: scene_assets.enemy.clone(),
-        //                 transform: Transform::from_translation(Vec3::new(
-        //                     1.0,
-        //                     1.0,
-        //                     0.)),
-        //                 ..default()
-        //             },
-        //         }, EnemyComponent,
-        //     ));
-        // }
+        for (enemy, mut transform) in enemy_query.iter_mut() {
+            commands.spawn((
+                MovingObjectBundle {
+                    velocity: Velocity::new(Vec3::ZERO),
+                    acceleration: Acceleration::new(Vec3::ZERO),
+                    sprite: SpriteBundle {
+                        texture: scene_assets.enemy.clone(),
+                        transform: Transform::from_translation(Vec3::new(
+                            1.0,
+                            1.0,
+                            0.)),
+                        ..default()
+                    },
+                }, EnemyComponent,
+            ));
+        }
     }
 }
