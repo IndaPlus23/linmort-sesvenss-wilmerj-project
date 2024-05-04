@@ -1,4 +1,3 @@
-use bevy::asset::LoadedAsset;
 use bevy::prelude::*;
 use std::path::PathBuf;
 use serde_json;
@@ -10,7 +9,7 @@ use crate::enemy::Enemy;
 #[derive(Resource, Debug, Default)]
 pub struct SceneAssets {
     pub enemy: Handle<Scene>,
-    pub enemies: Vec<Enemy>,
+    //pub enemies: Vec<Enemy>,
     pub textures: Vec<Handle<Image>>,
     pub texture_paths: Vec<String>,
 }
@@ -32,7 +31,6 @@ pub fn load_assets(mut scene_assets: ResMut<SceneAssets>, asset_server: Res<Asse
 
     *scene_assets = SceneAssets {
         enemy: asset_server.load("sprites/enemy.png"),
-        enemies: load_enemies(),
         textures: load_textures_from_folder(texture_paths.clone(), asset_server),
         texture_paths: texture_paths,
     }
@@ -89,7 +87,7 @@ struct EnemyJSON {
     rows: usize
 }
 
-fn load_enemies(scene_assets: &Res<SceneAssets>) -> Vec<Enemy> {
+fn load_enemies() -> Vec<Enemy> {
     let data = fs::read_to_string("enemies.json").expect("Unable to read file");
     let enemy_datas: Vec<EnemyJSON> = serde_json::from_str(&data).expect("JSON was incorrectly formatted");
     let mut enemies: Vec<Enemy> = vec![];
@@ -106,8 +104,6 @@ fn load_enemies(scene_assets: &Res<SceneAssets>) -> Vec<Enemy> {
             enemy.range, 
             None, 
             enemy.projectile_speed, 
-            enemy.sprite_sheet,
-            scene_assets
         ))
     }
 

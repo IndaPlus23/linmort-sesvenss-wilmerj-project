@@ -1,9 +1,8 @@
 use bevy::{
-    //diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
     prelude::*,
     reflect::TypePath,
     render::mesh::Mesh,
-    render::render_resource::{AsBindGroup, ShaderRef},
+    render::render_resource::AsBindGroup,
     sprite::{Material2d, Material2dPlugin},
     window::{PresentMode, WindowTheme},
 };

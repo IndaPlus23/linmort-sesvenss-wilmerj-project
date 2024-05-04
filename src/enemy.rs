@@ -1,12 +1,8 @@
-use bevy::asset::{UntypedAssetId, VisitAssetDependencies};
 use bevy::prelude::*;
-use serde::{Deserialize, Serialize};
-use crate::asset_loader::SceneAssets;
 use crate::collision_detection::Collider;
-use crate::movement::{Acceleration, MovingObjectBundle, Velocity};
+use crate::movement::Velocity;
 use crate::player::Player;
 use crate::sound::Sound;
-use crate::vertice::Vertice;
 
 #[derive(Clone, Debug)]
 enum EnemyState {
@@ -16,9 +12,8 @@ enum EnemyState {
     Dead,
 }
 
-// TODO: Use the Transform component instead of a custom position
 // Enemy stats are stored in JSON format.
-#[derive(Component)]
+#[derive(Component, Clone, Debug)]
 pub struct Enemy {
     id: usize,
     position: Vec3,
@@ -30,7 +25,6 @@ pub struct Enemy {
     range: usize,
     respawn_time: Option<usize>, // If true, usize
     projectile_speed: usize,
-    pub(crate) texture: Handle<Scene>, // Used to query texture in SceneBundle
 }
 
 pub struct EnemyPlugin;
@@ -51,15 +45,7 @@ impl Enemy {
                range: usize,
                respawn_time: Option<usize>,
                projectile_speed: usize,
-               enemy_type: String,
-               scene_assets: &Res<SceneAssets>,
     ) -> Self {
-
-        // TODO: find enemy sprite
-        let sprite_handle = match enemy_type.as_str() {
-            "enemy_a" => { scene_assets.enemy.clone()},
-            _ => panic!("Couldn't recognize enemy type: {} from file.", enemy_type)
-        };
 
         Enemy {
             id,
@@ -72,76 +58,7 @@ impl Enemy {
             range,
             respawn_time,
             projectile_speed,
-            texture: sprite_handle,
         }
-    }
-
-    /// Populates map with enemies<
-    pub fn spawn_enemy(commands: &mut Commands, scene_assets: &mut Res<SceneAssets>, enemy: &Enemy) {
-
-        let sprite = match enemy.texture.as_str() {
-            "enemy_a" => { scene_assets.enemy.clone()},
-            _ => panic!("Couldn't recognize enemy type: {} from file.", enemy.texture)
-        };
-
-        // TODO: Bundle enemy entity with spawned entity. Currently, there is no indication of enemy type
-        commands.spawn((
-            MovingObjectBundle {
-                velocity: Velocity::new(Vec3::ZERO),
-                acceleration: Acceleration::new(Vec3::ZERO),
-                model: SceneBundle {
-                    scene: sprite,
-                    transform: Transform::from_translation(enemy.position),
-                    ..default()
-                },
-            }
-        ));
-    }
-
-    pub fn transform(
-        &mut self,
-        player: &Player,
-    ) -> Vec2 {
-        let mut x = self.position.x;
-        let mut y = self.position.y;
-        let mut z = self.position.z;
-
-        let cos = player.yaw.cos();
-        let sin = player.yaw.sin();
-
-        x -= player.x;
-        y -= player.y;
-        z -= player.z;
-
-        let new_x = x * cos + z * sin;
-        let new_z = z * cos - x * sin;
-        let new_y = y + (player.pitch * new_z);
-
-        let position = Vec3::new(new_x, new_y, new_z);
-
-        // Enemy is behind player, should not render.
-        if position.z > 0. {
-            return Vec2::ZERO
-        }
-
-        // ------------------------------------ Secured
-
-        // TODO: Might have to deal with clipping
-
-        return position.screen();
-    }
-
-    /// Converts vertice coordinates to 2d screen coordinates
-    /// NOTE: COPY FROM vertice.rs
-    pub fn screen(&self) -> Vec2 {
-        let world_x = self.position.x;
-        let world_y = self.position.y;
-        let world_z = self.position.z;
-
-        let screen_x = world_x * 1500. / world_z;
-        let screen_y = world_y * 1500. / world_z;
-
-        Vec2::new(-screen_x, -screen_y)
     }
 }
 

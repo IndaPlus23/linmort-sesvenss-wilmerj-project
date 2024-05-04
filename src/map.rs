@@ -72,7 +72,8 @@ impl Map {
 
         // Spawn enemies
         for enemy in &self.enemies {
-            Enemy::spawn_enemy(commands, asset_server, enemy);
+            // TODO: Spawn enemies
+            //Enemy::spawn_enemy(commands, asset_server, enemy);
         }
     }
 
@@ -157,16 +158,8 @@ pub fn load_from_file(filename: &str) -> Option<Map> {
     for _ in 0..read_integer(&mut reader) {
         let data = read_vector(&mut reader);
 
-        // TODO: Make a copy of the enemies with correlating position from scene_assets
-        // TODO: Update copy with positional information
         let position = Vec3::new(data[1], data[2], data[3]);
-
-        let enemy = Enemy::new(
-         data[0] as usize,
-            data[4].to_string(),
-        );
-
-        map.enemies.push(enemy);
+        // TODO: Insert enemies into map data
     }
 
     Some(map)

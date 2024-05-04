@@ -3,6 +3,7 @@ use crate::asset_loader::SceneAssets;
 use crate::enemy::Enemy;
 use crate::movement::{Acceleration, MovingObjectBundle, Velocity};
 use crate::player::Player;
+use crate::vertice::Vertice;
 
 #[derive(Component)]
 struct AnimationIndices {
@@ -66,33 +67,9 @@ impl Sprite {
     pub fn transform(
         &self,
         player: &Player
-    ) -> Option<(Vec2, Vec2)> {
-        let view_position = self.position - player.position;
-        let view_position = player.orientation * view_position; // Assuming orientation is a Quat or similar
+    ) -> Vec2 {
 
-        // Perform simple frustum culling
-        if view_position.z <= 0.0 {
-            // The sprite is behind the player
-            None
-        } else {
-            // Convert 3D position to 2D screen coordinates
-            let screen_x = view_position.x / view_position.z;
-            let screen_y = view_position.y / view_position.z;
-            let screen_position = Vec2::new(screen_x, screen_y);
-
-            // Calculate the size on the screen based on the distance
-            let scale = 1.0 / view_position.z; // Simple perspective scaling
-            let screen_size = self.height * scale;
-
-            Some((screen_position, screen_size))
-        }
-    }
-
-    /// Apply transformation based on player rotation and position.
-    pub fn transform_sprite(&self, player: &Player) -> Enemy {
-
-        // TODO: Query enemies
-
+        // This code comes from transform_vertice
         let mut x = self.position.x;
         let mut y = self.position.y;
         let mut z = self.position.z;
@@ -108,10 +85,21 @@ impl Sprite {
         let new_z = z * cos - x * sin;
         let new_y = y + (player.pitch * new_z);
 
-        // TODO: Fix return/mod
+        let position = Vec3::new(new_x, new_y, new_z);
+
+        // This code comes from transform
+
+        // Do not render if position is behind player
+        return if self.position.z > 0. {
+            Vec2::ZERO
+        } else {
+            // TODO: Might have to do with clipping if end/start is behind player
+            // TODO: Might have to deal with scaling issues. Something like self.scale = screen/z
+
+            self.screen()
+        }
     }
 
-    // TODO: Make function work on sprites
     fn screen(&self) -> Vec2 {
         let world_x = self.position.x;
         let world_y = self.position.y;

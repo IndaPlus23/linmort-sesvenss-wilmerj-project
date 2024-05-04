@@ -1,4 +1,4 @@
-use bevy::math::{Vec2, Vec3};
+use bevy::math::Vec3;
 
 //TODO: Use library function or something
 pub fn norm(vec: Vec3) -> f32 {

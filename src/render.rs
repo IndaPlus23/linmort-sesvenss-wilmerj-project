@@ -38,6 +38,9 @@ pub struct CustomMaterial {
     pub uv_rotation: f32,
 }
 
+#[derive(Component)]
+struct EnemyComponent;
+
 impl Material2d for CustomMaterial {
     fn fragment_shader() -> ShaderRef {
         "shaders/custom_material.wgsl".into()
@@ -49,7 +52,7 @@ pub fn render(
     mut query: Query<&Player>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut custom_materials: ResMut<Assets<CustomMaterial>>,
-    asset_server: Res<SceneAssets>,
+    scene_assets: Res<SceneAssets>,
     mut wall_query: Query<(
         &mut Wall,
         &mut Transform,
@@ -95,7 +98,7 @@ pub fn render(
             material.uv_scalar = wall.uv_scalar;
             material.uv_offset = wall.uv_offset;
             material.uv_rotation = wall.uv_rotation;
-            material.texture = asset_server.textures[wall.texture_id].clone();
+            material.texture = scene_assets.textures[wall.texture_id].clone();
 
             if let Some(_positions) = mesh.attribute_mut(Mesh::ATTRIBUTE_POSITION) {
                 mesh.insert_attribute(
@@ -142,17 +145,21 @@ pub fn render(
             }
         }
 
-        for (mut enemy, transform, sprite) in enemy_query.iter() {
+        for (mut enemy, transform, sprite) in enemy_query.iter_mut() {
+
             commands.spawn((
                 MovingObjectBundle {
                     velocity: Velocity::new(Vec3::ZERO),
                     acceleration: Acceleration::new(Vec3::ZERO),
                     model: SceneBundle {
-                        scene: enemy.texture.clone(),
-                        transform: Transform::from_translation(enemy.transform(player)),
+                        scene: scene_assets.enemy.clone(),
+                        transform: Transform::from_translation(Vec3::new(
+                            1.0,
+                            1.0,
+                            0.)),
                         ..default()
                     },
-                }, Enemy,
+                }, EnemyComponent,
             ));
         }
     }
