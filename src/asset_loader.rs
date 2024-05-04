@@ -9,7 +9,7 @@ use std::path::Path;
 /// SceneAssets stores handles for assets used in the scene.
 #[derive(Resource, Debug, Default)]
 pub struct SceneAssets {
-    pub enemy: Handle<Scene>,
+    pub enemy: Handle<Image>,
     //pub enemies: Vec<Enemy>,
     pub textures: Vec<Handle<Image>>,
     pub texture_paths: Vec<String>,
@@ -31,7 +31,7 @@ pub fn load_assets(mut scene_assets: ResMut<SceneAssets>, asset_server: Res<Asse
     let texture_paths = vec![String::from("grass_front.png"), String::from("SFLR6_4.png")];
 
     *scene_assets = SceneAssets {
-        enemy: asset_server.load(Path::new("enemy.png")),
+        enemy: asset_server.load(Path::new("sprites/enemy.png")),
         textures: load_textures_from_folder(texture_paths.clone(), asset_server),
         texture_paths: texture_paths,
     }
@@ -51,6 +51,23 @@ fn load_sprite_sheet(
     let texture: Handle<Image> = asset_server.load("spritesheet.png");
     let layout = TextureAtlasLayout::from_grid(tile_size, columns, rows, None, None);
     texture_atlas_layouts.add(layout)
+}
+
+fn load_sprites_from_folder(
+    texture_paths: Vec<String>,
+    asset_server: Res<AssetServer>,
+) -> Vec<Handle<Image>> {
+    let mut image_handles: Vec<Handle<Image>> = Vec::new();
+
+    for texture in texture_paths.iter() {
+        let mut path = PathBuf::from("sprites/");
+        path.push(texture);
+        // Unchecked loading
+        let texture: Handle<Image> = asset_server.load(path);
+        image_handles.push(texture);
+    }
+
+    return image_handles;
 }
 
 /// Loads folder of textures and upgrades into handle of image

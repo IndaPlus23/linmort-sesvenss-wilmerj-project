@@ -38,8 +38,8 @@ impl Sprite {
             MovingObjectBundle {
                 velocity: Velocity { value: Vec3::ZERO },
                 acceleration: Acceleration::new(Vec3::ZERO),
-                model: SceneBundle {
-                    scene: scene_assets.enemy.clone(),
+                sprite: SpriteBundle {
+                    texture: scene_assets.enemy.clone(),
                     transform: Transform::from_translation(position),
                     ..default()
                 },
