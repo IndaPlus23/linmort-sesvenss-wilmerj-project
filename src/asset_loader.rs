@@ -4,6 +4,7 @@ use serde_json;
 use std::fs;
 use serde::{Deserialize, Serialize};
 use crate::enemy::Enemy;
+use std::path::Path;
 
 /// SceneAssets stores handles for assets used in the scene.
 #[derive(Resource, Debug, Default)]
@@ -30,7 +31,7 @@ pub fn load_assets(mut scene_assets: ResMut<SceneAssets>, asset_server: Res<Asse
     let texture_paths = vec![String::from("grass_front.png"), String::from("SFLR6_4.png")];
 
     *scene_assets = SceneAssets {
-        enemy: asset_server.load("enemy.png"),
+        enemy: asset_server.load(Path::new("enemy.png")),
         textures: load_textures_from_folder(texture_paths.clone(), asset_server),
         texture_paths: texture_paths,
     }
