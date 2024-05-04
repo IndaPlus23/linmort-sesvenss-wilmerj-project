@@ -6,9 +6,9 @@
         "hp": 100,
         "attack": 20,
         "range": 5,
-        "respawn_time": false,
+        "respawn_time": 0,
         "projectile_speed": 2,
-        "texture_location": "enemy_a.png",
+        "texture_name": "enemy_a.png",
         "columns": 1,
         "rows": 1
     },

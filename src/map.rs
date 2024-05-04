@@ -160,6 +160,11 @@ pub fn load_from_file(filename: &str) -> Option<Map> {
 
         let position = Vec3::new(data[1], data[2], data[3]);
         // TODO: Insert enemies into map data
+        // TODO: Query enemy type
+        // TODO: Make copy of enemy type and insert with correct positioning
+        //let enemy = Enemy::new()
+
+        //map.enemies.push(enemy);
     }
 
     Some(map)

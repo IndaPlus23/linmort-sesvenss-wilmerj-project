@@ -15,7 +15,6 @@ enum EnemyState {
 // Enemy stats are stored in JSON format.
 #[derive(Component, Clone, Debug)]
 pub struct Enemy {
-    id: usize,
     position: Vec3,
     state: EnemyState,
     reaction_speed: usize,
@@ -37,7 +36,7 @@ impl Plugin for EnemyPlugin {
 
 impl Enemy {
     /// Creates a new enemy with an associated sprite and
-    pub fn new(id: usize,
+    pub fn new(
                reaction_speed: usize,
                speed: usize,
                hp: usize,
@@ -48,7 +47,6 @@ impl Enemy {
     ) -> Self {
 
         Enemy {
-            id,
             position: Vec3::ZERO,
             state: EnemyState::Dormant,
             reaction_speed,
