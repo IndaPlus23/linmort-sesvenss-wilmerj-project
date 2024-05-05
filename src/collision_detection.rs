@@ -32,85 +32,60 @@ use crate::Player;
 pub fn wall_collision(wall: &Mut<'_, Wall>, movement: &mut bevy::prelude::Vec3, player: &mut bevy::prelude::Mut<'_, Player>) {
     let padding = 1.5;
 
-    // FIND WHICH WAY THE WALL IS FACING ASUMING THAT ALL WALLS ARE FLAT
-    
-    if wall.start.position.x != wall.end.position.x {
-        // WALL IS POINTING IN z DIRECTION
-        // CHECK IF PLAYER IS IN SAME (x,y) AS WALL
-        if is_inside_rectangle(wall.start.position.x, wall.start.position.y, wall.end.position.x, wall.end.position.y + wall.height, player.x + movement.x, player.y + movement.y, player.height) {
-            // CHECK IF PLAYER HITS WALL IN z DIRECTION
-            let position_z = player.z + movement.z;
-            let wall_start_z = wall.start.position.z - padding;
-            let wall_end_z = wall.end.position.z + padding;
+    // https://math.stackexchange.com/questions/1472049/check-if-a-point-is-inside-a-rectangular-shaped-area-3d
+    let p1: Vec<f32> = vec![wall.start.position.x + padding, wall.start.position.y, wall.start.position.z + padding];
+    let p2 = vec![wall.end.position.x, wall.end.position.y, wall.end.position.z];
+    let p4 = vec![wall.start.position.x - padding, wall.start.position.y, wall.start.position.z - padding];
+    let p5 = vec![wall.start.position.x + padding, wall.start.position.y + wall.height, wall.start.position.z + padding];
+    let pv = vec![player.x + movement.x, player.y + movement.y, player.z + movement.z];
+    //println!("before");
+    if is_inside_rectangle(&p1, &p2, &p4, &p5, &pv) {
+        //println!("hit");
+        // kryssprodukt
+        let v1 = elementwise_subtraction(&p2, &p1);
+        let v2 = elementwise_subtraction(&p5, &p1);
 
-            // CHECK IF THE PLAYER IS GOING TO MOVE THROUGH THE WALL
-            if position_z > wall_start_z &&  position_z < wall_end_z {
-                // walking up stairs
-                if player.height / 5. >= wall.height {
-                    player.y += wall.height + padding + 1.;
-                } else {
-                    movement[2] = 0.;
-                }
-                
-            }
-        }
-    }
-    else if wall.start.position.z != wall.end.position.z {
-        // WALL IS POINTING IN x DIRECTION
-        // CHECK IF PLAYER IS IN SAME (z,y) AS WALL
-        if is_inside_rectangle(wall.start.position.z, wall.start.position.y, wall.end.position.z, wall.end.position.y + wall.height, player.z + movement.z, player.y + movement.y, player.height) {
-            // CHECK IF PLAYER HITS WALL IN x DIRECTION
-            let position_x = player.x + movement.x;
-            let wall_start_x = wall.start.position.x - padding;
-            let wall_end_x = wall.end.position.x + padding;
-            
-            // CHECK IF THE PLAYER IS GOING TO MOVE THROUGH THE WALL
-            if position_x > wall_start_x &&  position_x < wall_end_x {
-                // walking up stairs
-                if player.height / 5. >= wall.height {
-                    player.y += wall.height + padding + 1.;
-                } else {
-                    movement[0] = 0.;
-                }
-                
-            }
-        }
-    }
-}
+        let normal = vec![
+            v1[1]*v2[2] - v1[2]*v2[1],
+            v1[2]*v2[0] - v1[0]*v2[2],
+            v1[0]*v2[1] - v1[1]*v2[0],
+            ];
 
-fn infront_of_wall() {
-    
+        let movement_vec = vec![movement.x, movement.y, movement.z];
+
+        // calculate angle between normal and movement_vec
+        let angle = (
+            dot(&normal, &movement_vec)/
+            ((normal[0]*normal[0] + normal[1]*normal[1] + normal[2]*normal[2]).sqrt() * (movement_vec[0]*movement_vec[0] + movement_vec[1]*movement_vec[1] + movement_vec[2]*movement_vec[2]).sqrt())
+        ).acos();
+        println!("{:?}", angle);
+    }
+
 }
 
 // function to find if given point
 // lies inside a given rectangle or not.
-fn is_inside_rectangle(x1: f32, y1: f32, x2: f32, y2: f32, x: f32, y: f32, height: f32) -> bool {
-    let mut check_x = false;
-    let mut check_y = false;
+fn is_inside_rectangle(p1: &Vec<f32>, p2: &Vec<f32>, p4: &Vec<f32>, p5: &Vec<f32>, pv: &Vec<f32>) -> bool {
 
-    if x1 < x2 {
-        if x >= x1 && x <= x2 {
-            check_x = true
-        }
-    } else {
-        if x <= x1 && x >= x2 {
-            check_x = true
-        }
-    }
-    if y1 < y2 {
-        if y >= y1 && y <= y2 {
-            check_y = true
-        }
-    } else {
-        if y <= y1 && y >= y2 {
-            check_y = true
-        }
-    }
+    let i= elementwise_subtraction(&p2, &p1);
+    let j= elementwise_subtraction(&p4, &p1);
+    let k= elementwise_subtraction(&p5, &p1);
+    let v= elementwise_subtraction(&pv, &p1);
 
-    if check_x && check_y {
-        return true;
+    if 0. < dot(&v, &i) && dot(&v, &i) < dot(&i, &i) && 0. < dot(&v, &j) && dot(&v, &j) < dot(&j, &j) && 0. < dot(&v, &k) && dot(&v, &k) < dot(&k, &k) {
+        return true
     }
-    return false;
+    
+    return false
+
+}
+
+fn elementwise_subtraction(vec_a: &Vec<f32>, vec_b: &Vec<f32>) -> Vec<f32> {
+    vec_a.into_iter().zip(vec_b).map(|(a, b)| a - b).collect()
+}
+
+fn dot(p1: &Vec<f32>, p2: &Vec<f32>) -> f32 {
+    return p1[0] * p2[0] + p1[1] * p2[1] + p1[2] * p2[2]
 }
 
 pub fn floor_collision(floor: &Mut<'_, Floor>, movement: &mut bevy::prelude::Vec3, player: &mut bevy::prelude::Mut<'_, Player>) {
@@ -202,23 +177,30 @@ mod tests {
     }
 
     #[test]
-    fn test_inside_rectangle() {
-        // Test cases where (x, y) is inside the rectangle
-        assert!(is_inside_rectangle(0.0, 0.0, 4.0, 4.0, 2.0, 2.0, 4.0));
-        assert!(is_inside_rectangle(-1.0, -1.0, 1.0, 1.0, 0.0, 0.0, 2.0));
+    fn test_elementwise_subtraction() {
+        let vec_a = vec![1.0, 2.0, 3.0];
+        let vec_b = vec![0.5, 1.5, 2.5];
+        let result = elementwise_subtraction(&vec_a, &vec_b);
+        assert_eq!(result, vec![0.5, 0.5, 0.5]);
     }
 
     #[test]
-    fn test_outside_rectangle() {
-        // Test cases where (x, y) is outside the rectangle
-        assert!(!is_inside_rectangle(0.0, 0.0, 4.0, 4.0, 5.0, 5.0, 1.0));
-        assert!(!is_inside_rectangle(-1.0, -1.0, 1.0, 1.0, 2.0, 2.0, 0.5));
+    fn test_dot_product() {
+        let vec_a = vec![1.0, 2.0, 3.0];
+        let vec_b = vec![0.5, 1.5, 2.5];
+        let result = dot(&vec_a, &vec_b);
+        assert_eq!(result, 11.0);
     }
 
     #[test]
-    fn test_on_boundary_rectangle() {
-        // Test case where (x, y) is on the boundary of the rectangle
-        assert!(is_inside_rectangle(0.0, 0.0, 4.0, 4.0, 2.0, 0.0, 4.0));
-        assert!(is_inside_rectangle(-1.0, -1.0, 1.0, 1.0, 0.0, 1.0, 2.0));
+    fn test_is_inside_rectangle() {
+        let p1 = vec![0.0, 0.0, 0.0];
+        let p2 = vec![2.0, 0.0, 0.0];
+        let p4 = vec![0.0, 0.0, 2.0];
+        let p5 = vec![0.0, 2.0, 0.0];
+        let pv_inside = vec![1.0, 1.0, 1.0];
+        let pv_outside = vec![3.0, 3.0, 3.0];
+        assert!(is_inside_rectangle(p1.clone(), p2.clone(), p4.clone(), p5.clone(), pv_inside.clone()));
+        assert!(!is_inside_rectangle(p1, p2, p4, p5, pv_outside));
     }
 }
