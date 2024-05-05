@@ -1,7 +1,11 @@
-use crate::Player;
-use bevy::window::{CursorGrabMode, PrimaryWindow};
-use bevy::{input::mouse::MouseMotion, prelude::*};
+use bevy::{
+    input::mouse::MouseMotion,
+    prelude::*,
+    window::{CursorGrabMode, PrimaryWindow},
+};
 use std::f32::consts::PI;
+
+use crate::{EditorState, GameState, Player};
 
 #[derive(Default)]
 pub struct MouseState {
@@ -11,28 +15,51 @@ pub struct MouseState {
 impl Resource for MouseState {}
 
 pub fn keyboard_input(
-    mut window_query: Query<&mut Window, With<PrimaryWindow>>,
+    mut window: Query<&mut Window, With<PrimaryWindow>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut query: Query<&mut Player>,
     time: Res<'_, Time<Real>>,
+    game_state: Res<State<GameState>>,
+    mut next_game_state: ResMut<NextState<GameState>>,
+    editor_state: Res<State<EditorState>>,
+    mut next_editor_state: ResMut<NextState<EditorState>>,
 ) {
     if keyboard_input.just_pressed(KeyCode::Escape) {
         std::process::exit(0);
     }
 
+    if keyboard_input.just_pressed(KeyCode::AltLeft) {
+        match game_state.get() {
+            GameState::InGame => {
+                next_game_state.set(GameState::InEditor);
+            }
+            GameState::InEditor => {
+                next_game_state.set(GameState::InGame);
+                let mut primary_window = window.single_mut();
+
+                if primary_window.cursor.grab_mode != CursorGrabMode::Locked {
+                    primary_window.cursor.grab_mode = CursorGrabMode::Locked;
+                    primary_window.cursor.visible = false;
+                }
+            }
+        }
+    }
+
     if keyboard_input.just_pressed(KeyCode::Tab) {
-        let mut primary_window = window_query.single_mut();
+        lock_cursor(&mut window);
+    }
 
-        if primary_window.cursor.grab_mode == CursorGrabMode::Locked {
-            primary_window.cursor.grab_mode = CursorGrabMode::None;
-            primary_window.cursor.visible = true;
-        } else {
-            // for a game that doesn't use the cursor (like a shooter):
-            // use `Locked` mode to keep the cursor in one place
-            primary_window.cursor.grab_mode = CursorGrabMode::Locked;
-
-            // also hide the cursor
-            primary_window.cursor.visible = false;
+    if keyboard_input.just_pressed(KeyCode::KeyM) {
+        match game_state.get() {
+            GameState::InEditor => match editor_state.get() {
+                EditorState::World => {
+                    next_editor_state.set(EditorState::Map);
+                }
+                EditorState::Map => {
+                    next_editor_state.set(EditorState::World);
+                }
+            },
+            GameState::InGame => {}
         }
     }
 
@@ -97,36 +124,32 @@ pub fn mouse_input(
         mouse_state.press_coords.clear();
 
         let window = window_query.single_mut();
-        let window_pos = window.cursor_position().unwrap();
-
-        let mut cursor_world_pos = window_pos;
-        for player in query.iter_mut() {
-            cursor_world_pos.x -= window.width() / 2.0 - player.x;
-            cursor_world_pos.y -= window.height() / 2.0 + player.y;
-            cursor_world_pos.y *= -1.;
-        }
-
-        cursor_world_pos.x = (cursor_world_pos.x / 25.0).round() * 25.0;
-        cursor_world_pos.y = (cursor_world_pos.y / 25.0).round() * 25.0;
-
-        mouse_state.press_coords.push(cursor_world_pos);
+        let _window_pos = window.cursor_position().unwrap();
     }
 
     if mouse_button_input.just_released(MouseButton::Left) {
         let window = window_query.single_mut();
-        let window_pos = window.cursor_position().unwrap();
 
-        let mut cursor_world_pos = window_pos;
-
-        for player in query.iter_mut() {
-            cursor_world_pos.x -= window.width() / 2.0 - player.x;
-            cursor_world_pos.y -= window.height() / 2.0 + player.y;
-            cursor_world_pos.y *= -1.;
+        if window.cursor_position() == None {
+            return;
         }
 
-        cursor_world_pos.x = (cursor_world_pos.x / 25.0).round() * 25.0;
-        cursor_world_pos.y = (cursor_world_pos.y / 25.0).round() * 25.0;
+        let _window_pos = window.cursor_position().unwrap();
+    }
+}
 
-        let _starting_position = mouse_state.press_coords.last().unwrap().clone();
+pub fn lock_cursor(window: &mut Query<&mut Window, With<PrimaryWindow>>) {
+    let mut primary_window = window.single_mut();
+
+    if primary_window.cursor.grab_mode == CursorGrabMode::Locked {
+        primary_window.cursor.grab_mode = CursorGrabMode::None;
+        primary_window.cursor.visible = true;
+    } else {
+        // for a game that doesn't use the cursor (like a shooter):
+        // use `Locked` mode to keep the cursor in one place
+        primary_window.cursor.grab_mode = CursorGrabMode::Locked;
+
+        // also hide the cursor
+        primary_window.cursor.visible = false;
     }
 }

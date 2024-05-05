@@ -1,104 +1,91 @@
+mod asset_loader;
+mod egui;
+mod floor;
+mod input;
+mod map;
+mod player;
+mod render;
+mod vertex;
+mod wall;
+
 use bevy::{
-    //diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
+    core::FrameCount,
     prelude::*,
-    reflect::TypePath,
     render::mesh::Mesh,
-    render::render_resource::{AsBindGroup, ShaderRef},
-    sprite::{Material2d, Material2dPlugin},
-    window::{PresentMode, WindowTheme},
+    sprite::Material2dPlugin,
+    window::{PresentMode, PrimaryWindow, WindowTheme},
 };
 use bevy_egui::EguiPlugin;
+use render::render_grid;
 use std::f32::consts::PI;
 
-mod input;
-use crate::input::{keyboard_input, mouse_input, MouseState};
-mod player;
-use crate::player::Player;
-mod render;
-use crate::render::render;
-mod wall;
-use crate::wall::Wall;
-mod floor;
-use crate::floor::Floor;
-mod vertice;
-use crate::vertice::Vertice;
-mod egui;
-use crate::egui::ui_example_system;
-mod asset_loader;
-use crate::asset_loader::AssetLoaderPlugin;
-use crate::asset_loader::{load_assets, SceneAssets};
+use crate::{
+    asset_loader::{load_assets, AssetLoaderPlugin, SceneAssets},
+    egui::editor_ui,
+    input::{keyboard_input, lock_cursor, mouse_input, MouseState},
+    map::load_from_file,
+    player::Player,
+    render::CustomMaterial,
+    render::{render, render_map},
+    wall::Wall,
+};
 
-#[derive(Component, Asset, TypePath, AsBindGroup, Debug, Clone)]
-pub struct CustomMaterial {
-    #[texture(0)]
-    #[sampler(1)]
-    texture: Handle<Image>,
-    #[uniform(2)]
-    a: Vec3,
-    #[uniform(3)]
-    b: Vec3,
-    #[uniform(4)]
-    c: Vec3,
-    #[uniform(5)]
-    a_uv: Vec2,
-    #[uniform(6)]
-    b_uv: Vec2,
-    #[uniform(7)]
-    c_uv: Vec2,
-    #[uniform(8)]
-    uv_scalar: Vec2,
-    #[uniform(9)]
-    uv_offset: Vec2,
-    #[uniform(10)]
-    uv_rotation: f32,
+#[derive(States, Debug, Clone, PartialEq, Eq, Hash)]
+enum GameState {
+    InGame,
+    InEditor,
 }
 
-impl Material2d for CustomMaterial {
-    fn fragment_shader() -> ShaderRef {
-        "shaders/custom_material.wgsl".into()
-    }
+#[derive(States, Debug, Clone, PartialEq, Eq, Hash)]
+enum EditorState {
+    World,
+    Map,
 }
+
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
+struct EditorSet;
 
 fn main() {
     App::new()
+        .insert_state(GameState::InGame)
+        .insert_state(EditorState::Map)
+        .configure_sets(Update, EditorSet.run_if(in_state(GameState::InEditor)))
         .insert_resource(ClearColor(Color::rgb(0.1, 0.1, 0.1)))
         .insert_resource(MouseState {
             press_coords: Vec::new(),
         })
         .add_plugins(AssetLoaderPlugin)
-        .add_plugins((
-            DefaultPlugins
-                .set(WindowPlugin {
-                    primary_window: Some(Window {
-                        title: "Raycaster".into(),
-                        name: Some("Raycaster".into()),
-                        resolution: (1280., 720.).into(),
-                        present_mode: PresentMode::AutoVsync,
-                        // Tells wasm not to override default event handling, like F5, Ctrl+R etc.
-                        prevent_default_event_handling: false,
-                        window_theme: Some(WindowTheme::Dark),
-                        enabled_buttons: bevy::window::EnabledButtons {
-                            maximize: false,
-                            ..Default::default()
-                        },
-                        ..default()
-                    }),
+        .add_plugins((DefaultPlugins
+            .set(WindowPlugin {
+                primary_window: Some(Window {
+                    title: "Raycaster".into(),
+                    name: Some("Raycaster".into()),
+                    resolution: (1280., 720.).into(),
+                    present_mode: PresentMode::AutoVsync,
+                    prevent_default_event_handling: false,
+                    window_theme: Some(WindowTheme::Dark),
+                    visible: false,
                     ..default()
-                })
-                .set(ImagePlugin::default_nearest()),
-            //FrameTimeDiagnosticsPlugin,
-            //LogDiagnosticsPlugin::default(),
-            //bevy::diagnostic::SystemInformationDiagnosticsPlugin::default()
-        ))
+                }),
+                ..default()
+            })
+            .set(ImagePlugin::default_nearest()),))
         .add_plugins(Material2dPlugin::<CustomMaterial>::default())
         .add_plugins(EguiPlugin)
         .add_systems(PreStartup, load_assets)
         .add_systems(Startup, setup)
-        .add_systems(Update, keyboard_input)
-        .add_systems(Update, mouse_input)
-        .add_systems(Update, render)
-        .add_systems(Update, change_title)
-        .add_systems(Update, ui_example_system)
+        .add_systems(
+            Update,
+            (
+                make_visible,
+                change_title,
+                keyboard_input,
+                mouse_input,
+                render,
+                render_map,
+            ),
+        )
+        .add_systems(Update, (editor_ui, render_grid).in_set(EditorSet))
         .run();
 }
 
@@ -106,46 +93,30 @@ fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut custom_materials: ResMut<Assets<CustomMaterial>>,
-    //mut standard_materials: ResMut<Assets<StandardMaterial>>,
     mut asset_server: Res<SceneAssets>,
+    mut window_query: Query<&mut Window, With<PrimaryWindow>>,
 ) {
+    let map = load_from_file("map.txt").expect("Error: could not open map");
+
     commands.spawn(Camera2dBundle {
-        transform: Transform::from_xyz(0.0, 0.0, 0.0)
-            .looking_at(Vec3::new(0.0, 0.0, -1.0), Vec3::Y),
+        transform: Transform::from_xyz(map.camera[0], map.camera[1], map.camera[2]).looking_at(
+            Vec3::new(map.camera[3], map.camera[4], map.camera[5]),
+            Vec3::Y,
+        ),
         ..Default::default()
     });
 
-    commands.spawn((Player::new(0., 0., 0., 0., 0.),));
-
-    Wall::spawn(
+    map.populate_scene(
         &mut commands,
         &mut meshes,
         &mut custom_materials,
         &mut asset_server,
-        Vertice::new(Vec3::new(0., -5., -50.), Vec2::new(0., 1.)),
-        Vertice::new(Vec3::new(50., -5., -50.), Vec2::new(1., 0.)),
-        10.,
+        &mut window_query,
     );
 
-    Floor::spawn(
-        &mut commands,
-        &mut meshes,
-        &mut custom_materials,
-        &mut asset_server,
-        Vertice::new(Vec3::new(0., -5., -100.), Vec2::new(0., 0.)),
-        Vertice::new(Vec3::new(0., -5., -50.), Vec2::new(0., 1.)),
-        Vertice::new(Vec3::new(50., -5., -50.), Vec2::new(1., 1.)),
-    );
+    commands.spawn(map);
 
-    Floor::spawn(
-        &mut commands,
-        &mut meshes,
-        &mut custom_materials,
-        &mut asset_server,
-        Vertice::new(Vec3::new(0., -5., -100.), Vec2::new(0., 0.)),
-        Vertice::new(Vec3::new(50., -5., -100.), Vec2::new(1., 0.)),
-        Vertice::new(Vec3::new(50., -5., -50.), Vec2::new(1., 1.)),
-    );
+    lock_cursor(&mut window_query);
 }
 
 fn change_title(mut windows: Query<&mut Window>, time: Res<'_, Time<Real>>, query: Query<&Player>) {
@@ -159,5 +130,12 @@ fn change_title(mut windows: Query<&mut Window>, time: Res<'_, Time<Real>>, quer
             player.z,
             player.yaw * (180.0 / PI),
             player.pitch * (180.0 / PI));
+    }
+}
+
+/// At this point the gpu is ready to show the app and make the window visible.
+fn make_visible(mut window: Query<&mut Window>, frames: Res<FrameCount>) {
+    if frames.0 == 3 {
+        window.single_mut().visible = true;
     }
 }
