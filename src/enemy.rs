@@ -4,7 +4,7 @@ use crate::movement::Velocity;
 use crate::sound::Sound;
 use bevy::ecs::component::Component;
 
-#[derive(Clone, Debug)]
+#[derive(Component, Clone, Copy, Debug)]
 enum EnemyState {
     Dormant,
     Attacking,
@@ -13,9 +13,9 @@ enum EnemyState {
 }
 
 // Enemy stats are stored in JSON format.
-#[derive(Component, Clone, Debug)]
+#[derive(Component, Clone, Copy, Debug)]
 pub struct Enemy {
-    position: Vec3,
+    pub(crate) position: Vec3,
     state: EnemyState,
     reaction_speed: usize,
     speed: usize,
@@ -57,6 +57,10 @@ impl Enemy {
             respawn_time,
             projectile_speed,
         }
+    }
+
+    pub fn update_position(mut self, pos: Vec3) {
+        self.position = pos;
     }
 }
 

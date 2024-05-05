@@ -90,9 +90,9 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut custom_materials: ResMut<Assets<CustomMaterial>>,
     //mut standard_materials: ResMut<Assets<StandardMaterial>>,
-    mut asset_server: Res<SceneAssets>,
+    mut scene_assets: Res<SceneAssets>,
 ) {
-    let map = load_from_file("map.txt").expect("Error: could not open map");
+    let map = load_from_file("map.txt", &scene_assets.enemy_types).expect("Error: could not open map");
 
     commands.spawn(Camera2dBundle {
         transform: Transform::from_xyz(map.camera[0], map.camera[1], map.camera[2])
@@ -107,7 +107,7 @@ fn setup(
         &mut commands,
         &mut meshes,
         &mut custom_materials,
-        &mut asset_server);
+        &mut scene_assets);
 
     commands.spawn(map);
 }

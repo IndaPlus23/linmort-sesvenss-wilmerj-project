@@ -10,6 +10,8 @@ use crate::Wall;
 use bevy::prelude::*;
 use bevy::sprite::MaterialMesh2dBundle;
 use crate::enemy::Enemy;
+use std::collections::HashMap;
+use crate::movement::{Acceleration, MovingObjectBundle, Velocity};
 
 #[derive(Component, Clone)]
 pub struct Map {
@@ -44,7 +46,7 @@ impl Map {
         commands: &mut Commands,
         meshes: &mut ResMut<Assets<Mesh>>,
         custom_materials: &mut ResMut<Assets<CustomMaterial>>,
-        asset_server: &mut Res<SceneAssets>,
+        scene_assets: &mut Res<SceneAssets>,
     ) {
         commands.spawn(self.player.clone());
 
@@ -54,7 +56,7 @@ impl Map {
                 MaterialMesh2dBundle {
                     mesh: meshes.add(Wall::new_wall_mesh()).into(),
                     material: custom_materials.add(CustomMaterial {
-                        texture: asset_server.textures[wall.texture_id].clone(),
+                        texture: scene_assets.textures[wall.texture_id].clone(),
                         a: Vec3::new(0., 0., 0.),
                         b: Vec3::new(0., 0., 0.),
                         c: Vec3::new(0., 0., 0.),
@@ -72,8 +74,17 @@ impl Map {
 
         // Spawn enemies
         for enemy in &self.enemies {
-            // TODO: Spawn enemies
-            //Enemy::spawn_enemy(commands, asset_server, enemy);
+            commands.spawn(
+                MovingObjectBundle {
+                    velocity: Velocity::new(Vec3::ZERO),
+                    acceleration: Acceleration::new(Vec3::ZERO),
+                    sprite: SpriteBundle {
+                        texture: scene_assets.enemy.clone(),
+                        transform: Transform::from_translation(enemy.position),
+                        ..default()
+                    },
+                }
+            );
         }
     }
 
@@ -123,7 +134,7 @@ impl Map {
     }
 }
 
-pub fn load_from_file(filename: &str) -> Option<Map> {
+pub fn load_from_file(filename: &str, enemy_types: &HashMap<String, Enemy>) -> Option<Map> {
     let mut map = Map::new();
 
     let path = Path::new("assets\\maps\\").join(filename);
@@ -158,13 +169,16 @@ pub fn load_from_file(filename: &str) -> Option<Map> {
     for _ in 0..read_integer(&mut reader) {
         let data = read_vector(&mut reader);
 
-        let position = Vec3::new(data[1], data[2], data[3]);
-        // TODO: Insert enemies into map data
-        // TODO: Query enemy type
-        // TODO: Make copy of enemy type and insert with correct positioning
-        //let enemy = Enemy::new()
+        // Convert to enemy_type
+        let enemy_type = match data[0] as i32 {
+            0 => "enemy_a",
+            _ => "enemy_a"
+        };
 
-        //map.enemies.push(enemy);
+        let mut enemy = enemy_types.get(enemy_type).unwrap().clone();
+        enemy.update_position(Vec3::new(data[1], data[2], data[3]));
+
+        map.enemies.push(enemy.clone());
     }
 
     Some(map)
