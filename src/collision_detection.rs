@@ -29,10 +29,92 @@ use crate::Player;
 
 */
 
-pub fn wall_collision(wall: &Mut<'_, Wall>, movement: &mut bevy::prelude::Vec3, player: &mut bevy::prelude::Mut<'_, Player>) {
-    let padding = 1.5;
+fn check_if_wall(player_position: [f32; 3], wall: &Mut<'_, Wall>) -> bool {
+    let wall_1: Vec3 = wall.start.position;
+    let wall_2: Vec3 = wall.end.position;
+    
+    let vec1: [f32; 3] = [player_position[0] - wall_1[0], player_position[1] - wall_1[1], player_position[2] - wall_1[2]];
+    let vec2: [f32; 3] = [player_position[0] - wall_2[0], player_position[1] - wall_2[1], player_position[2] - wall_2[2]];
+    let vec3: [f32; 3] = [wall_1[0] - wall_2[0], wall_1[1] - wall_2[1], wall_1[2] - wall_2[2]];
 
-    // https://math.stackexchange.com/questions/1472049/check-if-a-point-is-inside-a-rectangular-shaped-area-3d
+    let distance_1: f32 = (vec1[0] * vec1[0] + vec1[1] * vec1[1] + vec1[2] * vec1[2]).sqrt();
+    let distance_2: f32 = (vec2[0] * vec2[0] + vec2[1] * vec2[1] + vec2[2] * vec2[2]).sqrt();
+    let distance_3: f32 = (vec3[0] * vec3[0] + vec3[1] * vec3[1] + vec3[2] * vec3[2]).sqrt();
+
+    if distance_1 + distance_2 <= distance_3 + 1. {
+        return true
+    }
+
+    false
+}
+
+pub fn wall_collision(wall: &Mut<'_, Wall>, movement: &mut bevy::prelude::Vec3, player: &mut bevy::prelude::Mut<'_, Player>) {
+
+    let player_position: [f32; 3] = [player.x + movement.x,
+    player.y + movement.y,
+    player.z + movement.z,];
+
+
+    if check_if_wall(player_position, wall) {
+        //println!("Wall");
+        // calculate normal to determine which way to move
+        
+        // crossprodukt
+
+        let p1: Vec<f32> = vec![wall.start.position.x , wall.start.position.y, wall.start.position.z ];
+        let p2: Vec<f32> = vec![wall.end.position.x, wall.end.position.y, wall.end.position.z];
+        let p5: Vec<f32> = vec![wall.start.position.x , wall.start.position.y + wall.height, wall.start.position.z ];
+
+        let v1: Vec<f32> = elementwise_subtraction(&p2, &p1);
+        let v2: Vec<f32> = elementwise_subtraction(&p5, &p1);
+
+        let normal: Vec3 = Vec3::new(v1[1]*v2[2] - v1[2]*v2[1],
+            v1[2]*v2[0] - v1[0]*v2[2],
+            v1[0]*v2[1] - v1[1]*v2[0],
+        );
+
+        // movement must be vinkelrätt against normal
+
+        let movement_vec = movement.normalize_or_zero();
+        let normal_vec = normal.normalize_or_zero();
+
+        let vec = movement_vec.cross(normal_vec);
+        println!("movement: {:?} normal: {:?} vec: {:?}", movement_vec, normal_vec, vec);
+
+        if vec[1] == 0. {
+            movement.x = 0.;
+            movement.z = 0.;
+        } else if vec[1] < 0. {
+            movement.x = 0.;
+        } else if vec[1] > 0. {
+            movement.z = 0.;
+        }
+
+
+        /* let movement_vec = Vec3::new(-normal[2], normal[1], normal[0]);
+
+        //println!("{:?}",normal.dot(movement_vec));
+
+        let movement_vec1: Vec3 = movement_vec.normalize_or_zero();
+
+        // calculate angle between normal and movement_vec
+        let angle: f32 = (
+            normal.dot(*movement)/
+            ((normal[0]*normal[0] + normal[1]*normal[1] + normal[2]*normal[2]).sqrt() * (movement[0]*movement[0] + movement[1]*movement[1] + movement[2]*movement[2]).sqrt())
+        ).acos();
+
+        println!("{:?}", angle);
+        if angle < 3.14/3. {
+            movement.x =  movement_vec1[0];
+            movement.z =  movement_vec1[2];
+        } else {
+            
+        } */
+
+        
+    }
+
+    /* // https://math.stackexchange.com/questions/1472049/check-if-a-point-is-inside-a-rectangular-shaped-area-3d
     let p1: Vec<f32> = vec![wall.start.position.x + padding, wall.start.position.y, wall.start.position.z + padding];
     let p2 = vec![wall.end.position.x, wall.end.position.y, wall.end.position.z];
     let p4 = vec![wall.start.position.x - padding, wall.start.position.y, wall.start.position.z - padding];
@@ -59,7 +141,7 @@ pub fn wall_collision(wall: &Mut<'_, Wall>, movement: &mut bevy::prelude::Vec3, 
             ((normal[0]*normal[0] + normal[1]*normal[1] + normal[2]*normal[2]).sqrt() * (movement_vec[0]*movement_vec[0] + movement_vec[1]*movement_vec[1] + movement_vec[2]*movement_vec[2]).sqrt())
         ).acos();
         println!("{:?}", angle);
-    }
+    } */
 
 }
 

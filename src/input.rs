@@ -91,6 +91,9 @@ pub fn keyboard_input(
             movement.y -= 1. // If the player is in the air and not fallint -> start falling
         }
 
+        movement = movement * speed;//movement.normalize_or_zero() * speed * time.delta_seconds();
+
+
         // CHECKS EVERY FLOOR FOR COLLISION
         for floor in floor_query.iter_mut() {
             floor_collision(&floor, &mut movement, &mut player);
@@ -107,7 +110,6 @@ pub fn keyboard_input(
             wall_collision(&wall, &mut movement, &mut player);
         }
 
-        movement = movement * speed;//movement.normalize_or_zero() * speed * time.delta_seconds();
         
         player.x += movement.x;
         player.y += movement.y;
