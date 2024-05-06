@@ -10,7 +10,7 @@ use crate::Player;
 
     1. player can get stuck in the wall if they walk in towards the edge of a wall, 
     you can still walks alongside the wall but not away from it. 
-
+    2. when there are 2 walls in a sharp angle the player can slip through them
 
     TODO: 
     fix bugs
