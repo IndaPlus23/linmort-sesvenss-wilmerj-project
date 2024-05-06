@@ -91,24 +91,22 @@ pub fn keyboard_input(
             movement.y -= 1. // If the player is in the air and not fallint -> start falling
         }
 
-        movement = movement * speed;//movement.normalize_or_zero() * speed * time.delta_seconds();
-
-
         // CHECKS EVERY FLOOR FOR COLLISION
         for floor in floor_query.iter_mut() {
             floor_collision(&floor, &mut movement, &mut player);
         }
 
+        // CHECKS EVERY WALL FOR COLLISION
+        for wall in wall_query.iter_mut() {
+            wall_collision(&wall, &mut movement, &mut player)
+        }
+
         // when player has landed on the ground reset the "timer"
         if player.gravity > 0. && movement.y == 0.{
             player.gravity = 0.0;
-        }  
-        // END GRAVITY + JUMPING
+        }          
         
-        // CHECKS EVERY WALL FOR COLLISION
-        for wall in wall_query.iter_mut() {
-            wall_collision(&wall, &mut movement, &mut player);
-        }
+        movement = movement * speed;//movement.normalize_or_zero() * speed * time.delta_seconds();
 
         
         player.x += movement.x;
