@@ -1,10 +1,9 @@
 use bevy::prelude::*;
 use crate::collision_detection::Collider;
 use crate::movement::Velocity;
-use crate::sound::Sound;
 use bevy::ecs::component::Component;
 use crate::player::Player;
-use crate::vertice::Vertice;
+use crate::sound::Sound;
 
 #[derive(Component, Clone, Copy, Debug)]
 enum EnemyState {

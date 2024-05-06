@@ -11,7 +11,8 @@ use bevy::{
 use core::f32::consts::PI;
 use nalgebra::{Rotation3, Unit, Vector3};
 
-use crate::{floor::Floor, wall::Wall, EditorState, GameState, Player, SceneAssets, vertex::Vertex};
+use crate::{floor::Floor, wall::Wall, EditorState, GameState, Player, SceneAssets, vertex::Vertex, enemy::Enemy};
+use crate::movement::{Acceleration, MovingObjectBundle, Velocity};
 
 pub const MAX_STRUCTURES: usize = 1000;
 
@@ -53,6 +54,9 @@ pub struct CustomMaterial {
     #[uniform(17)]
     pub pitch: f32,
 }
+
+#[derive(Component)]
+struct EnemyComponent;
 
 impl Material2d for CustomMaterial {
     fn fragment_shader() -> ShaderRef {
@@ -211,7 +215,7 @@ pub fn render(
             material.uv_scalar = floor.uv_scalar;
             material.uv_offset = floor.uv_offset;
             material.uv_rotation = floor.uv_rotation;
-            material.texture = asset_server.textures[floor.texture_id].clone();
+            material.texture = scene_assets.textures[floor.texture_id].clone();
             material.a_position = a.position;
             material.b_position = b.position;
             material.c_position = c.position;

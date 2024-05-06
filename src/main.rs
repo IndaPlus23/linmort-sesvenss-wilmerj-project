@@ -11,6 +11,7 @@ mod collision_detection;
 mod enemy;
 mod movement;
 mod sprites;
+mod sound;
 
 
 use bevy::{

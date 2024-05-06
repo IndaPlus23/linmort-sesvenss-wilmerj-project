@@ -1,15 +1,3 @@
-use std::fs::File;
-use std::io::{BufRead, BufReader, BufWriter, Write};
-use std::path::Path;
-
-use crate::CustomMaterial;
-use crate::Player;
-use crate::SceneAssets;
-use crate::Vertice;
-use crate::Wall;
-use crate::enemy::Enemy;
-use crate::movement::{Acceleration, MovingObjectBundle, Velocity};
-
 use bevy::prelude::*;
 use bevy::sprite::MaterialMesh2dBundle;
 use bevy::window::PrimaryWindow;
@@ -23,6 +11,7 @@ use std::collections::HashMap;
 
 use crate::{
     floor::Floor, render::MAX_STRUCTURES, vertex::Vertex, CustomMaterial, Player, SceneAssets, Wall,
+    enemy::Enemy, movement::{Acceleration, MovingObjectBundle, Velocity}
 };
 
 #[derive(Component, Clone)]
@@ -45,6 +34,7 @@ impl Map {
         let player = Player::new(0., 0., 0., 0., 0.);
         let walls = Vec::new();
         let floors = Vec::new();
+        let enemies = Vec::new();
         Self {
             filename,
             selected_id,
@@ -52,6 +42,7 @@ impl Map {
             player,
             walls,
             floors,
+            enemies,
         }
     }
 

@@ -3,7 +3,6 @@ use crate::asset_loader::SceneAssets;
 use crate::enemy::Enemy;
 use crate::movement::{Acceleration, MovingObjectBundle, Velocity};
 use crate::player::Player;
-use crate::vertice::Vertice;
 
 #[derive(Component)]
 struct AnimationIndices {
