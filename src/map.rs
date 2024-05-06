@@ -217,7 +217,7 @@ impl Map {
     }
 }
 
-pub fn load_from_file(filename: &str) -> Option<Map> {
+pub fn load_from_file(filename: &str, enemy_types: &HashMap<String, Enemy>) -> Option<Map> {
     let mut map = Map::new();
     map.filename = filename.to_string();
 
