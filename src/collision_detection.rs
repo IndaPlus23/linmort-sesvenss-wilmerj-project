@@ -1,5 +1,4 @@
 use std::f32::consts::PI;
-
 use bevy::prelude::*;
 use crate::wall::Wall;
 use crate::floor::Floor;
@@ -11,7 +10,7 @@ use crate::Player;
 
     1. player can get stuck in the wall if they walk in towards the edge of a wall, 
     you can still walks alongside the wall but not away from it. 
-    2. wall collision does not work where 2 walls connect
+
 
     TODO: 
     fix bugs
@@ -28,7 +27,7 @@ pub fn wall_collision(wall: &Mut<'_, Wall>, movement: &mut bevy::prelude::Vec3, 
 
     let player_vec: [f32; 3] = [
         player.x + movement.x,
-        player.y + movement.y,
+        0.,
         player.z + movement.z,
         ];
 
@@ -44,8 +43,7 @@ pub fn wall_collision(wall: &Mut<'_, Wall>, movement: &mut bevy::prelude::Vec3, 
         // calculate angle between wall_vector and movement
         let angle = movement.angle_between(wall_vector);
 
-        // walking up stairs
-        if player.height / 5. >= wall.height {
+        if player.height / 5. >= wall.height {// walking up stairs
             player.y += wall.height + 2.;
         } 
         else if  PI/2. - 0.1 < angle && angle < PI/2. + 0.1 {
@@ -64,17 +62,28 @@ pub fn wall_collision(wall: &Mut<'_, Wall>, movement: &mut bevy::prelude::Vec3, 
 }
 
 fn check_if_wall(wall: &Mut<'_, Wall>, player_vec: [f32; 3], player: &mut bevy::prelude::Mut<'_, Player>) -> bool {
+  
+    // check if player and wall is at same height before starting all calculations
+    let wall_start = wall.start.position.y;
+    let wall_end = wall.start.position.y + wall.height;
+    let player_start = player.y - player.height;
+    let player_end = player.y;
 
-    
-    
+    if !((wall_start <= player_start && player_start <= wall_end) || (wall_start <= player_end && player_end <= wall_end)) {
+        // no wall hit
+        return false
+    } 
+
     let wall_1: Vec3 = wall.start.position;
     let wall_2: Vec3 = wall.end.position;
 
-    // wall collision
+    // vectors from player to the walls 2 corners
     let vec1: [f32; 3] = [player_vec[0] - wall_1[0], player_vec[1] - wall_1[1], player_vec[2] - wall_1[2]];
     let vec2: [f32; 3] = [player_vec[0] - wall_2[0], player_vec[1] - wall_2[1], player_vec[2] - wall_2[2]];
+    // wall vector
     let vec3: [f32; 3] = [wall_1[0] - wall_2[0], wall_1[1] - wall_2[1], wall_1[2] - wall_2[2]];
 
+    // calc distance of all 3 vectors
     let distance_1: f32 = (vec1[0] * vec1[0] + vec1[1] * vec1[1] + vec1[2] * vec1[2]).sqrt();
     let distance_2: f32 = (vec2[0] * vec2[0] + vec2[1] * vec2[1] + vec2[2] * vec2[2]).sqrt();
     let distance_3: f32 = (vec3[0] * vec3[0] + vec3[1] * vec3[1] + vec3[2] * vec3[2]).sqrt();
@@ -94,7 +103,10 @@ fn check_if_wall(wall: &Mut<'_, Wall>, player_vec: [f32; 3], player: &mut bevy::
         player.z += normalen.z / 10.;
     } */
 
-
+    // padding must be at least 1.5
+    // if the distance of the 2 vectors to the wall from 
+    // the player is the same as the wall vector, then the
+    // player is in the wall
     if distance_1 + distance_2 <= distance_3 + 1.5 {
         return true
     }
@@ -106,15 +118,19 @@ pub fn floor_collision(floor: &Mut<'_, Floor>, movement: &mut bevy::prelude::Vec
 
     let padding = 1.5;
 
-
     let position_x = player.x + movement.x;
     let position_z = player.z + movement.z;
 
     // BEGIN BY CHECKING IF THE PLAYER IS ON THE FLOOR
-    //println!("pos: {:?} {:?}", position_x, position_z);
-
-    if is_inside_triangle(floor.a.position.x, floor.a.position.z, floor.b.position.x, floor.b.position.z, floor.c.position.x, floor.c.position.z, position_x, position_z) {
-        //println!("inside");
+    if is_inside_triangle(
+        floor.a.position.x, 
+        floor.a.position.z, 
+        floor.b.position.x, 
+        floor.b.position.z, 
+        floor.c.position.x, 
+        floor.c.position.z, 
+        position_x, 
+        position_z) {
 
         // CHECK IF PLAYER HITS FLOOR IN y DIRECTION
         // ASUMES THAT ALL y VALUES ARE THE SAME AND THAT THE TRIANGLE IS ALWAYS FLAT
@@ -122,12 +138,8 @@ pub fn floor_collision(floor: &Mut<'_, Floor>, movement: &mut bevy::prelude::Vec
         let wall_start_y = floor.a.position.y - padding;
         let wall_end_y = floor.a.position.y + padding;
 
-
-        //println!("player: {:?} wall: {:?} {:?}", position_y, wall_start_y, wall_end_y);
-
-
-        if position_y > wall_start_y && position_y < wall_end_y {
-            if movement[1] < 0. {
+        if wall_start_y < position_y && position_y < wall_end_y {
+            if movement[1] != 0. {
                 movement[1] = 0.;
             }
         }
