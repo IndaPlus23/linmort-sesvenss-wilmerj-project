@@ -13,6 +13,7 @@ use crate::{
     floor::Floor, render::MAX_STRUCTURES, vertex::Vertex, CustomMaterial, Player, SceneAssets, Wall,
     enemy::Enemy, movement::{Acceleration, MovingObjectBundle, Velocity}
 };
+use crate::enemy::EnemyComponent;
 
 #[derive(Component, Clone)]
 pub struct Map {
@@ -118,7 +119,7 @@ impl Map {
 
         // Spawn enemies
         for enemy in &self.enemies {
-            commands.spawn(
+            commands.spawn((
                 MovingObjectBundle {
                     velocity: Velocity::new(Vec3::ZERO),
                     acceleration: Acceleration::new(Vec3::ZERO),
@@ -127,8 +128,8 @@ impl Map {
                         transform: Transform::from_translation(enemy.position),
                         ..default()
                     },
-                }
-            );
+                }, EnemyComponent,
+            ));
         }
     }
 

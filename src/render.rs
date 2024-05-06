@@ -11,7 +11,7 @@ use bevy::{
 use core::f32::consts::PI;
 use nalgebra::{Rotation3, Unit, Vector3};
 
-use crate::{floor::Floor, wall::Wall, EditorState, GameState, Player, SceneAssets, vertex::Vertex, enemy::Enemy};
+use crate::{floor::Floor, wall::Wall, EditorState, GameState, Player, SceneAssets, vertex::Vertex, enemy::{Enemy, EnemyComponent}};
 use crate::movement::{Acceleration, MovingObjectBundle, Velocity};
 
 pub const MAX_STRUCTURES: usize = 1000;
@@ -55,9 +55,6 @@ pub struct CustomMaterial {
     pub pitch: f32,
 }
 
-#[derive(Component)]
-struct EnemyComponent;
-
 impl Material2d for CustomMaterial {
     fn fragment_shader() -> ShaderRef {
         "shaders/custom_material.wgsl".into()
@@ -85,7 +82,13 @@ pub fn render(
         ),
         Without<Wall>,
     >,
-    mut enemy_query: Query<(&Enemy, &mut Transform), (Without<Wall>, Without<Floor>)>,
+    mut enemy_query: Query<(
+        &mut Transform
+    ), (
+        With<EnemyComponent>,
+        Without<Wall>,
+        Without<Floor>
+    )>,
 ) {
     for player in player_query.iter_mut() {
         // Calculate mask for z-buffering
@@ -239,21 +242,11 @@ pub fn render(
         }
 
         // Enemies
-        for (enemy, mut transform) in enemy_query.iter_mut() {
-            commands.spawn((
-                MovingObjectBundle {
-                    velocity: Velocity::new(Vec3::ZERO),
-                    acceleration: Acceleration::new(Vec3::ZERO),
-                    sprite: SpriteBundle {
-                        texture: scene_assets.enemy.clone(),
-                        transform: Transform::from_translation(Vec3::new(
-                            1.0,
-                            1.0,
-                            0.)),
-                        ..default()
-                    },
-                }, EnemyComponent,
-            ));
+        for (mut transform) in enemy_query.iter_mut() {
+            let screen_position = Enemy::transform(transform.translation, player);
+            // TODO: Z locked due to debugging
+            let translation = Vec3::new(screen_position.x, screen_position.y, 0.5);
+            transform.translation = translation;
         }
     }
 }

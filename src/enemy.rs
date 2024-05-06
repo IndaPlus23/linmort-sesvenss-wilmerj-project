@@ -13,6 +13,9 @@ enum EnemyState {
     Dead,
 }
 
+#[derive(Component)]
+pub struct EnemyComponent;
+
 // Enemy stats are stored in JSON format.
 #[derive(Component, Clone, Copy, Debug)]
 pub struct Enemy {
@@ -61,6 +64,51 @@ impl Enemy {
 
     pub fn update_position(mut self, pos: Vec3) {
         self.position = pos;
+    }
+
+    // TODO: transform and screen are copies from sprite.rs which is a copy from vertex.rs
+    pub fn transform(
+        position: Vec3,
+        player: &Player
+    ) -> Vec2 {
+
+        // This code comes from transform_vertice
+        let mut x = position.x;
+        let mut y = position.y;
+        let mut z = position.z;
+
+        let cos = player.yaw.cos();
+        let sin = player.yaw.sin();
+
+        x -= player.x;
+        y -= player.y;
+        z -= player.z;
+
+        let new_x = x * cos + z * sin;
+        let new_z = z * cos - x * sin;
+        let new_y = y + (player.pitch * new_z);
+
+        let position = Vec3::new(new_x, new_y, new_z);
+
+        // Do not render if position is behind player
+        return if position.z > 0. {
+            Vec2::ZERO
+        } else {
+            // TODO: Might have to do with clipping if end/start is behind player
+            // TODO: Might have to deal with scaling issues. Something like self.scale = screen/z
+            Enemy::screen(position)
+        }
+    }
+
+    fn screen(position: Vec3) -> Vec2 {
+        let world_x = position.x;
+        let world_y = position.y;
+        let world_z = position.z;
+
+        let screen_x = world_x * 1500. / world_z;
+        let screen_y = world_y * 1500. / world_z;
+
+        Vec2::new(-screen_x, -screen_y)
     }
 }
 
