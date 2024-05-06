@@ -3,6 +3,8 @@ use crate::collision_detection::Collider;
 use crate::movement::Velocity;
 use crate::sound::Sound;
 use bevy::ecs::component::Component;
+use crate::player::Player;
+use crate::vertice::Vertice;
 
 #[derive(Component, Clone, Copy, Debug)]
 enum EnemyState {
@@ -37,15 +39,14 @@ impl Plugin for EnemyPlugin {
 impl Enemy {
     /// Creates a new enemy with an associated sprite and
     pub fn new(
-               reaction_speed: usize,
-               speed: usize,
-               hp: usize,
-               attack: usize,
-               range: usize,
-               respawn_time: Option<usize>,
-               projectile_speed: usize,
+        reaction_speed: usize,
+        speed: usize,
+        hp: usize,
+        attack: usize,
+        range: usize,
+        respawn_time: Option<usize>,
+        projectile_speed: usize,
     ) -> Self {
-
         Enemy {
             position: Vec3::ZERO,
             state: EnemyState::Dormant,
@@ -63,8 +64,6 @@ impl Enemy {
         self.position = pos;
     }
 }
-
-
 
 /// The "AI" of enemies. Loops over all enemies in
 fn act(mut commands: Commands, mut query: Query<(&mut Transform, &mut Velocity), With<Enemy>>) {
