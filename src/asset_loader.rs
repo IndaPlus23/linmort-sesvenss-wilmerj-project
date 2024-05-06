@@ -1,11 +1,12 @@
 use bevy::prelude::*;
-use std::path::PathBuf;
+use std::{
+    fs,
+    path::{Path, PathBuf},
+    collections::HashMap,
+};
 use serde_json;
-use std::fs;
 use serde::{Deserialize, Serialize};
 use crate::enemy::Enemy;
-use std::path::Path;
-use std::collections::HashMap;
 
 /// SceneAssets stores handles for assets used in the scene.
 #[derive(Resource, Debug, Default)]
@@ -28,8 +29,7 @@ impl Plugin for AssetLoaderPlugin {
 /// Loads assets from asset folder and populates AssetScene, making them available
 /// for usage without having multiple handles reference various copies of the same asset.
 pub fn load_assets(mut scene_assets: ResMut<SceneAssets>, asset_server: Res<AssetServer>) {
-    // TODO: Replace with a more permanent solution
-    let texture_paths = vec![String::from("grass_front.png"), String::from("SFLR6_4.png")];
+    let texture_paths = texture_paths("assets\\textures\\");
 
     *scene_assets = SceneAssets {
         enemy: asset_server.load(Path::new("sprites/enemy.png")),
@@ -71,6 +71,56 @@ fn load_textures_from_folder(
     }
 
     return image_handles;
+}
+
+fn texture_paths(folder: &str) -> Vec<String> {
+    let mut paths: Vec<String> = Vec::new();
+
+    // Convert the folder path to a PathBuf for manipulation
+    let folder_path = Path::new(folder);
+
+    // Recursively visit all files and directories within the specified folder
+    visit_folder(folder_path, PathBuf::new(), &mut paths);
+
+    paths
+}
+
+/// Recursively visits subfolders and pushes files with certain extentions.
+fn visit_folder(folder_path: &Path, relative_path: PathBuf, paths: &mut Vec<String>) {
+    if let Ok(entries) = fs::read_dir(folder_path) {
+        for entry in entries {
+            if let Ok(entry) = entry {
+                let path = entry.path();
+
+                if path.is_file() {
+                    // Check if the file has a .png extension
+                    if let Some(ext) = path.extension() {
+                        if ext == "png" {
+                            // Construct the relative path to the file
+                            let file_name =
+                                path.file_name().unwrap().to_string_lossy().into_owned();
+                            let mut file_path = relative_path.clone();
+                            file_path.push(&file_name);
+
+                            // Convert the path to a string
+                            if let Some(file_str) = file_path.to_str() {
+                                paths.push(file_str.to_string());
+                            }
+                        }
+                    }
+                } else if path.is_dir() {
+                    // Recursively visit subdirectories
+                    let mut next_relative_path = relative_path.clone();
+                    next_relative_path.push(path.file_name().unwrap());
+
+                    visit_folder(&path, next_relative_path, paths);
+                }
+            }
+        }
+    } else {
+        // Handle read_dir error
+        println!("Failed to read directory: {:?}", folder_path);
+    }
 }
 
 #[derive(Serialize, Deserialize)]
