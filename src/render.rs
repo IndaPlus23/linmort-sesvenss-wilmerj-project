@@ -230,28 +230,6 @@ pub fn render(
                     ],
                 );
             }
-
-            gizmos.circle_2d(Vec2::new(0., 0.), 1., Color::WHITE);
-            gizmos.line_2d(
-                Vec2::new(a.position.x, -a.position.z),
-                Vec2::new(b.position.x, -b.position.z),
-                Color::BLUE,
-            );
-            gizmos.line_2d(
-                Vec2::new(b.position.x, -b.position.z),
-                Vec2::new(c.position.x, -c.position.z),
-                Color::BLUE,
-            );
-            gizmos.line_2d(
-                Vec2::new(a.position.x, -a.position.z),
-                Vec2::new(c.position.x, -c.position.z),
-                Color::BLUE,
-            );
-            gizmos.line_2d(
-                Vec2::new(a.position.x, -a.position.z),
-                Vec2::new(d.position.x, -d.position.z),
-                Color::BLUE,
-            );
         }
     }
 }

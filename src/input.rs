@@ -7,8 +7,7 @@ use bevy::{
 };
 use std::f32::consts::PI;
 
-use crate::{map::Map, Player, Wall, floor::Floor};
-use crate::{EditorState, GameState, Player};
+use crate::{Player, Wall, floor::Floor, EditorState, GameState};
 
 #[derive(Default)]
 pub struct MouseState {
@@ -69,7 +68,7 @@ pub fn keyboard_input(
     }
 
     for mut player in query.iter_mut() {
-        let mut speed = 1./3.;
+        let mut speed = 50.;
 
         let mut movement = Vec3::ZERO;
 
@@ -88,7 +87,7 @@ pub fn keyboard_input(
             movement += Vec3::new(player.yaw.cos(), 0., player.yaw.sin());
         }
         if keyboard_input.pressed(KeyCode::ShiftLeft) {
-            speed = 1.0
+            speed = speed * 2.;
         }
 
         // GRAVITY + JUMPING
@@ -122,7 +121,7 @@ pub fn keyboard_input(
             player.gravity = 0.0;
         }          
         
-        movement = movement * speed;//movement.normalize_or_zero() * speed * time.delta_seconds();
+        movement = movement.normalize_or_zero() * speed * time.delta_seconds();
 
         
         player.x += movement.x;

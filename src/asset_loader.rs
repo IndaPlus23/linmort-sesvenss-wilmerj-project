@@ -72,6 +72,12 @@ fn visit_folder(folder_path: &Path, relative_path: PathBuf, paths: &mut Vec<Stri
 
                 if path.is_file() {
                     // Check if the file has a .png extension
+                    if let Some(ext) = path.extension() {
+                        if ext == "png" {
+                            // Construct the relative path to the file
+                            let file_name =
+                                path.file_name().unwrap().to_string_lossy().into_owned();
+                            let mut file_path = relative_path.clone();
                             file_path.push(&file_name);
 
                             // Convert the path to a string
