@@ -14,24 +14,43 @@ use bevy::{
     prelude::*,
     render::mesh::Mesh,
     sprite::Material2dPlugin,
-    window::{PresentMode, WindowTheme},
+    window::{PresentMode, PrimaryWindow, WindowTheme},
 };
 use bevy_egui::EguiPlugin;
+use render::render_grid;
 use std::f32::consts::PI;
 
 use crate::{
     asset_loader::{load_assets, AssetLoaderPlugin, SceneAssets},
     egui::editor_ui,
-    input::{keyboard_input, mouse_input, MouseState},
+    input::{keyboard_input, lock_cursor, mouse_input, MouseState},
     map::load_from_file,
     player::Player,
-    render::render,
     render::CustomMaterial,
+    render::{render, render_map},
     wall::Wall,
 };
 
+#[derive(States, Debug, Clone, PartialEq, Eq, Hash)]
+enum GameState {
+    InGame,
+    InEditor,
+}
+
+#[derive(States, Debug, Clone, PartialEq, Eq, Hash)]
+enum EditorState {
+    World,
+    Map,
+}
+
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
+struct EditorSet;
+
 fn main() {
     App::new()
+        .insert_state(GameState::InGame)
+        .insert_state(EditorState::Map)
+        .configure_sets(Update, EditorSet.run_if(in_state(GameState::InEditor)))
         .insert_resource(ClearColor(Color::rgb(0.1, 0.1, 0.1)))
         .insert_resource(MouseState {
             press_coords: Vec::new(),
@@ -56,12 +75,18 @@ fn main() {
         .add_plugins(EguiPlugin)
         .add_systems(PreStartup, load_assets)
         .add_systems(Startup, setup)
-        .add_systems(Update, (change_title, make_visible))
-        .add_systems(Update, keyboard_input)
-        .add_systems(Update, mouse_input)
-        .add_systems(Update, render)
-        .add_systems(Update, change_title)
-        .add_systems(Update, editor_ui)
+        .add_systems(
+            Update,
+            (
+                make_visible,
+                change_title,
+                keyboard_input,
+                mouse_input,
+                render,
+                render_map,
+            ),
+        )
+        .add_systems(Update, (editor_ui, render_grid).in_set(EditorSet))
         .run();
 }
 
@@ -70,7 +95,7 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut custom_materials: ResMut<Assets<CustomMaterial>>,
     mut asset_server: Res<SceneAssets>,
-    window_query: Query<&Window>,
+    mut window_query: Query<&mut Window, With<PrimaryWindow>>,
 ) {
     let map = load_from_file("map.txt").expect("Error: could not open map");
 
@@ -87,10 +112,12 @@ fn setup(
         &mut meshes,
         &mut custom_materials,
         &mut asset_server,
-        window_query,
+        &mut window_query,
     );
 
     commands.spawn(map);
+
+    lock_cursor(&mut window_query);
 }
 
 fn change_title(mut windows: Query<&mut Window>, time: Res<'_, Time<Real>>, query: Query<&Player>) {

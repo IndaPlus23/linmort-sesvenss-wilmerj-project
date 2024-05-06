@@ -23,11 +23,7 @@ impl Plugin for AssetLoaderPlugin {
 
 /// Loads assets from asset folder and populates AssetScene, making them available
 /// for usage without having multiple handles reference various copies of the same asset.
-pub fn load_assets(
-    mut scene_assets: ResMut<SceneAssets>,
-    asset_server: Res<AssetServer>,
-    mut window_query: Query<&mut Window>,
-) {
+pub fn load_assets(mut scene_assets: ResMut<SceneAssets>, asset_server: Res<AssetServer>) {
     let texture_paths = texture_paths("assets\\textures\\");
 
     *scene_assets = SceneAssets {
@@ -74,17 +70,8 @@ fn visit_folder(folder_path: &Path, relative_path: PathBuf, paths: &mut Vec<Stri
             if let Ok(entry) = entry {
                 let path = entry.path();
 
-                // Print debug information about the processed entry
-                // println!("Processing: {:?}", path);
-
                 if path.is_file() {
                     // Check if the file has a .png extension
-                    if let Some(ext) = path.extension() {
-                        if ext == "png" {
-                            // Construct the relative path to the file
-                            let file_name =
-                                path.file_name().unwrap().to_string_lossy().into_owned();
-                            let mut file_path = relative_path.clone();
                             file_path.push(&file_name);
 
                             // Convert the path to a string

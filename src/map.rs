@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy::sprite::MaterialMesh2dBundle;
+use bevy::window::PrimaryWindow;
 use std::{
     fs::File,
     io::{BufRead, BufReader, BufWriter, Write},
@@ -44,7 +45,7 @@ impl Map {
         meshes: &mut ResMut<Assets<Mesh>>,
         custom_materials: &mut ResMut<Assets<CustomMaterial>>,
         asset_server: &mut Res<SceneAssets>,
-        mut window_query: Query<&Window>,
+        window_query: &mut Query<&mut Window, With<PrimaryWindow>>,
     ) {
         let _window = window_query.single_mut();
 
