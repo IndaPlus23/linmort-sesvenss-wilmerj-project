@@ -102,7 +102,7 @@ fn setup(
     mut scene_assets: Res<SceneAssets>,
     mut window_query: Query<&mut Window, With<PrimaryWindow>>,
 ) {
-    let map = load_from_file("map.txt").expect("Error: could not open map");
+    let map = load_from_file("map.txt", &scene_assets.enemy_types).expect("Error: could not open map");
 
     commands.spawn(Camera2dBundle {
         transform: Transform::from_xyz(map.camera[0], map.camera[1], map.camera[2]).looking_at(
