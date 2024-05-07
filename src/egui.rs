@@ -2,18 +2,61 @@ use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts};
 use std::f32::consts::PI;
 
-use crate::{floor::Floor, map::Map, Player, SceneAssets, Wall};
+use crate::{floor::Floor, map::Map, Player, SceneAssets, Wall, render::MapFloor};
 
 pub fn editor_ui(
     mut player_query: Query<&mut Player>,
+    mut map_floors: Query<&mut MapFloor>,
     mut map_query: Query<&mut Map>,
     mut contexts: EguiContexts,
     asset_server: Res<SceneAssets>,
     mut wall_query: Query<&mut Wall>,
     mut floor_query: Query<&mut Floor>,
-) {
+) { 
     egui::Window::new("Editor").show(contexts.ctx_mut(), |ui| match map_query.get_single_mut() {
         Ok(mut map) => {
+            
+            ui.heading("Map");
+            let mut map_scale = 1.0;
+            let mut x_offset = 0.0;
+            let mut y_offset = 0.0;
+            for map_floor in map_floors.iter_mut() {
+                map_scale = map_floor.scale;
+                x_offset = map_floor.x_offset;
+                y_offset = -map_floor.y_offset;
+            }
+            ui.horizontal(|ui| {
+                ui.label("Scale:");
+                ui.add(
+                    egui::DragValue::new(&mut map_scale)
+                        .speed(0.01)
+                        .custom_formatter(|n, _| format!("{:.2}", n)),
+                );
+            });
+            ui.heading("Offset");
+            ui.horizontal(|ui| {
+                ui.label("x:");
+                ui.add(
+                    egui::DragValue::new(&mut x_offset)
+                        .speed(1.0)
+                        .custom_formatter(|n, _| format!("{:.0}", n)),
+                );
+            });
+            ui.horizontal(|ui| {
+                ui.label("y:");
+                ui.add(
+                    egui::DragValue::new(&mut y_offset)
+                        .speed(1.0)
+                        .custom_formatter(|n, _| format!("{:.0}", n + 0.001)),
+                );
+            });
+            for mut map_floor in map_floors.iter_mut() {
+                map_floor.scale = map_scale;
+                map_floor.x_offset = x_offset;
+                map_floor.y_offset = -y_offset;
+            }
+            ui.separator();
+
             let texture_paths = &asset_server.texture_paths;
             let n_walls = map.walls.len();
             let n_floors = map.floors.len();
