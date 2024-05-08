@@ -89,6 +89,7 @@ pub fn render(
         Without<Wall>,
         Without<Floor>
     )>,
+    mut gizmos: Gizmos,
 ) {
     for player in player_query.iter_mut() {
         // Calculate mask for z-buffering
@@ -243,10 +244,13 @@ pub fn render(
 
         // Enemies
         for (mut transform) in enemy_query.iter_mut() {
-            let screen_position = Enemy::transform(transform.translation, player);
-            // TODO: Z locked due to debugging
-            let translation = Vec3::new(screen_position.x, screen_position.y, 0.5);
-            transform.translation = translation;
+
+            let new_pos = Enemy::transform(transform.translation, player);
+            gizmos.circle_2d(Vec2::new(new_pos.x, new_pos.z), 2., Color::WHITE);
+
+            transform.translation = new_pos;
+            // TODO: Fix scaling
+            //transform.scale = Vec3::new(1.,1.,1.) / new_pos.z;
         }
     }
 }

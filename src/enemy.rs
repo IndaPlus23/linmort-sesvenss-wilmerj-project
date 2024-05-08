@@ -70,7 +70,7 @@ impl Enemy {
     pub fn transform(
         position: Vec3,
         player: &Player
-    ) -> Vec2 {
+    ) -> Vec3 {
 
         // This code comes from transform_vertice
         let mut x = position.x;
@@ -92,11 +92,10 @@ impl Enemy {
 
         // Do not render if position is behind player
         return if position.z > 0. {
-            Vec2::ZERO
+            Vec3::ZERO
         } else {
-            // TODO: Might have to do with clipping if end/start is behind player
-            // TODO: Might have to deal with scaling issues. Something like self.scale = screen/z
-            Enemy::screen(position)
+            let screen_pos = Enemy::screen(position);
+            Vec3::new(screen_pos.x, screen_pos.y, new_z)
         }
     }
 
