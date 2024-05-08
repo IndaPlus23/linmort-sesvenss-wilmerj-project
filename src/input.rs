@@ -126,6 +126,8 @@ pub fn mouse_input(
 
         let window = window_query.single_mut();
         let _window_pos = window.cursor_position().unwrap();
+
+        shoot_the_gun(query)
     }
 
     if mouse_button_input.just_released(MouseButton::Left) {

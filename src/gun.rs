@@ -65,7 +65,7 @@ impl Gun {
 pub fn shoot_the_gun(mut query: Query<&mut Player>) {
 
     // Pitch is how much a player is looking up or down, and yaw is how much they are looking left and right.
-    for mut player in query.iter_mut() {
+    for player in query.iter_mut() {
         //println!("yaw: {:?} pitch: {:?}", player.yaw, player.pitch);
 
         //println!("x: {:?} y: {:?} y: {:?}", player.x, player.y, player.z);
@@ -85,7 +85,7 @@ pub fn shoot_the_gun(mut query: Query<&mut Player>) {
         let step = 1.;  // how long steps should bullet take when checking for collision
         let range = 15; // range that gun shoots
 
-        for i in 0..range {
+        for _i in 0..range {
 
             // shot ray in direction player is looking. 
             ray[0] += player.yaw.sin() * step;
@@ -105,6 +105,6 @@ pub fn shoot_the_gun(mut query: Query<&mut Player>) {
             }
         }
 
-        //println!("ray: {:?}", ray)
+        println!("ray: {:?}", ray)
     }
 }
