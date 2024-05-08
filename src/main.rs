@@ -12,11 +12,13 @@ use bevy::{
     core::FrameCount,
     prelude::*,
     render::mesh::Mesh,
-    sprite::Material2dPlugin,
+    render::render_asset::RenderAssetUsages,
+    render::render_resource::{Extent3d, TextureFormat, Texture, TextureViewDescriptor, TextureDescriptor, TextureViewDimension, TextureDimension},
+    sprite::{Material2dPlugin, MaterialMesh2dBundle},
     window::{PresentMode, PrimaryWindow, WindowTheme},
 };
 use bevy_egui::EguiPlugin;
-use render::render_grid;
+use render::{render_cubemap, render_grid};
 use std::f32::consts::PI;
 
 use crate::{
@@ -26,7 +28,7 @@ use crate::{
     map::load_from_file,
     player::Player,
     render::CustomMaterial,
-    render::{render, render_map},
+    render::{render, render_map, render_hud, RenderItem, CubeMapMaterial},
     wall::Wall,
 };
 
@@ -71,6 +73,7 @@ fn main() {
             })
             .set(ImagePlugin::default_nearest()),))
         .add_plugins(Material2dPlugin::<CustomMaterial>::default())
+        .add_plugins(Material2dPlugin::<CubeMapMaterial>::default())
         .add_plugins(EguiPlugin)
         .add_systems(PreStartup, load_assets)
         .add_systems(Startup, setup)
@@ -83,6 +86,8 @@ fn main() {
                 mouse_input,
                 render,
                 render_map,
+                render_hud,
+                render_cubemap
             ),
         )
         .add_systems(Update, (editor_ui, render_grid).in_set(EditorSet))
@@ -92,9 +97,12 @@ fn main() {
 fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
     mut custom_materials: ResMut<Assets<CustomMaterial>>,
+    mut cubemaps: ResMut<Assets<CubeMapMaterial>>,
     mut asset_server: Res<SceneAssets>,
     mut window_query: Query<&mut Window, With<PrimaryWindow>>,
+    mut textures: ResMut<Assets<Image>>,
 ) {
     let map = load_from_file("map.txt").expect("Error: could not open map");
 
@@ -117,6 +125,39 @@ fn setup(
     commands.spawn(map);
 
     lock_cursor(&mut window_query);
+
+    // Hud item
+    commands.spawn((
+        RenderItem::new_with_id(0),
+        MaterialMesh2dBundle {
+            mesh: meshes.add(RenderItem::new_mesh()).into(),
+            material: materials.add(asset_server.textures[0].clone()),
+            transform: Transform::from_xyz(0.0, 0.0, 10.0),
+            ..default()
+        },
+    ));
+
+    //Cubemap
+    commands.spawn((
+        MaterialMesh2dBundle {
+            mesh: meshes.add(RenderItem::new_mesh()).into(),
+            material: cubemaps.add(CubeMapMaterial {
+                px: asset_server.cubemaps[0].clone(),
+                nx: asset_server.cubemaps[1].clone(),
+                py: asset_server.cubemaps[2].clone(),
+                ny: asset_server.cubemaps[3].clone(),
+                pz: asset_server.cubemaps[4].clone(),
+                nz: asset_server.cubemaps[5].clone(),
+                window_width: 0.,
+                window_height:  0.,
+                direction: Vec3::new(0., 0., -1.),
+                horizontal_vector: Vec3::new(0., 0., 0.),
+                vertical_vector: Vec3::new(0., 0., 0.),
+            }),
+            transform: Transform::from_xyz(0.0, 0.0, -10.0),
+            ..default()
+        },
+    ));
 }
 
 fn change_title(mut windows: Query<&mut Window>, time: Res<'_, Time<Real>>, query: Query<&Player>) {

@@ -8,6 +8,7 @@ use std::{
 #[derive(Resource, Debug, Default)]
 pub struct SceneAssets {
     pub enemy: Handle<Scene>,
+    pub cubemaps: Vec<Handle<Image>>,
     pub textures: Vec<Handle<Image>>,
     pub texture_paths: Vec<String>,
 }
@@ -23,28 +24,31 @@ impl Plugin for AssetLoaderPlugin {
 
 /// Loads assets from asset folder and populates AssetScene, making them available
 /// for usage without having multiple handles reference various copies of the same asset.
-pub fn load_assets(mut scene_assets: ResMut<SceneAssets>, asset_server: Res<AssetServer>) {
-    let texture_paths = texture_paths("assets\\textures\\");
+pub fn load_assets(mut scene_assets: ResMut<SceneAssets>, mut asset_server: Res<AssetServer>) {
+    let cubemap_paths = texture_paths("assets\\textures\\cubemap\\");
+    let texture_paths = texture_paths("assets\\textures\\flats\\");
 
     *scene_assets = SceneAssets {
         enemy: asset_server.load(""),
-        textures: load_textures_from_folder(texture_paths.clone(), asset_server),
+        cubemaps: load_textures_from_folder(cubemap_paths.clone(), &mut asset_server, "textures/cubemap/".to_string()),
+        textures: load_textures_from_folder(texture_paths.clone(), &mut asset_server, "textures/flats/".to_string()),
         texture_paths: texture_paths,
     }
 }
-
+ 
 /// Loads folder of textures and upgrades into handle of image.
 fn load_textures_from_folder(
     texture_paths: Vec<String>,
-    asset_server: Res<AssetServer>,
+    asset_server: &mut Res<AssetServer>,
+    path: String,
 ) -> Vec<Handle<Image>> {
     let mut image_handles: Vec<Handle<Image>> = Vec::new();
 
     for texture in texture_paths.iter() {
-        let mut path = PathBuf::from("textures/");
-        path.push(texture);
+        let mut path_buf = PathBuf::from(path.clone());
+        path_buf.push(texture);
         // Unchecked loading
-        let texture: Handle<Image> = asset_server.load(path);
+        let texture: Handle<Image> = asset_server.load(path_buf.clone());
         image_handles.push(texture);
     }
 
