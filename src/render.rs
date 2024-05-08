@@ -83,9 +83,9 @@ pub fn render(
         Without<Wall>,
     >,
     mut enemy_query: Query<(
-        &mut Transform
+        &mut EnemyComponent,
+        &mut Transform,
     ), (
-        With<EnemyComponent>,
         Without<Wall>,
         Without<Floor>
     )>,
@@ -243,14 +243,17 @@ pub fn render(
         }
 
         // Enemies
-        for (mut transform) in enemy_query.iter_mut() {
+        for (enemy, mut transform) in enemy_query.iter_mut() {
 
-            let new_pos = Enemy::transform(transform.translation, player);
-            gizmos.circle_2d(Vec2::new(new_pos.x, new_pos.z), 2., Color::WHITE);
+            let transformed_pos = Enemy::transform(enemy.position, player);
 
-            transform.translation = new_pos;
-            // TODO: Fix scaling
-            //transform.scale = Vec3::new(1.,1.,1.) / new_pos.z;
+            // Do not render if position is behind player
+            if transformed_pos.z > 0. {
+                transform.translation = Vec3::new(10000000.0, 10000000.0, -100.0)
+            } else {
+                let screen_pos = Enemy::screen(transformed_pos);
+                transform.translation = Vec3::new(screen_pos.x, screen_pos.y, 10.0);
+            }
         }
     }
 }

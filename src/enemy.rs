@@ -14,7 +14,10 @@ enum EnemyState {
 }
 
 #[derive(Component)]
-pub struct EnemyComponent;
+pub struct EnemyComponent {
+    pub position: Vec3,
+    pub height: f32,
+}
 
 // Enemy stats are stored in JSON format.
 #[derive(Component, Clone, Copy, Debug)]
@@ -88,18 +91,10 @@ impl Enemy {
         let new_z = z * cos - x * sin;
         let new_y = y + (player.pitch * new_z);
 
-        let position = Vec3::new(new_x, new_y, new_z);
-
-        // Do not render if position is behind player
-        return if position.z > 0. {
-            Vec3::ZERO
-        } else {
-            let screen_pos = Enemy::screen(position);
-            Vec3::new(screen_pos.x, screen_pos.y, new_z)
-        }
+        Vec3::new(new_x, new_y, new_z)
     }
 
-    fn screen(position: Vec3) -> Vec2 {
+    pub fn screen(position: Vec3) -> Vec2 {
         let world_x = position.x;
         let world_y = position.y;
         let world_z = position.z;

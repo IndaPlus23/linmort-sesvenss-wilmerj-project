@@ -128,7 +128,10 @@ impl Map {
                         transform: Transform::from_translation(enemy.position),
                         ..default()
                     },
-                }, EnemyComponent,
+                }, EnemyComponent {
+                    position: enemy.position,
+                    height: 10.,
+                },
             ));
         }
     }
