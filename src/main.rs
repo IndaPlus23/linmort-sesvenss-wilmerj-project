@@ -7,6 +7,7 @@ mod player;
 mod render;
 mod vertex;
 mod wall;
+mod collision_detection;
 
 use bevy::{
     core::FrameCount,
