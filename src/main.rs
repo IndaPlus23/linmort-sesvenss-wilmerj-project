@@ -30,7 +30,7 @@ use crate::{
     render::CustomMaterial,
     render::{render, render_map},
     wall::Wall,
-    sound_loader::play_background_audio
+    sound_loader::{play_background_audio, volume_system}
 };
 
 #[derive(States, Debug, Clone, PartialEq, Eq, Hash)]
@@ -77,7 +77,7 @@ fn main() {
         .add_plugins(EguiPlugin)
         .add_systems(PreStartup, load_assets)
         .add_systems(Startup, setup)
-        .add_systems(Startup, play_background_audio)
+        .add_systems(Startup, play_background_audio) //background music
         .add_systems(
             Update,
             (
@@ -87,6 +87,7 @@ fn main() {
                 mouse_input,
                 render,
                 render_map,
+                volume_system
             ),
         )
         .add_systems(Update, (editor_ui, render_grid).in_set(EditorSet))
