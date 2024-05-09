@@ -86,6 +86,11 @@ pub fn keyboard_input(
         if keyboard_input.pressed(KeyCode::KeyD) {
             movement += Vec3::new(player.yaw.cos(), 0., player.yaw.sin());
         }
+
+        if keyboard_input.pressed(KeyCode::KeyS) && keyboard_input.pressed(KeyCode::KeyW) {
+            movement = Vec3::new(0., movement.y, 0.);
+        }
+        
         if keyboard_input.pressed(KeyCode::ShiftLeft) {
             speed = speed * 2.;
         }
