@@ -30,7 +30,7 @@ use crate::{
     render::CustomMaterial,
     render::{render, render_map},
     wall::Wall,
-    sound_loader::{play_background_audio, volume_system}
+    sound_loader::{play_background_audio, update_speed, pause, volume}
 };
 
 #[derive(States, Debug, Clone, PartialEq, Eq, Hash)]
@@ -87,7 +87,7 @@ fn main() {
                 mouse_input,
                 render,
                 render_map,
-                volume_system
+                update_speed, pause, volume
             ),
         )
         .add_systems(Update, (editor_ui, render_grid).in_set(EditorSet))
