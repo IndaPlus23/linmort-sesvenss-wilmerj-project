@@ -1,5 +1,5 @@
 use crate::collision_detection::{wall_collision, floor_collision};
-
+use crate::sound_loader::play_audio;
 use bevy::{
     input::mouse::MouseMotion,
     prelude::*,
@@ -141,6 +141,8 @@ pub fn mouse_input(
     mut mouse_state: ResMut<MouseState>,
     mut window_query: Query<&mut Window, With<PrimaryWindow>>,
     mut query: Query<&mut Player>,
+    asset_server: Res<AssetServer>, 
+    mut commands: Commands
 ) {
     for event in mouse_motion_events.read() {
         let primary_window = window_query.single_mut();
@@ -163,6 +165,9 @@ pub fn mouse_input(
 
         let window = window_query.single_mut();
         let _window_pos = window.cursor_position().unwrap();
+
+        // plays shotgun sound
+        play_audio(asset_server,commands, "shotgun.ogg")
     }
 
     if mouse_button_input.just_released(MouseButton::Left) {
