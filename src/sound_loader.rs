@@ -31,6 +31,19 @@ pub fn decrease_audio(music_controller: Query<&AudioSink>) {
     }
 }
 
+/*
+EXAMPLE:
+
+you need these ->
+    
+    asset_server: Res<AssetServer>, 
+    mut commands: Commands
+
+then use the function like this (shotgun.ogg must be a file in assets/sounds)->
+    
+    play_audio(asset_server,commands, "shotgun.ogg")
+        
+*/
 pub fn play_audio(asset_server: Res<AssetServer>, mut commands: Commands, path: &str) {
     commands.spawn(AudioBundle {
         source: asset_server.load("sounds\\".to_owned() + path),
