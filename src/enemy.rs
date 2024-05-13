@@ -2,10 +2,10 @@ use bevy::prelude::*;
 use crate::collision_detection::Collider;
 use crate::movement::{Acceleration, MovingObjectBundle, Velocity};
 use bevy::ecs::component::Component;
-use bevy::ecs::query::QueryData;
 use crate::asset_loader::SceneAssets;
 use crate::player::Player;
 use crate::sound::Sound;
+use bevy::time::Timer;
 
 const MISSILE_SPEED: f32 = 0.1;
 
@@ -107,12 +107,18 @@ impl Enemy {
     }
 }
 
+#[derive(Component)]
+struct DelayedAction {
+    timer: Timer,
+}
 /// The "AI" of enemies. Loops over all enemies in
 fn act(mut commands: Commands, scene_assets: Res<SceneAssets>, mut query: Query<(&mut Transform), With<EnemyComponent>>) {
-    for (mut transform) in query.iter() {
-        let projectile = create_projectile(scene_assets.projectile.clone(), transform);
-        commands.spawn(projectile);
-    }
+    // for (mut transform) in query.iter() {
+    //     let projectile = create_projectile(scene_assets.projectile.clone(), transform);
+    //     commands.spawn(projectile).insert(DelayedAction {
+    //         timer: Timer::from_seconds(5.0, TimerMode::Once),
+    //     });
+    // }
 }
 
 fn handle_enemy_sound_collisions(

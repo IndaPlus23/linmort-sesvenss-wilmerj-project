@@ -15,7 +15,7 @@ use crate::{floor::Floor, wall::Wall, EditorState, GameState, Player, SceneAsset
 use crate::movement::{Acceleration, MovingObjectBundle, Velocity};
 
 pub const MAX_STRUCTURES: usize = 1000;
-const SCALING_FACTOR: f32 = 100.;
+const SCALING_FACTOR: f32 = 0.01;
 
 #[derive(Component, Asset, TypePath, AsBindGroup, Debug, Clone)]
 pub struct CustomMaterial {
@@ -89,6 +89,14 @@ pub fn render(
     ), (
         Without<Wall>,
         Without<Floor>
+    )>,
+    mut sprite_query: Query<(
+        &Transform,
+    ), (
+        Without<Wall>,
+        Without<Floor>,
+        Without<EnemyComponent>,
+        With<Sprite>,
     )>,
     mut gizmos: Gizmos,
 ) {
@@ -258,14 +266,18 @@ pub fn render(
                 transform.scale = Vec3::new(scaling, scaling, scaling);
             }
         }
+
+        for mut transform in sprite_query.iter_mut() {
+            // TODO: Use sprites instead of enemy_query
+        }
     }
 }
 
 /// Returns a scale multiplier for a sprite based on its distance from the camera.
 /// `distance`: the distance of the sprite from the camera.
 /// `max_distance`: the maximum distance at which the sprite is still visible, beyond which it won't scale further.
-fn scale_by_distance_linear(distance: f32, scaling: f32) -> f32 {
-    1.0
+fn scale_by_distance_linear(distance: f32, scaling_factor: f32) -> f32 {
+    1.0 / (distance * scaling_factor)
 }
 
 #[derive(Component, Clone)]
