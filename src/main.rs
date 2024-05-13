@@ -30,7 +30,7 @@ use crate::{
     render::CustomMaterial,
     render::{render, render_map},
     wall::Wall,
-    sound_loader::{play_background_audio, pause}
+    sound_loader::play_background_audio
 };
 
 #[derive(States, Debug, Clone, PartialEq, Eq, Hash)]
