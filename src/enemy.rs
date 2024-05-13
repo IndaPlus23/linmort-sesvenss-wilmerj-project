@@ -1,15 +1,18 @@
 use bevy::prelude::*;
 use crate::collision_detection::Collider;
-use crate::movement::Velocity;
+use crate::movement::{Acceleration, MovingObjectBundle, Velocity};
 use bevy::ecs::component::Component;
+use bevy::ecs::query::QueryData;
+use crate::asset_loader::SceneAssets;
 use crate::player::Player;
 use crate::sound::Sound;
 
-#[derive(Component, Clone, Copy, Debug)]
-enum EnemyState {
+const MISSILE_SPEED: f32 = 0.1;
+
+#[derive(Clone, Copy, Debug, Component)]
+pub enum EnemyState {
     Dormant,
     Attacking,
-    Dying,
     Dead,
 }
 
@@ -23,7 +26,6 @@ pub struct EnemyComponent {
 #[derive(Component, Clone, Copy, Debug)]
 pub struct Enemy {
     pub(crate) position: Vec3,
-    state: EnemyState,
     reaction_speed: usize,
     speed: usize,
     hp: usize,
@@ -54,7 +56,6 @@ impl Enemy {
     ) -> Self {
         Enemy {
             position: Vec3::ZERO,
-            state: EnemyState::Dormant,
             reaction_speed,
             speed,
             hp,
@@ -107,11 +108,10 @@ impl Enemy {
 }
 
 /// The "AI" of enemies. Loops over all enemies in
-fn act(mut commands: Commands, mut query: Query<(&mut Transform, &mut Velocity), With<Enemy>>) {
-    for (mut transform, mut velocity) in query.iter() {
-        // TODO: Loop over available enemies, and check their state. Take different actions depending on state.
-        // TODO: Detect sounds
-        // TODO: Follow walk in random directions based on walls around the enemy
+fn act(mut commands: Commands, scene_assets: Res<SceneAssets>, mut query: Query<(&mut Transform), With<EnemyComponent>>) {
+    for (mut transform) in query.iter() {
+        let projectile = create_projectile(scene_assets.projectile.clone(), transform);
+        commands.spawn(projectile);
     }
 }
 
@@ -126,4 +126,18 @@ fn handle_enemy_sound_collisions(
     }
 }
 
-//TODO: Delete enemy. Removes from act loop and from game once killed
+#[derive(Component)]
+struct ProjectileComponent;
+
+fn create_projectile(sprite: Handle<Image>, transform: &Transform) -> MovingObjectBundle {
+    MovingObjectBundle {
+        velocity: Velocity::new(-transform.forward() * MISSILE_SPEED),
+        acceleration: Acceleration::new(Vec3::ZERO),
+        sprite: SpriteBundle {
+            texture: sprite,
+            transform: Transform::from_translation(transform.translation),
+            ..default()
+        },
+        state: EnemyState::Dormant,
+    }
+}

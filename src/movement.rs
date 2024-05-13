@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use crate::enemy::EnemyState;
 
 #[derive(Component, Debug)]
 pub struct Velocity {
@@ -23,6 +24,7 @@ pub struct MovingObjectBundle {
     pub velocity: Velocity,
     pub acceleration: Acceleration,
     pub sprite: SpriteBundle,
+    pub state: EnemyState,
 }
 
 pub struct MovementPlugin;

@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use crate::asset_loader::SceneAssets;
-use crate::enemy::Enemy;
+use crate::enemy::EnemyState;
 use crate::movement::{Acceleration, MovingObjectBundle, Velocity};
 use crate::player::Player;
 
@@ -15,12 +15,11 @@ struct AnimationTimer(Timer);
 
 pub struct SpritePlugin;
 
-// TODO: Implement sprite spawning at various part of the game
-// impl Plugin for SpritePlugin {
-//     fn build(&self, app: &mut App) {
-//         todo!()
-//     }
-// }
+impl Plugin for SpritePlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(Update, animate_sprite);
+    }
+}
 
 pub struct Sprite {
     position: Vec3,
@@ -42,24 +41,9 @@ impl Sprite {
                     transform: Transform::from_translation(position),
                     ..default()
                 },
+                state: EnemyState::Dormant,
             }
         ));
-    }
-
-    fn animate_sprite(
-        time: Res<Time>,
-        mut query: Query<(&AnimationIndices, &mut AnimationTimer, &mut TextureAtlas)>,
-    ) {
-        for (indices, mut timer, mut atlas) in &mut query {
-            timer.tick(time.delta());
-            if timer.just_finished() {
-                atlas.index = if atlas.index == indices.last {
-                    indices.first
-                } else {
-                    atlas.index + 1
-                };
-            }
-        }
     }
 
     // Transforms the sprite's position based on the player's position and orientation
@@ -108,5 +92,24 @@ impl Sprite {
         let screen_y = world_y * 1500. / world_z;
 
         Vec2::new(-screen_x, -screen_y)
+    }
+}
+
+fn animate_sprite(
+    time: Res<Time>,
+    mut query: Query<(&AnimationIndices, &mut AnimationTimer, &mut TextureAtlas)>,
+) {
+    for (indices, mut timer, mut atlas) in &mut query {
+        // TODO: Query EnemyType
+        // TODO: Chose correct indices depending on EnemyState
+
+        timer.tick(time.delta());
+        if timer.just_finished() {
+            atlas.index = if atlas.index == indices.last {
+                indices.first
+            } else {
+                atlas.index + 1
+            };
+        }
     }
 }

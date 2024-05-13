@@ -15,6 +15,7 @@ pub struct SceneAssets {
     pub enemy_types: HashMap<String, Enemy>,
     pub textures: Vec<Handle<Image>>,
     pub texture_paths: Vec<String>,
+    pub projectile: Handle<Image>,
 }
 
 pub struct AssetLoaderPlugin;
@@ -33,6 +34,7 @@ pub fn load_assets(mut scene_assets: ResMut<SceneAssets>, asset_server: Res<Asse
 
     *scene_assets = SceneAssets {
         enemy: asset_server.load(Path::new("sprites/enemy.png")),
+        projectile: asset_server.load(Path::new("sprites/projectile.png")),
         enemy_types: load_enemy_types(),
         textures: load_textures_from_folder(texture_paths.clone(), asset_server),
         texture_paths: texture_paths,
@@ -123,6 +125,8 @@ fn visit_folder(folder_path: &Path, relative_path: PathBuf, paths: &mut Vec<Stri
     }
 }
 
+/// sprite_sheet_states is an array holding tuples which hold the index of a beginning and end tile for a certain animation.
+/// The order of animations are dormant:attack:dead.
 #[derive(Serialize, Deserialize)]
 struct EnemyJSON {
     state: String,

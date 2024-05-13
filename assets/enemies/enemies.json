@@ -10,7 +10,8 @@
         "projectile_speed": 2,
         "texture_name": "enemy_a.png",
         "columns": 1,
-        "rows": 1
+        "rows": 1,
+        "sprite_sheet_states": [[1,4],[5,6],[7,9]]
     },
     "enemy_b": {
         "state": "Attack",
@@ -23,6 +24,7 @@
         "projectile_speed": 1,
         "sprite_sheet": "enemy_b.png",
         "columns": 1,
-        "rows": 1
+        "rows": 1,
+        "sprite_sheet_states": [[1,4],[5,6],[7,9]]
     }
 }

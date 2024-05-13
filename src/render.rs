@@ -15,6 +15,7 @@ use crate::{floor::Floor, wall::Wall, EditorState, GameState, Player, SceneAsset
 use crate::movement::{Acceleration, MovingObjectBundle, Velocity};
 
 pub const MAX_STRUCTURES: usize = 1000;
+const SCALING_FACTOR: f32 = 100.;
 
 #[derive(Component, Asset, TypePath, AsBindGroup, Debug, Clone)]
 pub struct CustomMaterial {
@@ -246,6 +247,7 @@ pub fn render(
         for (enemy, mut transform) in enemy_query.iter_mut() {
 
             let transformed_pos = Enemy::transform(enemy.position, player);
+            let scaling = scale_by_distance_linear(-transformed_pos.z, SCALING_FACTOR);
 
             // Do not render if position is behind player
             if transformed_pos.z > 0. {
@@ -253,9 +255,17 @@ pub fn render(
             } else {
                 let screen_pos = Enemy::screen(transformed_pos);
                 transform.translation = Vec3::new(screen_pos.x, screen_pos.y, 10.0);
+                transform.scale = Vec3::new(scaling, scaling, scaling);
             }
         }
     }
+}
+
+/// Returns a scale multiplier for a sprite based on its distance from the camera.
+/// `distance`: the distance of the sprite from the camera.
+/// `max_distance`: the maximum distance at which the sprite is still visible, beyond which it won't scale further.
+fn scale_by_distance_linear(distance: f32, scaling: f32) -> f32 {
+    1.0
 }
 
 #[derive(Component, Clone)]
