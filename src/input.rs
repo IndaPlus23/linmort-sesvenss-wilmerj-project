@@ -115,7 +115,7 @@ pub fn mouse_input(
                 player.yaw += delta.x * sensitivity;
                 player.yaw = player.yaw.rem_euclid(2.0 * PI);
                 player.pitch -= delta.y * sensitivity;
-                player.pitch = player.pitch.clamp(-PI / 2.0, PI / 2.0);
+                player.pitch = player.pitch.clamp(-30.0 * PI / 180., 30.0 * PI / 180.);
             }
         }
     }

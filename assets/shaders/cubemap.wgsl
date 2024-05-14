@@ -20,13 +20,9 @@
 
 @fragment
 fn fragment(mesh: VertexOutput) -> @location(0) vec4<f32> {
-    let horizontal_step = (mesh.world_position[0]) / window_width;
-    let abs_horizontal: vec3<f32> = normalize(direction + horizontal_step * horizontal_vector);
-
-    let vertical_step = (mesh.world_position[1]) / window_height;
-    let abs_vertical: vec3<f32> = normalize(direction + vertical_step * vertical_vector);
-
-    let abs_direction: vec3<f32> = normalize(abs_horizontal + abs_vertical);
+    let abs_horizontal: vec3<f32> = (mesh.world_position[0] * 0.9 / (window_width) * horizontal_vector);
+    let abs_vertical: vec3<f32> = (mesh.world_position[1] * 0.9 / (window_height) * vertical_vector);
+    let abs_direction: vec3<f32> = normalize(direction + abs_horizontal + abs_vertical);
 
     let x = abs_direction[0];
     let y = abs_direction[1];
