@@ -11,7 +11,7 @@ use bevy::{
 use core::f32::consts::PI;
 use nalgebra::{Rotation3, Unit, Vector3};
 
-use crate::{floor::Floor, wall::Wall, EditorState, GameState, Player, SceneAssets, vertex::Vertex, enemy::{Enemy, EnemyComponent}};
+use crate::{floor::Floor, wall::Wall, EditorState, GameState, Player, SceneAssets, vertex::Vertex, enemy::{Enemy}, sprites::SpriteComponent};
 use crate::movement::{Acceleration, MovingObjectBundle, Velocity};
 
 pub const MAX_STRUCTURES: usize = 1000;
@@ -84,7 +84,7 @@ pub fn render(
         Without<Wall>,
     >,
     mut enemy_query: Query<(
-        &mut EnemyComponent,
+        &mut SpriteComponent,
         &mut Transform,
     ), (
         Without<Wall>,
@@ -243,10 +243,10 @@ pub fn render(
             }
         }
 
-        // Enemies
-        for (enemy, mut transform) in enemy_query.iter_mut() {
+        // Sprites
+        for (sprite, mut transform) in enemy_query.iter_mut() {
 
-            let transformed_pos = Enemy::transform(enemy.position, player);
+            let transformed_pos = Enemy::transform(sprite.position, player);
             let scaling = scale_by_distance_linear(-transformed_pos.z, SCALING_FACTOR);
 
             // Do not render if position is behind player

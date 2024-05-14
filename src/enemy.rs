@@ -6,6 +6,7 @@ use crate::asset_loader::SceneAssets;
 use crate::player::Player;
 use crate::sound::Sound;
 use bevy::time::Timer;
+use crate::sprites::SpriteComponent;
 
 const MISSILE_SPEED: f32 = 0.1;
 
@@ -14,12 +15,6 @@ pub enum EnemyState {
     Dormant,
     Attacking,
     Dead,
-}
-
-#[derive(Component)]
-pub struct EnemyComponent {
-    pub position: Vec3,
-    pub height: f32,
 }
 
 // Enemy stats are stored in JSON format.
@@ -112,13 +107,11 @@ struct DelayedAction {
     timer: Timer,
 }
 /// The "AI" of enemies. Loops over all enemies in
-fn act(mut commands: Commands, scene_assets: Res<SceneAssets>, mut query: Query<(&mut Transform), With<EnemyComponent>>) {
-    // for (mut transform) in query.iter() {
-    //     let projectile = create_projectile(scene_assets.projectile.clone(), transform);
-    //     commands.spawn(projectile).insert(DelayedAction {
-    //         timer: Timer::from_seconds(5.0, TimerMode::Once),
-    //     });
-    // }
+fn act(mut commands: Commands, scene_assets: Res<SceneAssets>, mut query: Query<(&mut Transform), With<SpriteComponent>>) {
+    for (mut transform) in query.iter() {
+        let projectile = create_projectile(scene_assets.projectile.clone(), transform);
+        commands.spawn(projectile);
+    }
 }
 
 fn handle_enemy_sound_collisions(
@@ -135,7 +128,7 @@ fn handle_enemy_sound_collisions(
 #[derive(Component)]
 struct ProjectileComponent;
 
-fn create_projectile(sprite: Handle<Image>, transform: &Transform) -> MovingObjectBundle {
+fn create_projectile(sprite: Handle<Image>, transform: &Transform) { (
     MovingObjectBundle {
         velocity: Velocity::new(-transform.forward() * MISSILE_SPEED),
         acceleration: Acceleration::new(Vec3::ZERO),
@@ -145,5 +138,8 @@ fn create_projectile(sprite: Handle<Image>, transform: &Transform) -> MovingObje
             ..default()
         },
         state: EnemyState::Dormant,
-    }
+    }, SpriteComponent {
+        position: transform.translation,
+        height: 10.,
+    });
 }

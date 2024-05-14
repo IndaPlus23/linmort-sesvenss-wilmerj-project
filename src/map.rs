@@ -13,7 +13,9 @@ use crate::{
     floor::Floor, render::MAX_STRUCTURES, vertex::Vertex, CustomMaterial, Player, SceneAssets, Wall,
     enemy::Enemy, movement::{Acceleration, MovingObjectBundle, Velocity}
 };
-use crate::enemy::{EnemyComponent, EnemyState};
+use crate::enemy::EnemyState;
+use crate::sprites::SpriteComponent;
+
 
 #[derive(Component, Clone)]
 pub struct Map {
@@ -130,7 +132,7 @@ impl Map {
                         ..default()
                     },
                     state: EnemyState::Dormant,
-                }, EnemyComponent {
+                }, SpriteComponent {
                     position: enemy.position,
                     height: 10.,
                 }

@@ -26,6 +26,12 @@ pub struct Sprite {
     height: usize,
 }
 
+#[derive(Component)]
+pub struct SpriteComponent {
+    pub position: Vec3,
+    pub height: f32,
+}
+
 impl Sprite {
     // TODO: Don't render a sprite which won't be visible on screen. Instead, use some other mechanic to track the sprite while "walking" off-screen.
     /// spawn_sprites uses SceneAssets to clone handles for different assets. This means that the
