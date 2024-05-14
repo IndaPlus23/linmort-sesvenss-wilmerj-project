@@ -2,16 +2,16 @@ use bevy::prelude::*;
 use crate::collision_detection::Collider;
 use crate::movement::{Acceleration, MovingObjectBundle, Velocity};
 use bevy::ecs::component::Component;
+use bevy::log::tracing_subscriber::fmt::time;
 use crate::asset_loader::SceneAssets;
 use crate::player::Player;
 use crate::sound::Sound;
 use bevy::time::Timer;
 use crate::sprites::SpriteComponent;
+use crate::timer::ShootingTimer;
+use crate::utility::normalize;
 
-const MISSILE_SPEED: f32 = 0.1;
-
-// Used for time-tracked events
-struct Spawntimer(Timer);
+const MISSILE_SPEED: f32 = 20.;
 
 #[derive(Clone, Copy, Debug, Component)]
 pub enum EnemyState {
@@ -111,13 +111,28 @@ struct DelayedAction {
 }
 /// The "AI" of enemies. Loops over all enemies in
 /// Update velocity to change direction of movement
-fn act(mut commands: Commands, scene_assets: Res<SceneAssets>, mut query: Query<(&Velocity, &mut SpriteComponent)>) {
-    for (mut velocity, mut enemy) in query.iter() {
-        let projectile = create_projectile(scene_assets.projectile.clone(), enemy.position);
-        commands.spawn(projectile);
-        println!("Projectile has been spawned");
+fn act(
+    mut commands: Commands,
+    scene_assets: Res<SceneAssets>,
+    time: Res<Time>,
+    mut query: Query<(
+        &Velocity,
+        &Transform,
+        &mut SpriteComponent,
+        &mut ShootingTimer
+    )>,
+) {
+    for (velocity, transform, enemy, mut timer) in query.iter_mut() {
+        timer.timer.tick(time.delta());
+
+        let direction = normalize(transform.translation - enemy.position);
+
+        if timer.timer.finished() {
+            create_projectile(&mut commands, scene_assets.projectile.clone(), enemy.position, direction);
+        }
     }
 }
+
 
 fn handle_enemy_sound_collisions(
     mut commands: Commands,
@@ -133,18 +148,30 @@ fn handle_enemy_sound_collisions(
 #[derive(Component)]
 struct ProjectileComponent;
 
-fn create_projectile(sprite: Handle<Image>, position: Vec3) { (
-    MovingObjectBundle {
-        velocity: Velocity::new(Vec3::new(-position.x, -position.y, -position.z) * MISSILE_SPEED),
-        acceleration: Acceleration::new(Vec3::ZERO),
-        sprite: SpriteBundle {
-            texture: sprite,
-            transform: Transform::from_translation(position),
-            ..default()
+fn create_projectile(
+    commands: &mut Commands,
+    sprite: Handle<Image>,
+    position: Vec3,
+    direction: Vec3,
+) {
+    commands.spawn((
+        MovingObjectBundle {
+            velocity: Velocity::new(Vec3::new(direction.x, direction.y, direction.z) * MISSILE_SPEED),
+            acceleration: Acceleration::new(Vec3::ZERO),
+            sprite: SpriteBundle {
+                texture: sprite,
+                transform: Transform {
+                    translation: position,
+                    scale: Vec3::new(0.01, 0.01, 0.01),
+                    ..default()
+                },
+                ..default()
+            },
+            state: EnemyState::Dormant,
         },
-        state: EnemyState::Dormant,
-    }, SpriteComponent {
-        position: position,
-        height: 10.,
-    });
+        SpriteComponent {
+            position,
+            height: 10.,
+        },
+    ));
 }

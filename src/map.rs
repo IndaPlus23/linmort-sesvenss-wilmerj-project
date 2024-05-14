@@ -8,6 +8,7 @@ use std::{
 };
 
 use std::collections::HashMap;
+use std::time::Duration;
 
 use crate::{
     floor::Floor, render::MAX_STRUCTURES, vertex::Vertex, CustomMaterial, Player, SceneAssets, Wall,
@@ -15,6 +16,7 @@ use crate::{
 };
 use crate::enemy::EnemyState;
 use crate::sprites::SpriteComponent;
+use crate::timer::ShootingTimer;
 
 
 #[derive(Component, Clone)]
@@ -134,7 +136,10 @@ impl Map {
                 }, SpriteComponent {
                     position: enemy.position,
                     height: 10.,
-                }
+                }, ShootingTimer {
+                    // create the non-repeating fuse timer
+                    timer: Timer::new(Duration::from_secs(5), TimerMode::Repeating),
+                },
             ));
         }
     }

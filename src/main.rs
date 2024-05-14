@@ -12,6 +12,8 @@ mod enemy;
 mod movement;
 mod sprites;
 mod sound;
+mod timer;
+mod utility;
 
 
 use bevy::{
