@@ -10,6 +10,9 @@ use crate::sprites::SpriteComponent;
 
 const MISSILE_SPEED: f32 = 0.1;
 
+// Used for time-tracked events
+struct Spawntimer(Timer);
+
 #[derive(Clone, Copy, Debug, Component)]
 pub enum EnemyState {
     Dormant,
@@ -109,6 +112,9 @@ struct DelayedAction {
 /// The "AI" of enemies. Loops over all enemies in
 fn act(mut commands: Commands, scene_assets: Res<SceneAssets>, mut query: Query<(&mut Transform), With<SpriteComponent>>) {
     for (mut transform) in query.iter() {
+
+        println!("Found: {}", transform.translation);
+
         let projectile = create_projectile(scene_assets.projectile.clone(), transform);
         commands.spawn(projectile);
     }
