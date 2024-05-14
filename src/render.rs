@@ -90,14 +90,6 @@ pub fn render(
         Without<Wall>,
         Without<Floor>
     )>,
-    mut sprite_query: Query<(
-        &Transform,
-    ), (
-        Without<Wall>,
-        Without<Floor>,
-        Without<EnemyComponent>,
-        With<Sprite>,
-    )>,
     mut gizmos: Gizmos,
 ) {
     for player in player_query.iter_mut() {
@@ -265,10 +257,6 @@ pub fn render(
                 transform.translation = Vec3::new(screen_pos.x, screen_pos.y, 10.0);
                 transform.scale = Vec3::new(scaling, scaling, scaling);
             }
-        }
-
-        for mut transform in sprite_query.iter_mut() {
-            // TODO: Use sprites instead of enemy_query
         }
     }
 }
