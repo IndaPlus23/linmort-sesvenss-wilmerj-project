@@ -36,6 +36,7 @@ use crate::{
     wall::Wall,
 };
 use crate::enemy::EnemyPlugin;
+use crate::movement::MovementPlugin;
 
 #[derive(States, Debug, Clone, PartialEq, Eq, Hash)]
 enum GameState {
@@ -62,6 +63,7 @@ fn main() {
             press_coords: Vec::new(),
         })
         .add_plugins(AssetLoaderPlugin)
+        .add_plugins(MovementPlugin)
         .add_plugins((DefaultPlugins
             .set(WindowPlugin {
                 primary_window: Some(Window {

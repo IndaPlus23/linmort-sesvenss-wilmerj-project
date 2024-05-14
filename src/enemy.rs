@@ -110,13 +110,12 @@ struct DelayedAction {
     timer: Timer,
 }
 /// The "AI" of enemies. Loops over all enemies in
-fn act(mut commands: Commands, scene_assets: Res<SceneAssets>, mut query: Query<(&mut Transform), With<SpriteComponent>>) {
-    for (mut transform) in query.iter() {
-
-        println!("Found: {}", transform.translation);
-
-        let projectile = create_projectile(scene_assets.projectile.clone(), transform);
+/// Update velocity to change direction of movement
+fn act(mut commands: Commands, scene_assets: Res<SceneAssets>, mut query: Query<(&Velocity, &mut SpriteComponent)>) {
+    for (mut velocity, mut enemy) in query.iter() {
+        let projectile = create_projectile(scene_assets.projectile.clone(), enemy.position);
         commands.spawn(projectile);
+        println!("Projectile has been spawned");
     }
 }
 
@@ -134,18 +133,18 @@ fn handle_enemy_sound_collisions(
 #[derive(Component)]
 struct ProjectileComponent;
 
-fn create_projectile(sprite: Handle<Image>, transform: &Transform) { (
+fn create_projectile(sprite: Handle<Image>, position: Vec3) { (
     MovingObjectBundle {
-        velocity: Velocity::new(-transform.forward() * MISSILE_SPEED),
+        velocity: Velocity::new(Vec3::new(-position.x, -position.y, -position.z) * MISSILE_SPEED),
         acceleration: Acceleration::new(Vec3::ZERO),
         sprite: SpriteBundle {
             texture: sprite,
-            transform: Transform::from_translation(transform.translation),
+            transform: Transform::from_translation(position),
             ..default()
         },
         state: EnemyState::Dormant,
     }, SpriteComponent {
-        position: transform.translation,
+        position: position,
         height: 10.,
     });
 }

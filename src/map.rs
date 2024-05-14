@@ -124,7 +124,6 @@ impl Map {
             commands.spawn((
                 MovingObjectBundle {
                     velocity: Velocity::new(Vec3::ZERO),
-                    // velocity: Velocity::new(Vec3::ZERO),
                     acceleration: Acceleration::new(Vec3::ZERO),
                     sprite: SpriteBundle {
                         texture: scene_assets.enemy.clone(),
