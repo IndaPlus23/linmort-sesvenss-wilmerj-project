@@ -100,7 +100,7 @@ fn main() {
                 .in_set(MenuSet),
         )
         .add_systems(Update, (change_title, keyboard_input, mouse_input))
-        .add_systems(Update, (render, render_hud, render_skybox).in_set(GameSet))
+        .add_systems(Update, (render, render_hud, render_skybox, render_map).in_set(GameSet))
         .add_systems(
             Update,
             (
