@@ -1,10 +1,12 @@
 mod asset_loader;
 mod egui;
 mod floor;
+mod hud;
 mod input;
 mod map;
 mod player;
 mod render;
+mod skybox;
 mod vertex;
 mod wall;
 mod collision_detection;
@@ -13,7 +15,7 @@ use bevy::{
     core::FrameCount,
     prelude::*,
     render::mesh::Mesh,
-    sprite::Material2dPlugin,
+    sprite::{Material2dPlugin, MaterialMesh2dBundle},
     window::{PresentMode, PrimaryWindow, WindowTheme},
 };
 use bevy_egui::EguiPlugin;
@@ -23,16 +25,19 @@ use std::f32::consts::PI;
 use crate::{
     asset_loader::{load_assets, AssetLoaderPlugin, SceneAssets},
     egui::editor_ui,
-    input::{keyboard_input, lock_cursor, mouse_input, MouseState},
+    hud::{main_menu_text, render_hud, render_main_menu, MainMenuText, RenderItem},
+    input::{keyboard_input, lock_cursor, main_menu_input, mouse_input, MouseState},
     map::load_from_file,
     player::Player,
-    render::CustomMaterial,
     render::{render, render_map},
+    render::{CustomMaterial, MAX_STRUCTURES},
+    skybox::{render_skybox, CubeMapMaterial},
     wall::Wall,
 };
 
 #[derive(States, Debug, Clone, PartialEq, Eq, Hash)]
 enum GameState {
+    MainMenu,
     InGame,
     InEditor,
 }
@@ -44,12 +49,20 @@ enum EditorState {
 }
 
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
+struct MenuSet;
+
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
+struct GameSet;
+
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
 struct EditorSet;
 
 fn main() {
     App::new()
-        .insert_state(GameState::InGame)
+        .insert_state(GameState::MainMenu)
         .insert_state(EditorState::Map)
+        .configure_sets(Update, MenuSet.run_if(in_state(GameState::MainMenu)))
+        .configure_sets(Update, GameSet.run_if(in_state(GameState::InGame)))
         .configure_sets(Update, EditorSet.run_if(in_state(GameState::InEditor)))
         .insert_resource(ClearColor(Color::rgb(0.1, 0.1, 0.1)))
         .insert_resource(MouseState {
@@ -72,6 +85,7 @@ fn main() {
             })
             .set(ImagePlugin::default_nearest()),))
         .add_plugins(Material2dPlugin::<CustomMaterial>::default())
+        .add_plugins(Material2dPlugin::<CubeMapMaterial>::default())
         .add_plugins(EguiPlugin)
         .add_systems(PreStartup, load_assets)
         .add_systems(Startup, setup)
@@ -80,21 +94,37 @@ fn main() {
             (
                 make_visible,
                 change_title,
-                keyboard_input,
-                mouse_input,
+                main_menu_input,
+                render_main_menu,
+                main_menu_text,
+            )
+                .in_set(MenuSet),
+        )
+        .add_systems(Update, (change_title, keyboard_input, mouse_input))
+        .add_systems(Update, (render, render_hud, render_skybox, render_map).in_set(GameSet))
+        .add_systems(
+            Update,
+            (
                 render,
                 render_map,
-            ),
+                render_hud,
+                render_skybox,
+                editor_ui,
+                render_grid,
+            )
+                .in_set(EditorSet),
         )
-        .add_systems(Update, (editor_ui, render_grid).in_set(EditorSet))
         .run();
 }
 
 fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
     mut custom_materials: ResMut<Assets<CustomMaterial>>,
-    mut asset_server: Res<SceneAssets>,
+    mut cubemaps: ResMut<Assets<CubeMapMaterial>>,
+    asset_server: Res<AssetServer>,
+    mut scene_asset_server: Res<SceneAssets>,
     mut window_query: Query<&mut Window, With<PrimaryWindow>>,
 ) {
     let map = load_from_file("map.txt").expect("Error: could not open map");
@@ -111,13 +141,160 @@ fn setup(
         &mut commands,
         &mut meshes,
         &mut custom_materials,
-        &mut asset_server,
+        &mut scene_asset_server,
         &mut window_query,
     );
 
     commands.spawn(map);
 
     lock_cursor(&mut window_query);
+
+    // Main menu
+    commands.spawn((
+        RenderItem::new_with_id(0),
+        MaterialMesh2dBundle {
+            mesh: meshes.add(RenderItem::new_mesh()).into(),
+            material: materials.add(scene_asset_server.hud[0].clone()),
+            transform: Transform::from_xyz(0.0, 0.0, -10.0),
+            ..default()
+        },
+    ));
+
+    // Text
+    commands.spawn((
+        MainMenuText::new_with_id(0, false),
+        Text2dBundle {
+            text: Text::from_section(
+                "Play game",
+                TextStyle {
+                    font: asset_server.load("fonts/DooM.ttf").clone(),
+                    font_size: 80.0,
+                    color: Color::RED,
+                },
+            )
+            .with_justify(JustifyText::Center),
+            transform: Transform::from_xyz(0.0, 100.0, 0.0),
+            ..default()
+        },
+    ));
+
+    commands.spawn((
+        MainMenuText::new_with_id(0, true),
+        Text2dBundle {
+            text: Text::from_section(
+                "Play game",
+                TextStyle {
+                    font: asset_server.load("fonts/DooM.ttf").clone(),
+                    font_size: 80.0,
+                    color: Color::BLACK,
+                },
+            )
+            .with_justify(JustifyText::Center),
+            transform: Transform::from_xyz(0.0, 100.0, -1.0),
+            ..default()
+        },
+    ));
+
+    commands.spawn((
+        MainMenuText::new_with_id(1, false),
+        Text2dBundle {
+            text: Text::from_section(
+                "Settings",
+                TextStyle {
+                    font: asset_server.load("fonts/DooM.ttf").clone(),
+                    font_size: 80.0,
+                    color: Color::RED,
+                },
+            )
+            .with_justify(JustifyText::Center),
+            transform: Transform::from_xyz(0.0, 0.0, 0.0),
+            ..default()
+        },
+    ));
+
+    commands.spawn((
+        MainMenuText::new_with_id(1, true),
+        Text2dBundle {
+            text: Text::from_section(
+                "Settings",
+                TextStyle {
+                    font: asset_server.load("fonts/DooM.ttf").clone(),
+                    font_size: 80.0,
+                    color: Color::BLACK,
+                },
+            )
+            .with_justify(JustifyText::Center),
+            transform: Transform::from_xyz(0.0, 0.0, -1.0),
+            ..default()
+        },
+    ));
+
+    commands.spawn((
+        MainMenuText::new_with_id(2, false),
+        Text2dBundle {
+            text: Text::from_section(
+                "Exit",
+                TextStyle {
+                    font: asset_server.load("fonts/DooM.ttf").clone(),
+                    font_size: 80.0,
+                    color: Color::RED,
+                },
+            )
+            .with_justify(JustifyText::Center),
+            transform: Transform::from_xyz(0.0, -100.0, 0.0),
+            ..default()
+        },
+    ));
+
+    commands.spawn((
+        MainMenuText::new_with_id(2, true),
+        Text2dBundle {
+            text: Text::from_section(
+                "Exit",
+                TextStyle {
+                    font: asset_server.load("fonts/DooM.ttf").clone(),
+                    font_size: 80.0,
+                    color: Color::BLACK,
+                },
+            )
+            .with_justify(JustifyText::Center),
+            transform: Transform::from_xyz(0.0, -100.0, -1.0),
+            ..default()
+        },
+    ));
+
+    // HUD items
+    commands.spawn((
+        RenderItem::new_with_id(1),
+        MaterialMesh2dBundle {
+            mesh: meshes.add(RenderItem::new_mesh()).into(),
+            material: materials.add(scene_asset_server.hud[1].clone()),
+            transform: Transform::from_xyz(0.0, 0.0, 10.0),
+            ..default()
+        },
+    ));
+
+    //Cubemap
+    commands.spawn((MaterialMesh2dBundle {
+        mesh: meshes.add(RenderItem::new_mesh()).into(),
+        material: cubemaps.add(CubeMapMaterial {
+            px: scene_asset_server.cubemaps[0].clone(),
+            nx: scene_asset_server.cubemaps[1].clone(),
+            py: scene_asset_server.cubemaps[2].clone(),
+            ny: scene_asset_server.cubemaps[3].clone(),
+            pz: scene_asset_server.cubemaps[4].clone(),
+            nz: scene_asset_server.cubemaps[5].clone(),
+            window_width: 0.,
+            window_height: 0.,
+            direction: Vec3::new(0., 0., -1.),
+            horizontal_vector: Vec3::new(0., 0., 0.),
+            vertical_vector: Vec3::new(0., 0., 0.),
+            mask: [Vec3::new(0., 0., 0.); MAX_STRUCTURES],
+            mask_len: 0,
+        }),
+        transform: Transform::from_xyz(0.0, 0.0, -10.0),
+        ..default()
+    },));
 }
 
 fn change_title(mut windows: Query<&mut Window>, time: Res<'_, Time<Real>>, query: Query<&Player>) {

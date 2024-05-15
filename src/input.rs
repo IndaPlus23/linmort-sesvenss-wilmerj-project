@@ -7,7 +7,7 @@ use bevy::{
 };
 use std::f32::consts::PI;
 
-use crate::{Player, Wall, floor::Floor, EditorState, GameState};
+use crate::{EditorState, GameState, MainMenuText, Player};
 
 #[derive(Default)]
 pub struct MouseState {
@@ -16,9 +16,61 @@ pub struct MouseState {
 
 impl Resource for MouseState {}
 
+pub fn main_menu_input(
+    mut window: Query<&mut Window, With<PrimaryWindow>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    mut text_query: Query<(&mut MainMenuText, &mut Text, &mut Transform)>,
+    mut next_game_state: ResMut<NextState<GameState>>,
+) {
+    if keyboard_input.just_pressed(KeyCode::Escape) {
+        std::process::exit(0);
+    }
+
+    if keyboard_input.just_pressed(KeyCode::Tab) {
+        lock_cursor(&mut window);
+    }
+
+    let mut text_count = 0;
+    let mut selected_id = 0;
+    for (text, _, _) in text_query.iter_mut() {
+        if !text.shadow {
+            text_count += 1;
+        }
+        selected_id = text.selected_id;
+    }
+
+    if keyboard_input.just_pressed(KeyCode::ArrowUp) {
+        if selected_id != 0 {
+            selected_id -= 1;
+        }
+    }
+
+    if keyboard_input.just_pressed(KeyCode::ArrowDown) {
+        if selected_id != text_count - 1 {
+            selected_id += 1;
+        }
+    }
+
+    for (mut text, _, _) in text_query.iter_mut() {
+        text.selected_id = selected_id;
+    }
+
+    if keyboard_input.just_pressed(KeyCode::Enter) {
+        if selected_id == 0 {
+            next_game_state.set(GameState::InGame);
+
+            for (_, _, mut transform) in text_query.iter_mut() {
+                transform.scale = Vec3::ZERO;
+            }
+        }
+
+        if selected_id == 2 {
+            std::process::exit(0);
+        }
+    }
+}
+
 pub fn keyboard_input(
-    mut wall_query: Query<&mut Wall>,
-    mut floor_query: Query<&mut Floor>,
     mut window: Query<&mut Window, With<PrimaryWindow>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut query: Query<&mut Player>,
@@ -46,6 +98,7 @@ pub fn keyboard_input(
                     primary_window.cursor.visible = false;
                 }
             }
+            GameState::MainMenu => {}
         }
     }
 
@@ -64,6 +117,7 @@ pub fn keyboard_input(
                 }
             },
             GameState::InGame => {}
+            GameState::MainMenu => {}
         }
     }
 
@@ -153,7 +207,7 @@ pub fn mouse_input(
                 player.yaw += delta.x * sensitivity;
                 player.yaw = player.yaw.rem_euclid(2.0 * PI);
                 player.pitch -= delta.y * sensitivity;
-                player.pitch = player.pitch.clamp(-PI / 2.0, PI / 2.0);
+                player.pitch = player.pitch.clamp(-30.0 * PI / 180., 30.0 * PI / 180.);
             }
         }
     }
@@ -190,4 +244,3 @@ pub fn lock_cursor(window: &mut Query<&mut Window, With<PrimaryWindow>>) {
         // also hide the cursor
         primary_window.cursor.visible = false;
     }
-}

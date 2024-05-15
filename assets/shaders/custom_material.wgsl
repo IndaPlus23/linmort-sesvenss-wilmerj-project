@@ -129,6 +129,11 @@ fn fragment(mesh: VertexOutput) -> @location(0) vec4<f32> {
     // if current distance > shortest distance and current id is not shortest distance's id
     if length(corrected_position) >= shortest_distance[0] && id != shortest_distance[1] {
         sampled_color[3] = 0.0;
+    } else {
+        let shadow = -0.005 * length(corrected_position) + 1.0;
+        sampled_color[0] *= shadow;
+        sampled_color[1] *= shadow;
+        sampled_color[2] *= shadow;
     }
 
     return sampled_color;
