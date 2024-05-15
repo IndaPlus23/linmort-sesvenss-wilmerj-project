@@ -155,6 +155,7 @@ fn setup(
 
     lock_cursor(&mut window_query);
 
+    // Play main menu music
     play_background_audio(&mut asset_server, &mut commands, "sounds\\main_menu.ogg".to_string());
 
     // Main menu

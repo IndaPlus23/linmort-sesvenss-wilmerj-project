@@ -223,7 +223,7 @@ pub fn mouse_input(
     mut window_query: Query<&mut Window, With<PrimaryWindow>>,
     mut query: Query<&mut Player>,
     asset_server: Res<AssetServer>,
-    mut commands: Commands,
+    commands: Commands,
 ) {
     for event in mouse_motion_events.read() {
         let primary_window = window_query.single_mut();
@@ -248,7 +248,7 @@ pub fn mouse_input(
         let _window_pos = window.cursor_position().unwrap();
 
         // plays shotgun sound
-        play_audio(asset_server, commands, "shotgun.ogg")
+        play_audio(asset_server, commands, "SHOTGUN16.ogg");
     }
 
     if mouse_button_input.just_released(MouseButton::Left) {
