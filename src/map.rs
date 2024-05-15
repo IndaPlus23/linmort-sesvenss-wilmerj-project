@@ -62,7 +62,10 @@ impl Map {
     ) {
         let _window = window_query.single_mut();
 
-        commands.spawn(self.player.clone());
+        commands.spawn((
+            self.player.clone(),
+            Collider::new(100.),
+        ));
 
         for wall in &self.walls {
             commands.spawn((

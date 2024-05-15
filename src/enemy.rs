@@ -42,7 +42,7 @@ pub struct EnemyPlugin;
 
 impl Plugin for EnemyPlugin {
     fn build(&self, app: &mut App) {
-            app.add_systems(Update, act);
+        app.add_systems(Update, (act, handle_projectile_collisions));
     }
 }
 
@@ -137,7 +137,7 @@ fn act(
         mut timer
     ) in enemy_query.iter_mut() {
         match state.state {
-            ActionState::Attacking => {
+            ActionState::Dormant => {
                 // Shoot if enemy state is attacking
                 timer.timer.tick(time.delta());
 
@@ -156,13 +156,22 @@ fn act(
 }
 
 
-fn handle_enemy_sound_collisions(
+// TODO: Detect collisions correctly
+fn handle_projectile_collisions(
     mut commands: Commands,
-    query: Query<(Entity, &Collider), With<Sound>>
+    query: Query<(Entity, &Collider), With<ProjectileComponent>>
 ) {
     for (entity, collider) in query.iter() {
         for &collided_entity in collider.colliding_entities.iter() {
-            // TODO: Deal with collisions
+
+            println!("Collision detected");
+
+            // TODO: Projectile collides with enemy once spawning
+            if query.get(collided_entity).is_ok() {
+                continue;
+            }
+
+            commands.entity(entity).despawn_recursive();
         }
     }
 }
@@ -191,5 +200,6 @@ fn create_projectile(
             position,
             height: 10.,
         },
+        ProjectileComponent,
     ));
 }

@@ -37,6 +37,7 @@ use crate::{
     render::{render, render_map},
     wall::Wall,
 };
+use crate::collision_detection::CollisionDetectionPlugin;
 use crate::enemy::EnemyPlugin;
 use crate::movement::MovementPlugin;
 
@@ -84,6 +85,7 @@ fn main() {
         .add_plugins(Material2dPlugin::<CustomMaterial>::default())
         .add_plugins(EguiPlugin)
         .add_plugins(EnemyPlugin)
+        .add_plugins(CollisionDetectionPlugin)
         .add_systems(PreStartup, load_assets)
         .add_systems(Startup, setup)
         .add_systems(
