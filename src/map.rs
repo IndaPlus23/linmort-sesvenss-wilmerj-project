@@ -32,6 +32,9 @@ pub struct Map {
 
 }
 
+#[derive(Component)]
+pub struct PlayerComponent;
+
 impl Map {
     fn new() -> Self {
         let filename = String::from("");
@@ -64,6 +67,7 @@ impl Map {
 
         commands.spawn((
             self.player.clone(),
+            PlayerComponent,
             Collider::new(100.),
         ));
 

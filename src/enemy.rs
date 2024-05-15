@@ -7,6 +7,7 @@ use crate::asset_loader::SceneAssets;
 use crate::player::Player;
 use crate::sound::Sound;
 use bevy::time::Timer;
+use crate::map::PlayerComponent;
 use crate::sprites::SpriteComponent;
 use crate::timer::ShootingTimer;
 use crate::utility::normalize;
@@ -143,10 +144,10 @@ fn act(
 
                 let player = player_query.single();
 
-                // TODO: Calculate actual direction
                 let direction = normalize(Vec3::new(player.x, player.y, player.z));
 
                 if timer.timer.finished() {
+                    // TODO: Change to shooting animation sprite
                     create_projectile(&mut commands, scene_assets.projectile.clone(), enemy.position, direction);
                 }
             }
@@ -157,21 +158,40 @@ fn act(
 
 
 // TODO: Detect collisions correctly
+// fn handle_projectile_collisions(
+//     mut commands: Commands,
+//     query: Query<(Entity, &Collider), With<ProjectileComponent>>
+// ) {
+//     for (entity, collider) in query.iter() {
+//         for &collided_entity in collider.colliding_entities.iter() {
+//
+//             // TODO: Projectile collides with enemy once spawning
+//             if query.get(collided_entity).is_ok() {
+//                 continue;
+//             }
+//
+//             commands.entity(entity).despawn_recursive();
+//         }
+//     }
+// }
+
 fn handle_projectile_collisions(
     mut commands: Commands,
-    query: Query<(Entity, &Collider), With<ProjectileComponent>>
+    projectile_query: Query<(Entity, &Collider), With<ProjectileComponent>>,
+    player_query: Query<Entity, With<PlayerComponent>>,
 ) {
-    for (entity, collider) in query.iter() {
-        for &collided_entity in collider.colliding_entities.iter() {
+    for (projectile_entity, projectile_collider) in projectile_query.iter() {
 
-            println!("Collision detected");
+        println!("{}", projectile_collider.colliding_entities.iter().len());
 
-            // TODO: Projectile collides with enemy once spawning
-            if query.get(collided_entity).is_ok() {
-                continue;
+        for &collided_entity in projectile_collider.colliding_entities.iter() {
+
+            // Check if the collided entity is the player
+            if player_query.get(collided_entity).is_ok() {
+                // Despawn the projectile if it collides with the player
+                commands.entity(projectile_entity).despawn_recursive();
+                break;  // No need to check further since the projectile will be despawned
             }
-
-            commands.entity(entity).despawn_recursive();
         }
     }
 }
@@ -203,3 +223,50 @@ fn create_projectile(
         ProjectileComponent,
     ));
 }
+
+
+// Enemy AI Systems
+// TODO: Update to work with our implementation of the game
+// fn vision_system(
+//     player_query: Query<&Transform, With<Player>>,
+//     mut enemy_query: Query<(&Transform, &mut EnemyState), With<Enemy>>,
+// ) {
+//     if let Ok(player_transform) = player_query.single() {
+//         for (enemy_transform, mut enemy_ai) in enemy_query.iter_mut() {
+//             let direction_to_player = player_transform.translation - enemy_transform.translation;
+//             let distance_to_player = direction_to_player.length();
+//
+//             if distance_to_player < enemy_ai.vision_range {
+//                 let forward = enemy_transform.rotation.mul_vec3(Vec3::Z).normalize();
+//                 let direction = direction_to_player.normalize();
+//
+//                 let angle = forward.dot(direction).acos();
+//                 if angle < enemy_ai.vision_angle / 2.0 {
+//                     enemy_ai.state = EnemyState::Chasing;
+//                 } else {
+//                     enemy_ai.state = EnemyState::Idle;
+//                 }
+//             } else {
+//                 enemy_ai.state = EnemyState::Idle;
+//             }
+//         }
+//     }
+// }
+//
+// fn movement_system(
+//     player_query: Query<&Transform, With<Player>>,
+//     mut enemy_query: Query<(&Transform, &mut EnemyAI, &mut Transform), With<Enemy>>,
+//     time: Res<Time>,
+// ) {
+//     if let Ok(player_transform) = player_query.single() {
+//         for (enemy_transform, mut enemy_ai, mut enemy_transform_mut) in enemy_query.iter_mut() {
+//             if let EnemyState::Chasing = enemy_ai.state {
+//                 let direction_to_player = (player_transform.translation - enemy_transform.translation).normalize();
+//                 let speed = 2.0; // Define your enemy speed here
+//
+//                 enemy_transform_mut.translation += direction_to_player * speed * time.delta_seconds();
+//             }
+//         }
+//     }
+// }
+
