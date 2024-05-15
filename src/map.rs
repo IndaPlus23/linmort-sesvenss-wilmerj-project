@@ -14,7 +14,7 @@ use crate::{
     floor::Floor, render::MAX_STRUCTURES, vertex::Vertex, CustomMaterial, Player, SceneAssets, Wall,
     enemy::Enemy, movement::{Acceleration, MovingObjectBundle, Velocity}
 };
-use crate::enemy::EnemyState;
+use crate::enemy::{ActionState, EnemyState};
 use crate::sprites::SpriteComponent;
 use crate::timer::ShootingTimer;
 
@@ -132,14 +132,16 @@ impl Map {
                         transform: Transform::from_translation(enemy.position),
                         ..default()
                     },
-                    state: EnemyState::Dormant,
+                    state: ActionState::Dormant,
                 }, SpriteComponent {
                     position: enemy.position,
                     height: 10.,
                 }, ShootingTimer {
                     // create the non-repeating fuse timer
                     timer: Timer::new(Duration::from_secs(5), TimerMode::Repeating),
-                },
+                }, EnemyState {
+                    state: ActionState::Dormant,
+                }
             ));
         }
     }

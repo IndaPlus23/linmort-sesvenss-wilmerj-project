@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use crate::enemy::EnemyState;
+use crate::enemy::ActionState;
 use crate::sprites::SpriteComponent;
 
 #[derive(Component, Debug)]
@@ -25,7 +25,7 @@ pub struct MovingObjectBundle {
     pub velocity: Velocity,
     pub acceleration: Acceleration,
     pub sprite: SpriteBundle,
-    pub state: EnemyState,
+    pub state: ActionState,
 }
 
 pub struct MovementPlugin;

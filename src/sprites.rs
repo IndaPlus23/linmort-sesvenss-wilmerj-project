@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use crate::asset_loader::SceneAssets;
-use crate::enemy::EnemyState;
+use crate::enemy::ActionState;
 use crate::movement::{Acceleration, MovingObjectBundle, Velocity};
 use crate::player::Player;
 
@@ -47,7 +47,7 @@ impl Sprite {
                     transform: Transform::from_translation(position),
                     ..default()
                 },
-                state: EnemyState::Dormant,
+                state: ActionState::Dormant,
             }
         ));
     }

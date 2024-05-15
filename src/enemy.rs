@@ -14,10 +14,15 @@ use crate::utility::normalize;
 const MISSILE_SPEED: f32 = 20.;
 
 #[derive(Clone, Copy, Debug, Component)]
-pub enum EnemyState {
+pub enum ActionState {
     Dormant,
     Attacking,
     Dead,
+}
+
+#[derive(Component)]
+pub struct EnemyState {
+    pub(crate) state: ActionState
 }
 
 // Enemy stats are stored in JSON format.
@@ -118,17 +123,26 @@ fn act(
     mut query: Query<(
         &Velocity,
         &Transform,
+        &mut EnemyState,
         &mut SpriteComponent,
         &mut ShootingTimer
     )>,
 ) {
-    for (velocity, transform, enemy, mut timer) in query.iter_mut() {
-        timer.timer.tick(time.delta());
+    for (velocity, transform, state, enemy, mut timer) in query.iter_mut() {
 
-        let direction = normalize(transform.translation - enemy.position);
+        // Shoot if enemy state is attacking
+        match state.state {
+            ActionState::Attacking => {
+                timer.timer.tick(time.delta());
 
-        if timer.timer.finished() {
-            create_projectile(&mut commands, scene_assets.projectile.clone(), enemy.position, direction);
+                // TODO: Calculate actual direction
+                let direction = normalize(transform.translation - enemy.position);
+
+                if timer.timer.finished() {
+                    create_projectile(&mut commands, scene_assets.projectile.clone(), enemy.position, direction);
+                }
+            }
+            _ => {}
         }
     }
 }
@@ -160,14 +174,10 @@ fn create_projectile(
             acceleration: Acceleration::new(Vec3::ZERO),
             sprite: SpriteBundle {
                 texture: sprite,
-                transform: Transform {
-                    translation: position,
-                    scale: Vec3::new(0.01, 0.01, 0.01),
-                    ..default()
-                },
+                transform: Transform::from_translation(position),
                 ..default()
             },
-            state: EnemyState::Dormant,
+            state: ActionState::Dormant,
         },
         SpriteComponent {
             position,
