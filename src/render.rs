@@ -84,7 +84,7 @@ pub fn render(
     >,
 ) {
     for player in player_query.iter_mut() {
-        // Calculate mask for z-buffering
+        // Construct mask for z-buffering
         let mut mask: [Vec3; 1000] = [Vec3::new(0., 0., 0.); 1000];
         let mut i = 0;
 
@@ -129,6 +129,7 @@ pub fn render(
             i += 7;
         }
 
+        // Pass mask to cubemap, rendered in skybox.rs
         for material_handle in cubemap.iter_mut() {
             let material = cubemap_materials.get_mut(material_handle.clone()).unwrap();
 
