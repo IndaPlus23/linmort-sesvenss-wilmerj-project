@@ -129,10 +129,16 @@ fn act(
         &mut ShootingTimer
     )>,
 ) {
-    for (velocity, transform, state, enemy, mut timer) in enemy_query.iter_mut() {
-        // Shoot if enemy state is attacking
+    for (
+        velocity,
+        transform,
+        state,
+        enemy,
+        mut timer
+    ) in enemy_query.iter_mut() {
         match state.state {
             ActionState::Attacking => {
+                // Shoot if enemy state is attacking
                 timer.timer.tick(time.delta());
 
                 let player = player_query.single();
@@ -179,7 +185,6 @@ fn create_projectile(
                 transform: Transform::from_translation(position),
                 ..default()
             },
-            state: ActionState::Dormant,
         },
         SpriteComponent {
             position,

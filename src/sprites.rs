@@ -47,7 +47,6 @@ impl Sprite {
                     transform: Transform::from_translation(position),
                     ..default()
                 },
-                state: ActionState::Dormant,
             }
         ));
     }

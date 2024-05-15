@@ -132,7 +132,6 @@ impl Map {
                         transform: Transform::from_translation(enemy.position),
                         ..default()
                     },
-                    state: ActionState::Dormant,
                 }, SpriteComponent {
                     position: enemy.position,
                     height: 10.,
