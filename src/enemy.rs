@@ -11,7 +11,7 @@ use crate::sprites::SpriteComponent;
 use crate::timer::ShootingTimer;
 use crate::utility::normalize;
 
-const MISSILE_SPEED: f32 = 20.;
+const MISSILE_SPEED: f32 = 100.;
 
 #[derive(Clone, Copy, Debug, Component)]
 pub enum ActionState {
@@ -120,7 +120,8 @@ fn act(
     mut commands: Commands,
     scene_assets: Res<SceneAssets>,
     time: Res<Time>,
-    mut query: Query<(
+    mut player_query: Query<&Player>,
+    mut enemy_query: Query<(
         &Velocity,
         &Transform,
         &mut EnemyState,
@@ -128,15 +129,16 @@ fn act(
         &mut ShootingTimer
     )>,
 ) {
-    for (velocity, transform, state, enemy, mut timer) in query.iter_mut() {
-
+    for (velocity, transform, state, enemy, mut timer) in enemy_query.iter_mut() {
         // Shoot if enemy state is attacking
         match state.state {
             ActionState::Attacking => {
                 timer.timer.tick(time.delta());
 
+                let player = player_query.single();
+
                 // TODO: Calculate actual direction
-                let direction = normalize(transform.translation - enemy.position);
+                let direction = normalize(Vec3::new(player.x, player.y, player.z));
 
                 if timer.timer.finished() {
                     create_projectile(&mut commands, scene_assets.projectile.clone(), enemy.position, direction);
