@@ -123,14 +123,17 @@ pub fn keyboard_input(
         }
     }
 
-    if keyboard_input.just_pressed(KeyCode::KeyM) {
-
-    }
-
     for mut player in query.iter_mut() {
         let mut speed = 50.;
 
         let mut movement = Vec3::ZERO;
+
+        if keyboard_input.just_pressed(KeyCode::F1) {
+            match player.noclip {
+                true => {player.noclip = false}
+                false => {player.noclip = true}
+            }
+        }
 
         if keyboard_input.pressed(KeyCode::KeyW) {
             let yaw_offset = player.yaw - PI / 2.0;
@@ -146,13 +149,20 @@ pub fn keyboard_input(
         if keyboard_input.pressed(KeyCode::KeyD) {
             movement += Vec3::new(player.yaw.cos(), 0., player.yaw.sin());
         }
-
         if keyboard_input.pressed(KeyCode::KeyS) && keyboard_input.pressed(KeyCode::KeyW) {
             movement = Vec3::new(0., movement.y, 0.);
         }
-        
         if keyboard_input.pressed(KeyCode::ShiftLeft) {
             speed = speed * 2.;
+        }
+
+        if player.noclip {
+            if keyboard_input.pressed(KeyCode::KeyE) {
+                movement += Vec3::new(0., 1., 0.);
+            }
+            if keyboard_input.pressed(KeyCode::KeyQ) {
+                movement -= Vec3::new(0., 1., 0.);
+            }
         }
 
         if !player.noclip {
@@ -190,7 +200,6 @@ pub fn keyboard_input(
         
         movement = movement.normalize_or_zero() * speed * time.delta_seconds();
 
-        
         player.x += movement.x;
         player.y += movement.y;
         player.z += movement.z;
