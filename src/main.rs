@@ -10,6 +10,7 @@ mod skybox;
 mod vertex;
 mod wall;
 mod collision_detection;
+mod sound_loader;
 
 use bevy::{
     core::FrameCount,
@@ -33,6 +34,7 @@ use crate::{
     render::{CustomMaterial, MAX_STRUCTURES},
     skybox::{render_skybox, CubeMapMaterial},
     wall::Wall,
+    sound_loader::play_background_audio
 };
 
 #[derive(States, Debug, Clone, PartialEq, Eq, Hash)]
@@ -89,6 +91,7 @@ fn main() {
         .add_plugins(EguiPlugin)
         .add_systems(PreStartup, load_assets)
         .add_systems(Startup, setup)
+        .add_systems(Startup, play_background_audio) //background music
         .add_systems(
             Update,
             (
@@ -144,6 +147,9 @@ fn setup(
         &mut scene_asset_server,
         &mut window_query,
     );
+
+    
+
 
     commands.spawn(map);
 
