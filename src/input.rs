@@ -123,6 +123,10 @@ pub fn keyboard_input(
         }
     }
 
+    if keyboard_input.just_pressed(KeyCode::KeyM) {
+
+    }
+
     for mut player in query.iter_mut() {
         let mut speed = 50.;
 
@@ -151,36 +155,38 @@ pub fn keyboard_input(
             speed = speed * 2.;
         }
 
-        // GRAVITY + JUMPING
-        if keyboard_input.pressed(KeyCode::Space) { // jump
+        if !player.noclip {
+            // GRAVITY + JUMPING
+            if keyboard_input.pressed(KeyCode::Space) { // jump
 
-            if player.gravity < 30. {
-                movement += Vec3::new(0., 2., 0.); // add y velocity
+                if player.gravity < 30. {
+                    movement += Vec3::new(0., 2., 0.); // add y velocity
+                }
+                player.gravity += 1.0; // sort of a "timer" that counts how long the player jumped
             }
-            player.gravity += 1.0; // sort of a "timer" that counts how long the player jumped
-        }
 
-        // first part checks if player hit "rock bottom" so that they dont fall forever, then checks if the player is currently falling
-        if player.y + movement.y - player.height < -3. && movement.y <= 0. { 
-            movement.y = 0.
-        } else {
-            movement.y -= 1. // If the player is in the air and not fallint -> start falling
-        }
+            // first part checks if player hit "rock bottom" so that they dont fall forever, then checks if the player is currently falling
+            if player.y + movement.y - player.height < -3. && movement.y <= 0. { 
+                movement.y = 0.
+            } else {
+                movement.y -= 1. // If the player is in the air and not fallint -> start falling
+            }
 
-        // CHECKS EVERY FLOOR FOR COLLISION
-        for floor in floor_query.iter_mut() {
-            floor_collision(&floor, &mut movement, &mut player);
-        }
+            // CHECKS EVERY FLOOR FOR COLLISION
+            for floor in floor_query.iter_mut() {
+                floor_collision(&floor, &mut movement, &mut player);
+            }
 
-        // CHECKS EVERY WALL FOR COLLISION
-        for wall in wall_query.iter_mut() {
-            wall_collision(&wall, &mut movement, &mut player)
-        }
+            // CHECKS EVERY WALL FOR COLLISION
+            for wall in wall_query.iter_mut() {
+                wall_collision(&wall, &mut movement, &mut player)
+            }
 
-        // when player has landed on the ground reset the "timer"
-        if player.gravity > 0. && movement.y == 0.{
-            player.gravity = 0.0;
-        }          
+            // when player has landed on the ground reset the "timer"
+            if player.gravity > 0. && movement.y == 0.{
+                player.gravity = 0.0;
+            }
+        }      
         
         movement = movement.normalize_or_zero() * speed * time.delta_seconds();
 
