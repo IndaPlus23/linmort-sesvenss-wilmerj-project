@@ -8,6 +8,7 @@ use std::{
 #[derive(Resource, Debug, Default)]
 pub struct SceneAssets {
     pub enemy: Handle<Scene>,
+    pub hud: Vec<Handle<Image>>,
     pub cubemaps: Vec<Handle<Image>>,
     pub textures: Vec<Handle<Image>>,
     pub texture_paths: Vec<String>,
@@ -25,17 +26,31 @@ impl Plugin for AssetLoaderPlugin {
 /// Loads assets from asset folder and populates AssetScene, making them available
 /// for usage without having multiple handles reference various copies of the same asset.
 pub fn load_assets(mut scene_assets: ResMut<SceneAssets>, mut asset_server: Res<AssetServer>) {
+    let hud_paths = texture_paths("assets\\textures\\hud\\");
     let cubemap_paths = texture_paths("assets\\textures\\cubemap\\");
     let texture_paths = texture_paths("assets\\textures\\flats\\");
 
     *scene_assets = SceneAssets {
         enemy: asset_server.load(""),
-        cubemaps: load_textures_from_folder(cubemap_paths.clone(), &mut asset_server, "textures/cubemap/".to_string()),
-        textures: load_textures_from_folder(texture_paths.clone(), &mut asset_server, "textures/flats/".to_string()),
+        hud: load_textures_from_folder(
+            hud_paths.clone(),
+            &mut asset_server,
+            "textures/hud/".to_string(),
+        ),
+        cubemaps: load_textures_from_folder(
+            cubemap_paths.clone(),
+            &mut asset_server,
+            "textures/cubemap/".to_string(),
+        ),
+        textures: load_textures_from_folder(
+            texture_paths.clone(),
+            &mut asset_server,
+            "textures/flats/".to_string(),
+        ),
         texture_paths: texture_paths,
     }
 }
- 
+
 /// Loads folder of textures and upgrades into handle of image.
 fn load_textures_from_folder(
     texture_paths: Vec<String>,

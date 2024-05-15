@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts};
 use std::f32::consts::PI;
 
-use crate::{floor::Floor, map::Map, Player, SceneAssets, Wall, render::MapFloor};
+use crate::{floor::Floor, map::Map, render::MapFloor, Player, SceneAssets, Wall};
 
 pub fn editor_ui(
     mut player_query: Query<&mut Player>,
@@ -12,10 +12,9 @@ pub fn editor_ui(
     asset_server: Res<SceneAssets>,
     mut wall_query: Query<&mut Wall>,
     mut floor_query: Query<&mut Floor>,
-) { 
+) {
     egui::Window::new("Editor").show(contexts.ctx_mut(), |ui| match map_query.get_single_mut() {
         Ok(mut map) => {
-            
             ui.heading("Map");
             let mut map_scale = 1.0;
             let mut x_offset = 0.0;

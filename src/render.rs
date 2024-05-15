@@ -2,20 +2,24 @@ use bevy::{
     prelude::*,
     reflect::TypePath,
     render::{
-        prelude::Image,
-        mesh::Mesh,
-        render_resource::{AsBindGroup, ShaderRef},
         mesh::Indices,
-        render_resource::{Extent3d, PrimitiveTopology, TextureViewDescriptor, TextureViewDimension},
+        mesh::Mesh,
+        prelude::Image,
         render_asset::RenderAssetUsages,
+        render_resource::{AsBindGroup, ShaderRef},
+        render_resource::{
+            Extent3d, PrimitiveTopology, TextureViewDescriptor, TextureViewDimension,
         },
+    },
     sprite::{Material2d, MaterialMesh2dBundle, Mesh2dHandle},
     window::PrimaryWindow,
 };
 use core::f32::consts::PI;
 use nalgebra::{Rotation3, Unit, Vector3};
 
-use crate::{floor::Floor, wall::Wall, EditorState, GameState, Player, SceneAssets, vertex::Vertex};
+use crate::{
+    floor::Floor, vertex::Vertex, wall::Wall, EditorState, GameState, Player, SceneAssets,
+};
 
 pub const MAX_STRUCTURES: usize = 1000;
 
@@ -69,6 +73,8 @@ pub fn render(
     mut meshes: ResMut<Assets<Mesh>>,
     mut custom_materials: ResMut<Assets<CustomMaterial>>,
     asset_server: Res<SceneAssets>,
+    mut cubemap_materials: ResMut<Assets<CubeMapMaterial>>,
+    mut cubemap: Query<(&mut Handle<CubeMapMaterial>)>,
     mut wall_query: Query<(
         &mut Wall,
         &mut Transform,
@@ -129,6 +135,13 @@ pub fn render(
             mask[i + 5] = f.position;
             mask[i + 6] = Vec3::new(f.screen()[0], f.screen()[1], -f.position.z);
             i += 7;
+        }
+
+        for material_handle in cubemap.iter_mut() {
+            let material = cubemap_materials.get_mut(material_handle.clone()).unwrap();
+
+            material.mask = mask;
+            material.mask_len = i as i32;
         }
 
         // Render walls with calculated mask
@@ -251,7 +264,7 @@ impl MapFloor {
         let scale = 1.0;
         let x_offset = 0.0;
         let y_offset = 0.0;
-        Self { 
+        Self {
             id,
             scale,
             x_offset,
@@ -260,16 +273,14 @@ impl MapFloor {
     }
 }
 
-pub fn render_grid(
-    mut gizmos: Gizmos,
-    mut player_query: Query<&Player>,
-) {
+pub fn render_grid(mut gizmos: Gizmos, mut player_query: Query<&Player>) {
     for player in player_query.iter_mut() {
         let mut previous = 0.0;
         for x in -1000..1000 {
             let nearest = round_to_nearest(x as f32, 10.0);
             if nearest != previous {
-                let position = Vertex::new(Vec3::new(nearest, 0.0, 0.0), Vec2::ZERO).transform_vertice(player);
+                let position =
+                    Vertex::new(Vec3::new(nearest, 0.0, 0.0), Vec2::ZERO).transform_vertice(player);
                 let color = Color::Rgba {
                     red: 0.7,
                     green: 0.7,
@@ -286,7 +297,8 @@ pub fn render_grid(
         for y in -1000..1000 {
             let nearest = round_to_nearest(y as f32, 10.0);
             if nearest != previous {
-                let position = Vertex::new(Vec3::new(0.0, nearest, 0.0), Vec2::ZERO).transform_vertice(player);
+                let position =
+                    Vertex::new(Vec3::new(0.0, nearest, 0.0), Vec2::ZERO).transform_vertice(player);
                 let color = Color::Rgba {
                     red: 0.7,
                     green: 0.7,
@@ -303,7 +315,8 @@ pub fn render_grid(
         for z in -1000..1000 {
             let nearest = round_to_nearest(z as f32, 10.0);
             if nearest != previous {
-                let position = Vertex::new(Vec3::new(0.0, 0.0, nearest), Vec2::ZERO).transform_vertice(player);
+                let position =
+                    Vertex::new(Vec3::new(0.0, 0.0, nearest), Vec2::ZERO).transform_vertice(player);
                 let color = Color::Rgba {
                     red: 0.7,
                     green: 0.7,
@@ -325,7 +338,7 @@ fn round_to_nearest(num: f32, factor: f32) -> f32 {
 
 fn scale_alpha(num: f32, factor: f32) -> f32 {
     let k = -2.5 / factor;
-    return k * num + 1.0
+    return k * num + 1.0;
 }
 
 pub fn render_map(
@@ -405,9 +418,21 @@ pub fn render_map(
                         mesh.insert_attribute(
                             Mesh::ATTRIBUTE_POSITION,
                             vec![
-                                [(floor.a.position.x + x_offset) * scale, -(floor.a.position.z + y_offset) * scale, 0.0],
-                                [(floor.b.position.x + x_offset) * scale, -(floor.b.position.z + y_offset) * scale, 0.0],
-                                [(floor.c.position.x + x_offset) * scale, -(floor.c.position.z + y_offset) * scale, 0.0],
+                                [
+                                    (floor.a.position.x + x_offset) * scale,
+                                    -(floor.a.position.z + y_offset) * scale,
+                                    0.0,
+                                ],
+                                [
+                                    (floor.b.position.x + x_offset) * scale,
+                                    -(floor.b.position.z + y_offset) * scale,
+                                    0.0,
+                                ],
+                                [
+                                    (floor.c.position.x + x_offset) * scale,
+                                    -(floor.c.position.z + y_offset) * scale,
+                                    0.0,
+                                ],
                             ],
                         );
                     }
@@ -416,12 +441,25 @@ pub fn render_map(
         }
 
         // Render player
-        gizmos.circle_2d(Vec2::new((player.x + x_offset)* scale, -(player.z + y_offset)* scale), 2., Color::WHITE);
+        gizmos.circle_2d(
+            Vec2::new(
+                (player.x + x_offset) * scale,
+                -(player.z + y_offset) * scale,
+            ),
+            2.,
+            Color::WHITE,
+        );
 
         for wall in wall_query.iter_mut() {
             gizmos.line_2d(
-                Vec2::new((wall.start.position.x + x_offset) * scale, -(wall.start.position.z + y_offset) * scale),
-                Vec2::new((wall.end.position.x + x_offset) * scale, -(wall.end.position.z + y_offset) * scale),
+                Vec2::new(
+                    (wall.start.position.x + x_offset) * scale,
+                    -(wall.start.position.z + y_offset) * scale,
+                ),
+                Vec2::new(
+                    (wall.end.position.x + x_offset) * scale,
+                    -(wall.end.position.z + y_offset) * scale,
+                ),
                 Color::RED,
             );
         }
@@ -441,66 +479,6 @@ fn forward_vector(yaw: f32, pitch: f32) -> Vec3 {
     vector = pitch_rotation * vector;
 
     Vec3::new(vector.x, vector.y, vector.z)
-}
-
-#[derive(Component, Clone)]
-pub struct RenderItem {
-    pub id: usize,
-}
-
-impl RenderItem {
-    pub fn new_with_id(id: usize) -> Self {
-        Self { 
-            id,
-        }
-    }
-
-    pub fn new_mesh() -> Mesh {
-        Mesh::new(
-            PrimitiveTopology::TriangleList,
-            RenderAssetUsages::default(),
-        )
-        .with_inserted_attribute(
-            Mesh::ATTRIBUTE_POSITION,
-            vec![[0., 0., 0.], [0., 0., 0.], [0., 0., 0.], [0., 0., 0.]],
-        )
-        .with_inserted_attribute(
-            Mesh::ATTRIBUTE_UV_0,
-            vec![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]],
-        )
-        .with_inserted_attribute(
-            Mesh::ATTRIBUTE_NORMAL,
-            vec![
-                [0.0, 0.0, 1.0],
-                [0.0, 0.0, 1.0],
-                [0.0, 0.0, 1.0],
-                [0.0, 0.0, 1.0],
-            ],
-        )
-        .with_inserted_indices(Indices::U32(vec![0, 3, 1, 1, 3, 2]))
-    }
-}
-
-pub fn render_hud(
-    mut window: Query<&mut Window, With<PrimaryWindow>>,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut hud_query: Query<(&mut RenderItem, &mut Mesh2dHandle)>,
-) {
-    let primary_window = window.single_mut();
-    
-    for (_, mesh2dhandle) in hud_query.iter_mut() {
-        let mesh_handle = &mesh2dhandle.0;
-        let mesh = meshes.get_mut(mesh_handle).unwrap();
-        if let Some(_) = mesh.attribute_mut(Mesh::ATTRIBUTE_POSITION) {
-            mesh.insert_attribute(
-                Mesh::ATTRIBUTE_POSITION,
-                vec![[-primary_window.width()/2., -primary_window.height()/2. + 100., 0.0], 
-                [primary_window.width()/2., -primary_window.height()/2. + 100., 0.0], 
-                [primary_window.width()/2., -primary_window.height()/2., 0.0],
-                [-primary_window.width()/2., -primary_window.height()/2., 0.0], ],
-            );
-        }
-    }
 }
 
 #[derive(Component, Asset, TypePath, AsBindGroup, Debug, Clone)]
@@ -533,6 +511,10 @@ pub struct CubeMapMaterial {
     pub horizontal_vector: Vec3,
     #[uniform(16)]
     pub vertical_vector: Vec3,
+    #[uniform(17)]
+    pub mask: [Vec3; MAX_STRUCTURES],
+    #[uniform(18)]
+    pub mask_len: i32,
 }
 
 impl Material2d for CubeMapMaterial {
@@ -547,7 +529,7 @@ pub fn render_cubemap(
     mut meshes: ResMut<Assets<Mesh>>,
     asset_server: Res<SceneAssets>,
     mut cubemap_materials: ResMut<Assets<CubeMapMaterial>>,
-    mut cubemap: Query<(&mut Mesh2dHandle, &mut Handle<CubeMapMaterial>,)>,
+    mut cubemap: Query<(&mut Mesh2dHandle, &mut Handle<CubeMapMaterial>)>,
 ) {
     let primary_window = window.single_mut();
 
@@ -555,34 +537,62 @@ pub fn render_cubemap(
         for (mesh2dhandle, material_handle) in cubemap.iter_mut() {
             let mesh_handle = &mesh2dhandle.0;
             let mesh = meshes.get_mut(mesh_handle).unwrap();
-    
+
             let material = cubemap_materials.get_mut(material_handle.clone()).unwrap();
 
             material.window_width = primary_window.width();
             material.window_height = primary_window.height();
             material.direction = forward_vector(player.yaw, player.pitch);
 
-            let left_direction = forward_vector((player.yaw - (90. * PI / 180.)).rem_euclid(2.0 * PI), player.pitch);
-            let right_direction = forward_vector((player.yaw + (90. * PI / 180.)).rem_euclid(2.0 * PI), player.pitch);
+            let left_direction = forward_vector(
+                (player.yaw - (90. * PI / 180.)).rem_euclid(2.0 * PI),
+                player.pitch,
+            );
+            let right_direction = forward_vector(
+                (player.yaw + (90. * PI / 180.)).rem_euclid(2.0 * PI),
+                player.pitch,
+            );
             material.horizontal_vector = right_direction - left_direction;
 
-            let up_direction = forward_vector(player.yaw, (player.pitch + (90. * PI / 180.)).clamp(-PI / 2.0, PI / 2.0));
-            let down_direction = forward_vector(player.yaw, (player.pitch - (90. * PI / 180.)).clamp(-PI / 2.0, PI / 2.0));
+            let up_direction = forward_vector(
+                player.yaw,
+                (player.pitch + (90. * PI / 180.)).clamp(-PI / 2.0, PI / 2.0),
+            );
+            let down_direction = forward_vector(
+                player.yaw,
+                (player.pitch - (90. * PI / 180.)).clamp(-PI / 2.0, PI / 2.0),
+            );
             material.vertical_vector = up_direction - down_direction;
 
             //println!("{:?}", forward_vector(player.yaw, player.pitch));
-    
+
             if let Some(_) = mesh.attribute_mut(Mesh::ATTRIBUTE_POSITION) {
                 mesh.insert_attribute(
                     Mesh::ATTRIBUTE_POSITION,
-                    vec![[-primary_window.width()/2., primary_window.height()/2., 0.0], 
-                    [primary_window.width()/2., primary_window.height()/2., 0.0], 
-                    [primary_window.width()/2., -primary_window.height()/2., 0.0],
-                    [-primary_window.width()/2., -primary_window.height()/2., 0.0]],
+                    vec![
+                        [
+                            -primary_window.width() / 2.,
+                            primary_window.height() / 2.,
+                            0.0,
+                        ],
+                        [
+                            primary_window.width() / 2.,
+                            primary_window.height() / 2.,
+                            0.0,
+                        ],
+                        [
+                            primary_window.width() / 2.,
+                            -primary_window.height() / 2.,
+                            0.0,
+                        ],
+                        [
+                            -primary_window.width() / 2.,
+                            -primary_window.height() / 2.,
+                            0.0,
+                        ],
+                    ],
                 );
             }
-
-            
         }
     }
 }
