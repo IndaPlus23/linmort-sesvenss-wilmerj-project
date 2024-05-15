@@ -6,8 +6,7 @@ use bevy::{
     window::{CursorGrabMode, PrimaryWindow},
 };
 use std::f32::consts::PI;
-
-use crate::{floor::Floor, EditorState, GameState, MainMenuText, Player, Wall, sound::BackgroundSong, play_background_audio};
+use crate::{floor::Floor, EditorState, GameState, MainMenuText, Player, Wall, sound::BackgroundSong, play_background_audio, gun::shoot_the_gun};
 
 #[derive(Default)]
 pub struct MouseState {

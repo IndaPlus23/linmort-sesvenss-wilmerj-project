@@ -66,25 +66,24 @@ pub fn shoot_the_gun(mut query: Query<&mut Player>) {
 
     // Pitch is how much a player is looking up or down, and yaw is how much they are looking left and right.
     for player in query.iter_mut() {
-        //println!("yaw: {:?} pitch: {:?}", player.yaw, player.pitch);
 
-        //println!("x: {:?} y: {:?} y: {:?}", player.x, player.y, player.z);
-
-        //
         // todo:
             // health bar
-            // gun mabye
+            // gun hit detection
 
+
+        
         // send out ray in the direction that the player is facing
-
         // yaw x, z
         // pitch y
 
         let mut hit = false;
         let mut ray = [player.x, player.y, player.z];
-        let step = 1.;  // how long steps should bullet take when checking for collision
-        let range = 15; // range that gun shoots
+        let step = 0.25;  // how long steps should bullet take when checking for collision
+        let range = 100; // range is how many steps the bullet should take
 
+
+        // range is how long the gun shoots, add to range to shoot longer
         for _i in 0..range {
 
             // shot ray in direction player is looking. 
@@ -93,11 +92,7 @@ pub fn shoot_the_gun(mut query: Query<&mut Player>) {
             ray[2] -= player.yaw.cos() * step;
 
             // check if bullet hits something
-            // maybe use same as wall_collision
-
-            //hit = enemy_detection(ray)
-            //hit = wall_detection(ray);
-            //hit = flor_detection(ray);
+            // HIT DETECTION
 
             if hit {
                 // do damage?
@@ -105,6 +100,6 @@ pub fn shoot_the_gun(mut query: Query<&mut Player>) {
             }
         }
 
-        println!("ray: {:?}", ray)
+        //println!("ray: {:?}", ray)
     }
 }
