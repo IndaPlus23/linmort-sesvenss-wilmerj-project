@@ -18,12 +18,7 @@ pub fn main_menu_input(
     mut window: Query<&mut Window, With<PrimaryWindow>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut text_query: Query<(&mut MainMenuText, &mut Text, &mut Transform)>,
-    mut query: Query<&mut Player>,
-    time: Res<'_, Time<Real>>,
-    game_state: Res<State<GameState>>,
     mut next_game_state: ResMut<NextState<GameState>>,
-    editor_state: Res<State<EditorState>>,
-    mut next_editor_state: ResMut<NextState<EditorState>>,
 ) {
     if keyboard_input.just_pressed(KeyCode::Escape) {
         std::process::exit(0);

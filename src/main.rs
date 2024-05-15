@@ -6,6 +6,7 @@ mod input;
 mod map;
 mod player;
 mod render;
+mod skybox;
 mod vertex;
 mod wall;
 
@@ -13,16 +14,11 @@ use bevy::{
     core::FrameCount,
     prelude::*,
     render::mesh::Mesh,
-    render::render_asset::RenderAssetUsages,
-    render::render_resource::{
-        Extent3d, Texture, TextureDescriptor, TextureDimension, TextureFormat,
-        TextureViewDescriptor, TextureViewDimension,
-    },
     sprite::{Material2dPlugin, MaterialMesh2dBundle},
     window::{PresentMode, PrimaryWindow, WindowTheme},
 };
 use bevy_egui::EguiPlugin;
-use render::{render_cubemap, render_grid};
+use render::render_grid;
 use std::f32::consts::PI;
 
 use crate::{
@@ -32,8 +28,9 @@ use crate::{
     input::{keyboard_input, lock_cursor, main_menu_input, mouse_input, MouseState},
     map::load_from_file,
     player::Player,
+    render::{render, render_map},
     render::{CustomMaterial, MAX_STRUCTURES},
-    render::{render, render_map, CubeMapMaterial},
+    skybox::{render_skybox, CubeMapMaterial},
     wall::Wall,
 };
 
@@ -102,20 +99,20 @@ fn main() {
             )
                 .in_set(MenuSet),
         )
+        .add_systems(Update, (change_title, keyboard_input, mouse_input))
+        .add_systems(Update, (render, render_hud, render_skybox).in_set(GameSet))
         .add_systems(
             Update,
             (
-                change_title,
-                keyboard_input,
-                mouse_input,
                 render,
                 render_map,
                 render_hud,
-                render_cubemap,
+                render_skybox,
+                editor_ui,
+                render_grid,
             )
-                .in_set(GameSet),
+                .in_set(EditorSet),
         )
-        .add_systems(Update, (editor_ui, render_grid).in_set(EditorSet))
         .run();
 }
 
@@ -125,8 +122,8 @@ fn setup(
     mut materials: ResMut<Assets<ColorMaterial>>,
     mut custom_materials: ResMut<Assets<CustomMaterial>>,
     mut cubemaps: ResMut<Assets<CubeMapMaterial>>,
-    mut normal_asset_server: Res<AssetServer>,
-    mut asset_server: Res<SceneAssets>,
+    asset_server: Res<AssetServer>,
+    mut scene_asset_server: Res<SceneAssets>,
     mut window_query: Query<&mut Window, With<PrimaryWindow>>,
 ) {
     let map = load_from_file("map.txt").expect("Error: could not open map");
@@ -143,7 +140,7 @@ fn setup(
         &mut commands,
         &mut meshes,
         &mut custom_materials,
-        &mut asset_server,
+        &mut scene_asset_server,
         &mut window_query,
     );
 
@@ -156,7 +153,7 @@ fn setup(
         RenderItem::new_with_id(0),
         MaterialMesh2dBundle {
             mesh: meshes.add(RenderItem::new_mesh()).into(),
-            material: materials.add(asset_server.hud[0].clone()),
+            material: materials.add(scene_asset_server.hud[0].clone()),
             transform: Transform::from_xyz(0.0, 0.0, -10.0),
             ..default()
         },
@@ -169,7 +166,7 @@ fn setup(
             text: Text::from_section(
                 "Play game",
                 TextStyle {
-                    font: normal_asset_server.load("fonts/DooM.ttf").clone(),
+                    font: asset_server.load("fonts/DooM.ttf").clone(),
                     font_size: 80.0,
                     color: Color::RED,
                 },
@@ -186,7 +183,7 @@ fn setup(
             text: Text::from_section(
                 "Play game",
                 TextStyle {
-                    font: normal_asset_server.load("fonts/DooM.ttf").clone(),
+                    font: asset_server.load("fonts/DooM.ttf").clone(),
                     font_size: 80.0,
                     color: Color::BLACK,
                 },
@@ -203,7 +200,7 @@ fn setup(
             text: Text::from_section(
                 "Settings",
                 TextStyle {
-                    font: normal_asset_server.load("fonts/DooM.ttf").clone(),
+                    font: asset_server.load("fonts/DooM.ttf").clone(),
                     font_size: 80.0,
                     color: Color::RED,
                 },
@@ -220,7 +217,7 @@ fn setup(
             text: Text::from_section(
                 "Settings",
                 TextStyle {
-                    font: normal_asset_server.load("fonts/DooM.ttf").clone(),
+                    font: asset_server.load("fonts/DooM.ttf").clone(),
                     font_size: 80.0,
                     color: Color::BLACK,
                 },
@@ -237,7 +234,7 @@ fn setup(
             text: Text::from_section(
                 "Exit",
                 TextStyle {
-                    font: normal_asset_server.load("fonts/DooM.ttf").clone(),
+                    font: asset_server.load("fonts/DooM.ttf").clone(),
                     font_size: 80.0,
                     color: Color::RED,
                 },
@@ -254,7 +251,7 @@ fn setup(
             text: Text::from_section(
                 "Exit",
                 TextStyle {
-                    font: normal_asset_server.load("fonts/DooM.ttf").clone(),
+                    font: asset_server.load("fonts/DooM.ttf").clone(),
                     font_size: 80.0,
                     color: Color::BLACK,
                 },
@@ -270,7 +267,7 @@ fn setup(
         RenderItem::new_with_id(1),
         MaterialMesh2dBundle {
             mesh: meshes.add(RenderItem::new_mesh()).into(),
-            material: materials.add(asset_server.hud[1].clone()),
+            material: materials.add(scene_asset_server.hud[1].clone()),
             transform: Transform::from_xyz(0.0, 0.0, 10.0),
             ..default()
         },
@@ -280,12 +277,12 @@ fn setup(
     commands.spawn((MaterialMesh2dBundle {
         mesh: meshes.add(RenderItem::new_mesh()).into(),
         material: cubemaps.add(CubeMapMaterial {
-            px: asset_server.cubemaps[0].clone(),
-            nx: asset_server.cubemaps[1].clone(),
-            py: asset_server.cubemaps[2].clone(),
-            ny: asset_server.cubemaps[3].clone(),
-            pz: asset_server.cubemaps[4].clone(),
-            nz: asset_server.cubemaps[5].clone(),
+            px: scene_asset_server.cubemaps[0].clone(),
+            nx: scene_asset_server.cubemaps[1].clone(),
+            py: scene_asset_server.cubemaps[2].clone(),
+            ny: scene_asset_server.cubemaps[3].clone(),
+            pz: scene_asset_server.cubemaps[4].clone(),
+            nz: scene_asset_server.cubemaps[5].clone(),
             window_width: 0.,
             window_height: 0.,
             direction: Vec3::new(0., 0., -1.),
