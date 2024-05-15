@@ -7,7 +7,7 @@ use bevy::{
 };
 use std::f32::consts::PI;
 
-use crate::{EditorState, GameState, MainMenuText, Player};
+use crate::{EditorState, GameState, MainMenuText, Player, Wall, floor::Floor};
 
 #[derive(Default)]
 pub struct MouseState {
@@ -71,6 +71,8 @@ pub fn main_menu_input(
 }
 
 pub fn keyboard_input(
+    mut wall_query: Query<&mut Wall>,
+    mut floor_query: Query<&mut Floor>,
     mut window: Query<&mut Window, With<PrimaryWindow>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut query: Query<&mut Player>,
@@ -244,3 +246,4 @@ pub fn lock_cursor(window: &mut Query<&mut Window, With<PrimaryWindow>>) {
         // also hide the cursor
         primary_window.cursor.visible = false;
     }
+}

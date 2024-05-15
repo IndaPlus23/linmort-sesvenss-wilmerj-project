@@ -458,18 +458,3 @@ pub fn render_map(
         }
     }
 }
-
-fn forward_vector(yaw: f32, pitch: f32) -> Vec3 {
-    let mut vector = Vector3::new(0., 0., -1.);
-
-    //create rotation matrices from yaw and pitch
-    let yaw_rotation = Rotation3::from_euler_angles(0., 2. * PI - yaw, 0.);
-    vector = yaw_rotation * vector;
-
-    let axis = Unit::new_normalize(vector.cross(&Vector3::y()));
-    let pitch_rotation = Rotation3::from_axis_angle(&axis, pitch);
-
-    vector = pitch_rotation * vector;
-
-    Vec3::new(vector.x, vector.y, vector.z)
-}

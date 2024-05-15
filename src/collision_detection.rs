@@ -21,8 +21,6 @@ use crate::Player;
 
 */
 
-
-
 pub fn wall_collision(wall: &Mut<'_, Wall>, movement: &mut bevy::prelude::Vec3, player: &mut bevy::prelude::Mut<'_, Player>) {
 
     let player_vec: [f32; 3] = [
