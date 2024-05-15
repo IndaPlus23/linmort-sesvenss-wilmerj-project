@@ -7,7 +7,7 @@ use bevy::{
 };
 use std::f32::consts::PI;
 
-use crate::{floor::Floor, EditorState, GameState, MainMenuText, Player, Wall};
+use crate::{floor::Floor, EditorState, GameState, MainMenuText, Player, Wall, sound::BackgroundSong, play_background_audio};
 
 #[derive(Default)]
 pub struct MouseState {
@@ -17,10 +17,13 @@ pub struct MouseState {
 impl Resource for MouseState {}
 
 pub fn main_menu_input(
+    mut commands: Commands,
+    mut asset_server: Res<AssetServer>,
     mut window: Query<&mut Window, With<PrimaryWindow>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut text_query: Query<(&mut MainMenuText, &mut Text, &mut Transform)>,
     mut next_game_state: ResMut<NextState<GameState>>,
+    background_song: Query<Entity, With<BackgroundSong>>,
 ) {
     if keyboard_input.just_pressed(KeyCode::Escape) {
         std::process::exit(0);
@@ -62,6 +65,12 @@ pub fn main_menu_input(
             for (_, _, mut transform) in text_query.iter_mut() {
                 transform.scale = Vec3::ZERO;
             }
+
+            for entity in background_song.iter() {
+                commands.entity(entity).despawn();
+            }
+
+            play_background_audio(&mut asset_server, &mut commands, "sounds\\at_dooms_gate.ogg".to_string());
         }
 
         if selected_id == 2 {

@@ -90,7 +90,7 @@ fn main() {
         .add_plugins(Material2dPlugin::<CubeMapMaterial>::default())
         .add_plugins(EguiPlugin)
         .add_systems(PreStartup, load_assets)
-        .add_systems(Startup, (setup, play_background_audio))
+        .add_systems(Startup, setup)
         .add_systems(Update, change_title)
         .add_systems(
             Update,
@@ -129,7 +129,7 @@ fn setup(
     mut materials: ResMut<Assets<ColorMaterial>>,
     mut custom_materials: ResMut<Assets<CustomMaterial>>,
     mut cubemaps: ResMut<Assets<CubeMapMaterial>>,
-    asset_server: Res<AssetServer>,
+    mut asset_server: Res<AssetServer>,
     mut scene_asset_server: Res<SceneAssets>,
     mut window_query: Query<&mut Window, With<PrimaryWindow>>,
 ) {
@@ -154,6 +154,8 @@ fn setup(
     commands.spawn(map);
 
     lock_cursor(&mut window_query);
+
+    play_background_audio(&mut asset_server, &mut commands, "sounds\\main_menu.ogg".to_string());
 
     // Main menu
     commands.spawn((
