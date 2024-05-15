@@ -37,19 +37,19 @@ impl Sprite {
     /// spawn_sprites uses SceneAssets to clone handles for different assets. This means that the
     /// asset itself won't be loaded from file each time an asset is spawned, but rather the handle
     /// for that asset is cloned and used.
-    fn spawn_sprite(mut commands: Commands, scene_assets: Res<SceneAssets>, position: Vec3) {
-        commands.spawn((
-            MovingObjectBundle {
-                velocity: Velocity { value: Vec3::ZERO },
-                acceleration: Acceleration::new(Vec3::ZERO),
-                sprite: SpriteBundle {
-                    texture: scene_assets.enemy.clone(),
-                    transform: Transform::from_translation(position),
-                    ..default()
-                },
-            }
-        ));
-    }
+    // fn spawn_sprite(mut commands: Commands, scene_assets: Res<SceneAssets>, position: Vec3) {
+    //     commands.spawn((
+    //         MovingObjectBundle {
+    //             velocity: Velocity { value: Vec3::ZERO },
+    //             acceleration: Acceleration::new(Vec3::ZERO),
+    //             sprite: SpriteBundle {
+    //                 texture: scene_assets.enemy.clone(),
+    //                 transform: Transform::from_translation(position),
+    //                 ..default()
+    //             },
+    //         }
+    //     ));
+    // }
 
     // Transforms the sprite's position based on the player's position and orientation
     pub fn transform(

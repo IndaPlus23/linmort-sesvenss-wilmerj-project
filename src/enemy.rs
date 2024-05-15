@@ -180,6 +180,7 @@ fn create_projectile(
         MovingObjectBundle {
             velocity: Velocity::new(Vec3::new(direction.x, direction.y, direction.z) * MISSILE_SPEED),
             acceleration: Acceleration::new(Vec3::ZERO),
+            collider: Collider::new(50.),
             sprite: SpriteBundle {
                 texture: sprite,
                 transform: Transform::from_translation(position),

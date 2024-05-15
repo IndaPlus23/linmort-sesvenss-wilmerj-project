@@ -14,6 +14,7 @@ use crate::{
     floor::Floor, render::MAX_STRUCTURES, vertex::Vertex, CustomMaterial, Player, SceneAssets, Wall,
     enemy::Enemy, movement::{Acceleration, MovingObjectBundle, Velocity}
 };
+use crate::collision_detection::Collider;
 use crate::enemy::{ActionState, EnemyState};
 use crate::sprites::SpriteComponent;
 use crate::timer::ShootingTimer;
@@ -127,6 +128,7 @@ impl Map {
                 MovingObjectBundle {
                     velocity: Velocity::new(Vec3::ZERO),
                     acceleration: Acceleration::new(Vec3::ZERO),
+                    collider: Collider::new(100.),
                     sprite: SpriteBundle {
                         texture: scene_assets.enemy.clone(),
                         transform: Transform::from_translation(enemy.position),
@@ -145,7 +147,6 @@ impl Map {
         }
     }
 
-    // TODO: Implement some way of saving enemies to file
     pub fn save(&self) -> Option<()> {
         let path = Path::new("assets\\maps\\").join(&self.filename);
 

@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use crate::collision_detection::Collider;
 use crate::enemy::ActionState;
 use crate::sprites::SpriteComponent;
 
@@ -25,6 +26,7 @@ pub struct MovingObjectBundle {
     pub velocity: Velocity,
     pub acceleration: Acceleration,
     pub sprite: SpriteBundle,
+    pub collider: Collider,
 }
 
 pub struct MovementPlugin;
