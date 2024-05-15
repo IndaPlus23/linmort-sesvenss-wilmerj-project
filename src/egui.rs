@@ -12,7 +12,7 @@ pub fn editor_ui(
     asset_server: Res<SceneAssets>,
     mut wall_query: Query<&mut Wall>,
     mut floor_query: Query<&mut Floor>,
-) { 
+) {
     egui::Window::new("Editor").show(contexts.ctx_mut(), |ui| match map_query.get_single_mut() {
         Ok(mut map) => {
             ui.heading("Map");

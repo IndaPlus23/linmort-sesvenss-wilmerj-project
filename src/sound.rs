@@ -1,10 +1,11 @@
+use bevy::audio::Volume;
 use bevy::prelude::*;
 
 // startup background song
 pub fn play_background_audio(asset_server: Res<AssetServer>, mut commands: Commands) {
     commands.spawn(AudioBundle {
         source: asset_server.load("sounds\\02.-Cultist-Base.ogg"),
-        settings: PlaybackSettings::LOOP,
+        settings: PlaybackSettings::LOOP.with_volume(Volume::new(0.5)),
     });
 }
 
@@ -15,19 +16,19 @@ pub fn pause_audio(music_controller: Query<&AudioSink>) {
     }
 }
 
-pub fn increase_audio(music_controller: Query<&AudioSink>) {
+pub fn increase_volume(music_controller: Query<&AudioSink>) {
     if let Ok(sink) = music_controller.get_single() {
-        sink.set_volume(sink.volume() + 0.05);   
+        sink.set_volume(sink.volume() + 0.05);
     }
 }
 
-pub fn decrease_audio(music_controller: Query<&AudioSink>) {
+pub fn decrease_volume(music_controller: Query<&AudioSink>) {
     if let Ok(sink) = music_controller.get_single() {
         if sink.volume() - 0.1 > 0. {
             sink.set_volume(sink.volume() - 0.05);
         } else {
             sink.set_volume(0.)
-        }   
+        }
     }
 }
 
@@ -35,14 +36,14 @@ pub fn decrease_audio(music_controller: Query<&AudioSink>) {
 EXAMPLE:
 
 you need these ->
-    
-    asset_server: Res<AssetServer>, 
+
+    asset_server: Res<AssetServer>,
     mut commands: Commands
 
 then use the function like this (shotgun.ogg must be a file in assets/sounds)->
-    
+
     play_audio(asset_server,commands, "shotgun.ogg")
-        
+
 */
 pub fn play_audio(asset_server: Res<AssetServer>, mut commands: Commands, path: &str) {
     commands.spawn(AudioBundle {

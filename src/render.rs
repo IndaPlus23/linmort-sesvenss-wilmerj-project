@@ -1,3 +1,7 @@
+use crate::{
+    floor::Floor, skybox::CubeMapMaterial, vertex::Vertex, wall::Wall, EditorState, GameState,
+    Player, SceneAssets,
+};
 use bevy::{
     prelude::*,
     reflect::TypePath,
@@ -7,10 +11,6 @@ use bevy::{
         render_resource::{AsBindGroup, ShaderRef},
     },
     sprite::{Material2d, MaterialMesh2dBundle, Mesh2dHandle},
-};
-use crate::{
-    floor::Floor, skybox::CubeMapMaterial, vertex::Vertex, wall::Wall, EditorState, GameState,
-    Player, SceneAssets,
 };
 
 pub const MAX_STRUCTURES: usize = 1000;

@@ -1,5 +1,5 @@
-use crate::collision_detection::{wall_collision, floor_collision};
-use crate::sound_loader::play_audio;
+use crate::collision_detection::{floor_collision, wall_collision};
+use crate::sound::play_audio;
 use bevy::{
     input::mouse::MouseMotion,
     prelude::*,
@@ -7,7 +7,7 @@ use bevy::{
 };
 use std::f32::consts::PI;
 
-use crate::{EditorState, GameState, MainMenuText, Player, Wall, floor::Floor};
+use crate::{floor::Floor, EditorState, GameState, MainMenuText, Player, Wall};
 
 #[derive(Default)]
 pub struct MouseState {
@@ -130,8 +130,8 @@ pub fn keyboard_input(
 
         if keyboard_input.just_pressed(KeyCode::F1) {
             match player.noclip {
-                true => {player.noclip = false}
-                false => {player.noclip = true}
+                true => player.noclip = false,
+                false => player.noclip = true,
             }
         }
 
@@ -167,7 +167,8 @@ pub fn keyboard_input(
 
         if !player.noclip {
             // GRAVITY + JUMPING
-            if keyboard_input.pressed(KeyCode::Space) { // jump
+            if keyboard_input.pressed(KeyCode::Space) {
+                // jump
 
                 if player.gravity < 30. {
                     movement += Vec3::new(0., 2., 0.); // add y velocity
@@ -176,7 +177,7 @@ pub fn keyboard_input(
             }
 
             // first part checks if player hit "rock bottom" so that they dont fall forever, then checks if the player is currently falling
-            if player.y + movement.y - player.height < -3. && movement.y <= 0. { 
+            if player.y + movement.y - player.height < -3. && movement.y <= 0. {
                 movement.y = 0.
             } else {
                 movement.y -= 1. // If the player is in the air and not fallint -> start falling
@@ -193,11 +194,11 @@ pub fn keyboard_input(
             }
 
             // when player has landed on the ground reset the "timer"
-            if player.gravity > 0. && movement.y == 0.{
+            if player.gravity > 0. && movement.y == 0. {
                 player.gravity = 0.0;
             }
-        }      
-        
+        }
+
         movement = movement.normalize_or_zero() * speed * time.delta_seconds();
 
         player.x += movement.x;
@@ -212,8 +213,8 @@ pub fn mouse_input(
     mut mouse_state: ResMut<MouseState>,
     mut window_query: Query<&mut Window, With<PrimaryWindow>>,
     mut query: Query<&mut Player>,
-    asset_server: Res<AssetServer>, 
-    mut commands: Commands
+    asset_server: Res<AssetServer>,
+    mut commands: Commands,
 ) {
     for event in mouse_motion_events.read() {
         let primary_window = window_query.single_mut();
@@ -238,7 +239,7 @@ pub fn mouse_input(
         let _window_pos = window.cursor_position().unwrap();
 
         // plays shotgun sound
-        play_audio(asset_server,commands, "shotgun.ogg")
+        play_audio(asset_server, commands, "shotgun.ogg")
     }
 
     if mouse_button_input.just_released(MouseButton::Left) {

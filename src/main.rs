@@ -1,4 +1,5 @@
 mod asset_loader;
+mod collision_detection;
 mod egui;
 mod floor;
 mod hud;
@@ -7,10 +8,9 @@ mod map;
 mod player;
 mod render;
 mod skybox;
+mod sound;
 mod vertex;
 mod wall;
-mod collision_detection;
-mod sound_loader;
 
 use bevy::{
     core::FrameCount,
@@ -33,8 +33,8 @@ use crate::{
     render::{render, render_map},
     render::{CustomMaterial, MAX_STRUCTURES},
     skybox::{render_skybox, CubeMapMaterial},
+    sound::play_background_audio,
     wall::Wall,
-    sound_loader::play_background_audio
 };
 
 #[derive(States, Debug, Clone, PartialEq, Eq, Hash)]
@@ -90,24 +90,27 @@ fn main() {
         .add_plugins(Material2dPlugin::<CubeMapMaterial>::default())
         .add_plugins(EguiPlugin)
         .add_systems(PreStartup, load_assets)
-        .add_systems(Startup, setup)
-        .add_systems(Startup, play_background_audio) //background music
+        .add_systems(Startup, (setup, play_background_audio))
+        .add_systems(Update, change_title)
         .add_systems(
             Update,
             (
                 make_visible,
-                change_title,
                 main_menu_input,
                 render_main_menu,
                 main_menu_text,
             )
                 .in_set(MenuSet),
         )
-        .add_systems(Update, (change_title, keyboard_input, mouse_input))
-        .add_systems(Update, (render, render_hud, render_skybox, render_map).in_set(GameSet))
+        .add_systems(
+            Update,
+            (mouse_input, keyboard_input, render, render_hud, render_skybox, render_map).in_set(GameSet),
+        )
         .add_systems(
             Update,
             (
+                mouse_input,
+                keyboard_input,
                 render,
                 render_map,
                 render_hud,
@@ -147,9 +150,6 @@ fn setup(
         &mut scene_asset_server,
         &mut window_query,
     );
-
-    
-
 
     commands.spawn(map);
 
