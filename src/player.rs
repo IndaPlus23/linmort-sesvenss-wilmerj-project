@@ -9,6 +9,9 @@ pub struct Player {
     pub yaw: f32,
     pub pitch: f32,
     pub holster: Holster,
+    pub height: f32,
+    pub noclip: bool,
+    pub gravity: f32,
 }
 
 impl Player {
@@ -20,7 +23,10 @@ impl Player {
             z,
             yaw,
             pitch,
-            holster: Holster::new()
+            holster: Holster::new(),
+            height: 5.,
+            noclip: true,
+            gravity: 0.,
         }
     }
 }
