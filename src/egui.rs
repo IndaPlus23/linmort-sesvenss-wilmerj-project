@@ -2,14 +2,17 @@ use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts};
 use std::f32::consts::PI;
 
-use crate::{floor::Floor, map::Map, render::MapFloor, Player, SceneAssets, Wall};
+use crate::{floor::Floor, map::Map, render::MapFloor, Player, SceneAssets, Wall, wall::spawn_wall, floor::spawn_floor, CustomMaterial, vertex::Vertex};
 
 pub fn editor_ui(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut custom_materials: ResMut<Assets<CustomMaterial>>,
     mut player_query: Query<&mut Player>,
     mut map_floors: Query<&mut MapFloor>,
     mut map_query: Query<&mut Map>,
     mut contexts: EguiContexts,
-    asset_server: Res<SceneAssets>,
+    mut asset_server: Res<SceneAssets>,
     mut wall_query: Query<&mut Wall>,
     mut floor_query: Query<&mut Floor>,
 ) {
@@ -68,6 +71,59 @@ pub fn editor_ui(
                     0..=n_walls + n_floors - 1,
                 ));
             });
+
+            ui.separator();
+            if ui.button("Spawn wall").clicked() {
+                for player in player_query.iter_mut() {
+                    let wall = Wall::new(
+                        map.walls.len(),
+                        Vertex::new(Vec3::new(player.x.round(), 0.0, player.z.round()), Vec2::ZERO),
+                        Vertex::new(Vec3::new(player.x.round() + 10.0, 0.0, player.z.round() + 10.0), Vec2::ZERO),
+                        10.,
+                        Vec2::ONE,
+                        Vec2::ZERO,
+                        0.0,
+                        0,
+                    );
+
+                    spawn_wall(
+                        &mut commands,
+                        &mut meshes,
+                        &mut custom_materials,
+                        &asset_server,
+                        wall.clone()
+                    );
+
+                    map.walls.push(wall)
+                }
+            }
+
+            ui.separator();
+            if ui.button("Spawn floor").clicked() {
+                for player in player_query.iter_mut() {
+                    let floor = Floor::new(
+                        map.floors.len() + 1000,
+                        Vertex::new(Vec3::new(player.x.round(), 0.0, player.z.round()), Vec2::ZERO),
+                        Vertex::new(Vec3::new(player.x.round() + 10.0, 0.0, player.z.round() + 10.0), Vec2::ZERO),
+                        Vertex::new(Vec3::new(player.x.round(), 0.0, player.z.round() + 10.0), Vec2::ZERO),
+                        Vec2::ONE,
+                        Vec2::ZERO,
+                        0.0,
+                        true,
+                        1,
+                    );
+
+                    spawn_floor(
+                        &mut commands,
+                        &mut meshes,
+                        &mut custom_materials,
+                        &asset_server,
+                        floor.clone()
+                    );
+
+                    map.floors.push(floor)
+                }
+            }
 
             ui.separator();
             if ui.button("Save").clicked() {
@@ -188,9 +244,8 @@ pub fn editor_ui(
                                 ui.label("x:");
                                 ui.add(
                                     egui::DragValue::new(&mut start_transformation.x)
-                                        .custom_formatter(|n, _| {
-                                            let displayed = n as f32 + current_start.x;
-                                            format!("{displayed}")
+                                        .custom_formatter(|_, _| {
+                                            format!("{}", wall.start.position.x)
                                         })
                                         .speed(1.0),
                                 );
@@ -199,9 +254,8 @@ pub fn editor_ui(
                                 ui.label("y:");
                                 ui.add(
                                     egui::DragValue::new(&mut start_transformation.y)
-                                        .custom_formatter(|n, _| {
-                                            let displayed = n as f32 + current_start.y;
-                                            format!("{displayed}")
+                                        .custom_formatter(|_, _| {
+                                            format!("{}", wall.start.position.y)
                                         })
                                         .speed(1.0),
                                 );
@@ -210,9 +264,8 @@ pub fn editor_ui(
                                 ui.label("z:");
                                 ui.add(
                                     egui::DragValue::new(&mut start_transformation.z)
-                                        .custom_formatter(|n, _| {
-                                            let displayed = n as f32 + current_start.z;
-                                            format!("{displayed}")
+                                        .custom_formatter(|_, _| {
+                                            format!("{}", wall.start.position.z)
                                         })
                                         .speed(1.0),
                                 );
@@ -230,9 +283,8 @@ pub fn editor_ui(
                                 ui.label("x:");
                                 ui.add(
                                     egui::DragValue::new(&mut end_transformation.x)
-                                        .custom_formatter(|n, _| {
-                                            let displayed = n as f32 + current_end.x;
-                                            format!("{displayed}")
+                                        .custom_formatter(|_, _| {
+                                            format!("{}", wall.end.position.x)
                                         })
                                         .speed(1.0),
                                 );
@@ -241,9 +293,8 @@ pub fn editor_ui(
                                 ui.label("y:");
                                 ui.add(
                                     egui::DragValue::new(&mut end_transformation.y)
-                                        .custom_formatter(|n, _| {
-                                            let displayed = n as f32 + current_end.y;
-                                            format!("{displayed}")
+                                        .custom_formatter(|_, _| {
+                                            format!("{}", wall.end.position.y)
                                         })
                                         .speed(1.0),
                                 );
@@ -252,9 +303,8 @@ pub fn editor_ui(
                                 ui.label("z:");
                                 ui.add(
                                     egui::DragValue::new(&mut end_transformation.z)
-                                        .custom_formatter(|n, _| {
-                                            let displayed = n as f32 + current_end.z;
-                                            format!("{displayed}")
+                                        .custom_formatter(|_, _| {
+                                            format!("{}", wall.end.position.z)
                                         })
                                         .speed(1.0),
                                 );
@@ -277,22 +327,22 @@ pub fn editor_ui(
                     ui.heading("UV scaling");
                     ui.horizontal(|ui| {
                         ui.label("u:");
-                        ui.add(egui::Slider::new(&mut uv_scaling.x, 1.0..=10.));
+                        ui.add(egui::Slider::new(&mut uv_scaling.x, 0.0..=10.));
                     });
                     ui.horizontal(|ui| {
                         ui.label("v:");
-                        ui.add(egui::Slider::new(&mut uv_scaling.y, 1.0..=10.));
+                        ui.add(egui::Slider::new(&mut uv_scaling.y, 0.0..=10.));
                     });
                     ui.separator();
 
                     ui.heading("UV offset");
                     ui.horizontal(|ui| {
                         ui.label("u:");
-                        ui.add(egui::Slider::new(&mut uv_offset.x, 0.0..=1.));
+                        ui.add(egui::Slider::new(&mut uv_offset.x, 0.0..=10.));
                     });
                     ui.horizontal(|ui| {
                         ui.label("v:");
-                        ui.add(egui::Slider::new(&mut uv_offset.y, 0.0..=1.));
+                        ui.add(egui::Slider::new(&mut uv_offset.y, 0.0..=10.));
                     });
                     ui.separator();
 
@@ -339,7 +389,7 @@ pub fn editor_ui(
             }
 
             for mut floor in floor_query.iter_mut() {
-                if floor.id == map.selected_id {
+                if floor.id == (1000 + map.selected_id - n_walls) {
                     let mut a_transformation = floor.a.transformation;
                     let current_a = floor.a.position;
 
@@ -363,10 +413,9 @@ pub fn editor_ui(
                                 ui.label("x:");
                                 ui.add(
                                     egui::DragValue::new(&mut a_transformation.x)
-                                        .custom_formatter(|n, _| {
-                                            let displayed = n as f32 + current_a.x;
-                                            format!("{displayed}")
-                                        })
+                                    .custom_formatter(|_, _| {
+                                        format!("{}", floor.a.position.x)
+                                    })
                                         .speed(1.0),
                                 );
                             });
@@ -374,9 +423,8 @@ pub fn editor_ui(
                                 ui.label("y:");
                                 ui.add(
                                     egui::DragValue::new(&mut a_transformation.y)
-                                        .custom_formatter(|n, _| {
-                                            let displayed = n as f32 + current_a.y;
-                                            format!("{displayed}")
+                                        .custom_formatter(|_, _| {
+                                            format!("{}", floor.a.position.y)
                                         })
                                         .speed(1.0),
                                 );
@@ -385,9 +433,8 @@ pub fn editor_ui(
                                 ui.label("z:");
                                 ui.add(
                                     egui::DragValue::new(&mut a_transformation.z)
-                                        .custom_formatter(|n, _| {
-                                            let displayed = n as f32 + current_a.z;
-                                            format!("{displayed}")
+                                        .custom_formatter(|_, _| {
+                                            format!("{}", floor.a.position.z)
                                         })
                                         .speed(1.0),
                                 );
@@ -405,9 +452,8 @@ pub fn editor_ui(
                                 ui.label("x:");
                                 ui.add(
                                     egui::DragValue::new(&mut b_transformation.x)
-                                        .custom_formatter(|n, _| {
-                                            let displayed = n as f32 + current_b.x;
-                                            format!("{displayed}")
+                                        .custom_formatter(|_, _| {
+                                            format!("{}", floor.b.position.x)
                                         })
                                         .speed(1.0),
                                 );
@@ -416,9 +462,8 @@ pub fn editor_ui(
                                 ui.label("y:");
                                 ui.add(
                                     egui::DragValue::new(&mut b_transformation.y)
-                                        .custom_formatter(|n, _| {
-                                            let displayed = n as f32 + current_b.y;
-                                            format!("{displayed}")
+                                        .custom_formatter(|_, _| {
+                                            format!("{}", floor.b.position.y)
                                         })
                                         .speed(1.0),
                                 );
@@ -427,9 +472,8 @@ pub fn editor_ui(
                                 ui.label("z:");
                                 ui.add(
                                     egui::DragValue::new(&mut b_transformation.z)
-                                        .custom_formatter(|n, _| {
-                                            let displayed = n as f32 + current_b.z;
-                                            format!("{displayed}")
+                                        .custom_formatter(|_, _| {
+                                            format!("{}", floor.b.position.z)
                                         })
                                         .speed(1.0),
                                 );
@@ -447,9 +491,8 @@ pub fn editor_ui(
                                 ui.label("x:");
                                 ui.add(
                                     egui::DragValue::new(&mut c_transformation.x)
-                                        .custom_formatter(|n, _| {
-                                            let displayed = n as f32 + current_c.x;
-                                            format!("{displayed}")
+                                        .custom_formatter(|_, _| {
+                                            format!("{}", floor.c.position.x)
                                         })
                                         .speed(1.0),
                                 );
@@ -458,9 +501,8 @@ pub fn editor_ui(
                                 ui.label("y:");
                                 ui.add(
                                     egui::DragValue::new(&mut c_transformation.y)
-                                        .custom_formatter(|n, _| {
-                                            let displayed = n as f32 + current_c.y;
-                                            format!("{displayed}")
+                                        .custom_formatter(|_, _| {
+                                            format!("{}", floor.c.position.y)
                                         })
                                         .speed(1.0),
                                 );
@@ -469,9 +511,8 @@ pub fn editor_ui(
                                 ui.label("z:");
                                 ui.add(
                                     egui::DragValue::new(&mut c_transformation.z)
-                                        .custom_formatter(|n, _| {
-                                            let displayed = n as f32 + current_c.z;
-                                            format!("{displayed}")
+                                        .custom_formatter(|_, _| {
+                                            format!("{}", floor.c.position.z)
                                         })
                                         .speed(1.0),
                                 );
@@ -558,14 +599,14 @@ pub fn editor_ui(
                     floor.uv_rotation = uv_rotation;
                     floor.texture_id = texture_id;
 
-                    map.floors[floor.id - n_walls].a.position = floor.a.position;
-                    map.floors[floor.id - n_walls].b.position = floor.b.position;
-                    map.floors[floor.id - n_walls].c.position = floor.c.position;
-                    map.floors[floor.id - n_walls].uv_scalar = floor.uv_scalar;
-                    map.floors[floor.id - n_walls].uv_offset = floor.uv_offset;
-                    map.floors[floor.id - n_walls].uv_rotation = floor.uv_rotation;
-                    map.floors[floor.id - n_walls].world_aligned_uv = floor.world_aligned_uv;
-                    map.floors[floor.id - n_walls].texture_id = floor.texture_id;
+                    map.floors[floor.id - 1000].a.position = floor.a.position;
+                    map.floors[floor.id - 1000].b.position = floor.b.position;
+                    map.floors[floor.id - 1000].c.position = floor.c.position;
+                    map.floors[floor.id - 1000].uv_scalar = floor.uv_scalar;
+                    map.floors[floor.id - 1000].uv_offset = floor.uv_offset;
+                    map.floors[floor.id - 1000].uv_rotation = floor.uv_rotation;
+                    map.floors[floor.id - 1000].world_aligned_uv = floor.world_aligned_uv;
+                    map.floors[floor.id - 1000].texture_id = floor.texture_id;
                 }
             }
         }

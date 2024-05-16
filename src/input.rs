@@ -7,7 +7,10 @@ use bevy::{
 };
 use std::f32::consts::PI;
 
-use crate::{floor::Floor, EditorState, GameState, MainMenuText, Player, Wall, sound::BackgroundSong, play_background_audio};
+use crate::{
+    floor::Floor, play_background_audio, sound::BackgroundSong, EditorState, GameState,
+    MainMenuText, Player, Wall,
+};
 
 #[derive(Default)]
 pub struct MouseState {
@@ -70,7 +73,11 @@ pub fn main_menu_input(
                 commands.entity(entity).despawn();
             }
 
-            play_background_audio(&mut asset_server, &mut commands, "sounds\\at_dooms_gate.ogg".to_string());
+            play_background_audio(
+                &mut asset_server,
+                &mut commands,
+                "sounds\\at_dooms_gate.ogg".to_string(),
+            );
         }
 
         if selected_id == 2 {
@@ -222,6 +229,7 @@ pub fn mouse_input(
     mut mouse_state: ResMut<MouseState>,
     mut window_query: Query<&mut Window, With<PrimaryWindow>>,
     mut query: Query<&mut Player>,
+    game_state: Res<State<GameState>>,
     asset_server: Res<AssetServer>,
     commands: Commands,
 ) {
@@ -247,8 +255,10 @@ pub fn mouse_input(
         let window = window_query.single_mut();
         let _window_pos = window.cursor_position().unwrap();
 
-        // plays shotgun sound
-        play_audio(asset_server, commands, "SHOTGUN16.ogg");
+        if game_state.get() != &GameState::InEditor {
+            // plays shotgun sound
+            play_audio(asset_server, commands, "shotgun.ogg");
+        }
     }
 
     if mouse_button_input.just_released(MouseButton::Left) {

@@ -5,9 +5,10 @@ use bevy::{
         render_asset::RenderAssetUsages,
         render_resource::PrimitiveTopology,
     },
+    sprite::MaterialMesh2dBundle,
 };
 
-use crate::{vertex::Vertex, Player};
+use crate::{vertex::Vertex, CustomMaterial, Player, SceneAssets, MAX_STRUCTURES};
 
 #[derive(Component, Clone)]
 pub struct Wall {
@@ -203,4 +204,40 @@ impl Wall {
             return (a, b, c, d);
         }
     }
+}
+
+pub fn spawn_wall(
+    commands: &mut Commands,
+    meshes: &mut ResMut<Assets<Mesh>>,
+    custom_materials: &mut ResMut<Assets<CustomMaterial>>,
+    asset_server: &Res<SceneAssets>,
+    wall: Wall,
+) {
+    commands.spawn((
+        wall.clone(),
+        MaterialMesh2dBundle {
+            mesh: meshes.add(Wall::mesh()).into(),
+            material: custom_materials.add(CustomMaterial {
+                texture: asset_server.textures[wall.texture_id].clone(),
+                id: -1.,
+                mask: [Vec3::new(0., 0., 0.); MAX_STRUCTURES],
+                mask_len: 0,
+                a_screen: Vec3::new(0., 0., 0.),
+                b_screen: Vec3::new(0., 0., 0.),
+                c_screen: Vec3::new(0., 0., 0.),
+                a_uv: Vec2::new(0., 0.),
+                b_uv: Vec2::new(0., 0.),
+                c_uv: Vec2::new(0., 0.),
+                uv_scalar: Vec2::new(1., 1.),
+                uv_offset: Vec2::new(0., 0.),
+                uv_rotation: 0.,
+                a_position: Vec3::new(0., 0., 0.),
+                b_position: Vec3::new(0., 0., 0.),
+                c_position: Vec3::new(0., 0., 0.),
+                pitch: 0.0,
+                selected: 0,
+            }),
+            ..Default::default()
+        },
+    ));
 }
