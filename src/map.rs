@@ -7,9 +7,19 @@ use std::{
     path::Path,
 };
 
+use std::collections::HashMap;
+use std::time::Duration;
+
 use crate::{
     floor::Floor, render::MAX_STRUCTURES, vertex::Vertex, CustomMaterial, Player, SceneAssets, Wall,
+    enemy::Enemy, movement::{Acceleration, MovingObjectBundle, Velocity}
 };
+use crate::collision_detection::Collider;
+use crate::enemy::{ActionState, EnemyState};
+use crate::player::PLAYER_HIT_RADIUS;
+use crate::sprites::SpriteComponent;
+use crate::timer::{ShootingTimer, WalkTimer};
+
 
 #[derive(Component, Clone)]
 pub struct Map {
@@ -19,7 +29,12 @@ pub struct Map {
     pub player: Player,
     pub walls: Vec<Wall>,
     pub floors: Vec<Floor>,
+    pub enemies: Vec<Enemy>,
+
 }
+
+#[derive(Component)]
+pub struct PlayerComponent;
 
 impl Map {
     fn new() -> Self {
@@ -29,6 +44,7 @@ impl Map {
         let player = Player::new(0., 0., 0., 0., 0.);
         let walls = Vec::new();
         let floors = Vec::new();
+        let enemies = Vec::new();
         Self {
             filename,
             selected_id,
@@ -36,6 +52,7 @@ impl Map {
             player,
             walls,
             floors,
+            enemies,
         }
     }
 
@@ -44,12 +61,16 @@ impl Map {
         commands: &mut Commands,
         meshes: &mut ResMut<Assets<Mesh>>,
         custom_materials: &mut ResMut<Assets<CustomMaterial>>,
-        asset_server: &mut Res<SceneAssets>,
+        scene_assets: &mut Res<SceneAssets>,
         window_query: &mut Query<&mut Window, With<PrimaryWindow>>,
     ) {
         let _window = window_query.single_mut();
 
-        commands.spawn(self.player.clone());
+        commands.spawn((
+            self.player.clone(),
+            PlayerComponent,
+            Collider::new(PLAYER_HIT_RADIUS),
+        ));
 
         for wall in &self.walls {
             commands.spawn((
@@ -57,7 +78,7 @@ impl Map {
                 MaterialMesh2dBundle {
                     mesh: meshes.add(Wall::mesh()).into(),
                     material: custom_materials.add(CustomMaterial {
-                        texture: asset_server.textures[wall.texture_id].clone(),
+                        texture: scene_assets.textures[wall.texture_id].clone(),
                         id: -1.,
                         mask: [Vec3::new(0., 0., 0.); MAX_STRUCTURES],
                         mask_len: 0,
@@ -87,7 +108,7 @@ impl Map {
                 MaterialMesh2dBundle {
                     mesh: meshes.add(Floor::mesh()).into(),
                     material: custom_materials.add(CustomMaterial {
-                        texture: asset_server.textures[floor.texture_id].clone(),
+                        texture: scene_assets.textures[floor.texture_id].clone(),
                         id: -1.,
                         mask: [Vec3::new(0., 0., 0.); MAX_STRUCTURES],
                         mask_len: 0,
@@ -108,6 +129,31 @@ impl Map {
                     }),
                     ..Default::default()
                 },
+            ));
+        }
+
+        // Spawn enemies
+        for enemy in &self.enemies {
+            commands.spawn((
+                MovingObjectBundle {
+                    velocity: Velocity::new(Vec3::ZERO),
+                    acceleration: Acceleration::new(Vec3::ZERO),
+                    sprite: SpriteBundle {
+                        texture: scene_assets.enemy.clone(),
+                        transform: Transform::from_translation(enemy.position),
+                        ..default()
+                    },
+                }, SpriteComponent {
+                    position: enemy.position,
+                    health: 100.,
+                }, ShootingTimer {
+                    // create the non-repeating fuse timer
+                    timer: Timer::new(Duration::from_secs(5), TimerMode::Repeating),
+                }, EnemyState {
+                    state: ActionState::Dormant,
+                }, WalkTimer {
+                    timer: Timer::new(Duration::from_secs(0), TimerMode::Once),
+                }, Collider::new(5.),
             ));
         }
     }
@@ -196,7 +242,7 @@ impl Map {
     }
 }
 
-pub fn load_from_file(filename: &str) -> Option<Map> {
+pub fn load_from_file(filename: &str, enemy_types: &HashMap<String, Enemy>) -> Option<Map> {
     let mut map = Map::new();
     map.filename = filename.to_string();
 
@@ -248,6 +294,22 @@ pub fn load_from_file(filename: &str) -> Option<Map> {
             data[16] as usize,
         );
         map.floors.push(floor);
+    }
+
+    // Enemies
+    for _ in 0..read_integer(&mut reader) {
+        let data = read_vector(&mut reader);
+
+        // Convert to enemy_type
+        let enemy_type = match data[0] as i32 {
+            0 => "enemy_a",
+            _ => "enemy_a"
+        };
+
+        let mut enemy = enemy_types.get(enemy_type).unwrap().clone();
+        enemy.update_position(Vec3::new(data[1], data[2], data[3]));
+
+        map.enemies.push(enemy.clone());
     }
 
     Some(map)

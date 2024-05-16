@@ -11,6 +11,12 @@ mod skybox;
 mod sound;
 mod vertex;
 mod wall;
+mod enemy;
+mod movement;
+mod sprites;
+mod timer;
+mod utility;
+
 
 use bevy::{
     core::FrameCount,
@@ -36,6 +42,9 @@ use crate::{
     sound::play_background_audio,
     wall::Wall,
 };
+use crate::collision_detection::CollisionDetectionPlugin;
+use crate::enemy::EnemyPlugin;
+use crate::movement::MovementPlugin;
 
 #[derive(States, Debug, Clone, PartialEq, Eq, Hash)]
 enum GameState {
@@ -73,6 +82,7 @@ fn main() {
             press_coords: Vec::new(),
         })
         .add_plugins(AssetLoaderPlugin)
+        .add_plugins(MovementPlugin)
         .add_plugins((DefaultPlugins
             .set(WindowPlugin {
                 primary_window: Some(Window {
@@ -91,6 +101,8 @@ fn main() {
         .add_plugins(Material2dPlugin::<CustomMaterial>::default())
         .add_plugins(Material2dPlugin::<CubeMapMaterial>::default())
         .add_plugins(EguiPlugin)
+        .add_plugins(EnemyPlugin)
+        .add_plugins(CollisionDetectionPlugin)
         .add_systems(PreStartup, load_assets)
         .add_systems(Startup, setup)
         .add_systems(Update, change_title)
@@ -140,10 +152,10 @@ fn setup(
     mut custom_materials: ResMut<Assets<CustomMaterial>>,
     mut cubemaps: ResMut<Assets<CubeMapMaterial>>,
     mut asset_server: Res<AssetServer>,
-    mut scene_asset_server: Res<SceneAssets>,
+    mut scene_assets: Res<SceneAssets>,
     mut window_query: Query<&mut Window, With<PrimaryWindow>>,
 ) {
-    let map = load_from_file("map.txt").expect("Error: could not open map");
+    let map = load_from_file("map.txt", &scene_assets.enemy_types).expect("Error: could not open map");
 
     commands.spawn(Camera2dBundle {
         transform: Transform::from_xyz(map.camera[0], map.camera[1], map.camera[2]).looking_at(
@@ -157,7 +169,7 @@ fn setup(
         &mut commands,
         &mut meshes,
         &mut custom_materials,
-        &mut scene_asset_server,
+        &mut scene_assets,
         &mut window_query,
     );
 
@@ -177,7 +189,7 @@ fn setup(
         RenderItem::new_with_id(0),
         MaterialMesh2dBundle {
             mesh: meshes.add(RenderItem::new_mesh()).into(),
-            material: materials.add(scene_asset_server.hud[0].clone()),
+            material: materials.add(scene_assets.hud[0].clone()),
             transform: Transform::from_xyz(0.0, 0.0, -10.0),
             ..default()
         },
@@ -291,7 +303,7 @@ fn setup(
         RenderItem::new_with_id(1),
         MaterialMesh2dBundle {
             mesh: meshes.add(RenderItem::new_mesh()).into(),
-            material: materials.add(scene_asset_server.hud[1].clone()),
+            material: materials.add(scene_assets.hud[1].clone()),
             transform: Transform::from_xyz(0.0, 0.0, 10.0),
             ..default()
         },
@@ -301,12 +313,12 @@ fn setup(
     commands.spawn((MaterialMesh2dBundle {
         mesh: meshes.add(RenderItem::new_mesh()).into(),
         material: cubemaps.add(CubeMapMaterial {
-            px: scene_asset_server.cubemaps[0].clone(),
-            nx: scene_asset_server.cubemaps[1].clone(),
-            py: scene_asset_server.cubemaps[2].clone(),
-            ny: scene_asset_server.cubemaps[3].clone(),
-            pz: scene_asset_server.cubemaps[4].clone(),
-            nz: scene_asset_server.cubemaps[5].clone(),
+            px: scene_assets.cubemaps[0].clone(),
+            nx: scene_assets.cubemaps[1].clone(),
+            py: scene_assets.cubemaps[2].clone(),
+            ny: scene_assets.cubemaps[3].clone(),
+            pz: scene_assets.cubemaps[4].clone(),
+            nz: scene_assets.cubemaps[5].clone(),
             window_width: 0.,
             window_height: 0.,
             direction: Vec3::new(0., 0., -1.),

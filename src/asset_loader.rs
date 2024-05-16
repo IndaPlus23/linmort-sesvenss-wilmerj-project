@@ -2,16 +2,22 @@ use bevy::prelude::*;
 use std::{
     fs,
     path::{Path, PathBuf},
+    collections::HashMap,
 };
+use serde_json;
+use serde::{Deserialize, Serialize};
+use crate::enemy::Enemy;
 
 /// SceneAssets stores handles for assets used in the scene.
 #[derive(Resource, Debug, Default)]
 pub struct SceneAssets {
-    pub enemy: Handle<Scene>,
+    pub enemy: Handle<Image>,
     pub hud: Vec<Handle<Image>>,
     pub cubemaps: Vec<Handle<Image>>,
+    pub enemy_types: HashMap<String, Enemy>,
     pub textures: Vec<Handle<Image>>,
     pub texture_paths: Vec<String>,
+    pub projectile: Handle<Image>,
 }
 
 pub struct AssetLoaderPlugin;
@@ -31,7 +37,6 @@ pub fn load_assets(mut scene_assets: ResMut<SceneAssets>, mut asset_server: Res<
     let texture_paths = texture_paths("assets\\textures\\flats\\");
 
     *scene_assets = SceneAssets {
-        enemy: asset_server.load(""),
         hud: load_textures_from_folder(
             hud_paths.clone(),
             &mut asset_server,
@@ -47,11 +52,30 @@ pub fn load_assets(mut scene_assets: ResMut<SceneAssets>, mut asset_server: Res<
             &mut asset_server,
             "textures/flats/".to_string(),
         ),
-        texture_paths: texture_paths,
+        enemy: asset_server.load(Path::new("sprites/enemy.png")),
+        projectile: asset_server.load(Path::new("sprites/projectile.png")),
+        enemy_types: load_enemy_types(),
+        texture_paths,
     }
 }
 
-/// Loads folder of textures and upgrades into handle of image.
+/// Loads folder of textures and upgrades into handle of image
+fn load_sprite_sheet(
+    asset_server: Res<AssetServer>,
+    mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
+    tile_size: Vec2,
+    columns: usize,
+    rows: usize,
+    padding: Option<Vec2>,
+    offset: Option<Vec2>,
+    file_name: String,
+) -> Handle<TextureAtlasLayout> {
+    let texture: Handle<Image> = asset_server.load("spritesheet.png");
+    let layout = TextureAtlasLayout::from_grid(tile_size, columns, rows, None, None);
+    texture_atlas_layouts.add(layout)
+}
+
+/// Loads folder of textures and upgrades into handle of image
 fn load_textures_from_folder(
     texture_paths: Vec<String>,
     asset_server: &mut Res<AssetServer>,
@@ -118,4 +142,43 @@ fn visit_folder(folder_path: &Path, relative_path: PathBuf, paths: &mut Vec<Stri
         // Handle read_dir error
         println!("Failed to read directory: {:?}", folder_path);
     }
+}
+
+/// sprite_sheet_states is an array holding tuples which hold the index of a beginning and end tile for a certain animation.
+/// The order of animations are dormant:attack:dead.
+#[derive(Serialize, Deserialize)]
+struct EnemyJSON {
+    state: String,
+    reaction_speed: usize,
+    speed: usize,
+    hp: usize,
+    attack: usize,
+    range: usize,
+    respawn_time: Option<usize>, // Using Option to handle boolean/None scenario
+    projectile_speed: usize,
+    texture_name: Option<String>, // Optional because not all enemies might have it
+    sprite_sheet: Option<String>, // Optional for different key names in JSON
+    columns: usize,
+    rows: usize,
+}
+
+fn load_enemy_types() -> HashMap<String, Enemy> {
+    let data = fs::read_to_string("./assets/enemies/enemies.json").expect("Unable to read file");
+    let enemy_datas: HashMap<String, EnemyJSON> = serde_json::from_str(&data).expect("JSON was incorrectly formatted");
+
+    let mut enemies: HashMap<String, Enemy> = Default::default();
+
+    for (id, enemy) in enemy_datas {
+        enemies.insert(id, Enemy::new(
+            enemy.reaction_speed,
+            enemy.speed,
+            enemy.hp,
+            enemy.attack,
+            enemy.range,
+            enemy.respawn_time,
+            enemy.projectile_speed,
+        ));
+    }
+
+    enemies
 }

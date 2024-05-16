@@ -12,8 +12,14 @@ use bevy::{
     },
     sprite::{Material2d, MaterialMesh2dBundle, Mesh2dHandle},
 };
+use core::f32::consts::PI;
+use nalgebra::{Rotation3, Unit, Vector3};
+
+use crate::{enemy::{Enemy}, sprites::SpriteComponent};
+use crate::movement::{Acceleration, MovingObjectBundle, Velocity};
 
 pub const MAX_STRUCTURES: usize = 1000;
+const SCALING_FACTOR: f32 = 0.01;
 
 #[derive(Component, Asset, TypePath, AsBindGroup, Debug, Clone)]
 pub struct CustomMaterial {
@@ -63,8 +69,9 @@ impl Material2d for CustomMaterial {
 }
 
 pub fn render(
+    mut commands: Commands,
     game_state: Res<State<GameState>>,
-    asset_server: Res<SceneAssets>,
+    scene_assets: Res<SceneAssets>,
     mut player_query: Query<&Player>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut custom_materials: ResMut<Assets<CustomMaterial>>,
@@ -86,6 +93,14 @@ pub fn render(
         ),
         Without<Wall>,
     >,
+    mut enemy_query: Query<(
+        &mut SpriteComponent,
+        &mut Transform,
+    ), (
+        Without<Wall>,
+        Without<Floor>
+    )>,
+    mut gizmos: Gizmos,
 ) {
     for player in player_query.iter_mut() {
         let mut selected_id = 1000000000000;
@@ -175,7 +190,7 @@ pub fn render(
             material.uv_scalar = wall.uv_scalar;
             material.uv_offset = wall.uv_offset;
             material.uv_rotation = wall.uv_rotation;
-            material.texture = asset_server.textures[wall.texture_id].clone();
+            material.texture = scene_assets.textures[wall.texture_id].clone();
             material.a_position = a.position;
             material.b_position = b.position;
             material.c_position = c.position;
@@ -251,7 +266,7 @@ pub fn render(
             material.uv_scalar = floor.uv_scalar;
             material.uv_offset = floor.uv_offset;
             material.uv_rotation = floor.uv_rotation;
-            material.texture = asset_server.textures[floor.texture_id].clone();
+            material.texture = scene_assets.textures[floor.texture_id].clone();
             material.a_position = a.position;
             material.b_position = b.position;
             material.c_position = c.position;
@@ -287,7 +302,30 @@ pub fn render(
                 );
             }
         }
+
+        // Sprites
+        for (sprite, mut transform) in enemy_query.iter_mut() {
+
+            let transformed_pos = Enemy::transform(sprite.position, player);
+            let scaling = scale_by_distance_linear(-transformed_pos.z, SCALING_FACTOR);
+
+            // Do not render if position is behind player
+            if transformed_pos.z > 0. {
+                transform.translation = Vec3::new(10000000.0, 10000000.0, -100.0)
+            } else {
+                let screen_pos = Enemy::screen(transformed_pos);
+                transform.translation = Vec3::new(screen_pos.x, screen_pos.y, 10.0);
+                transform.scale = Vec3::new(scaling, scaling, scaling);
+            }
+        }
     }
+}
+
+/// Returns a scale multiplier for a sprite based on its distance from the camera.
+/// `distance`: the distance of the sprite from the camera.
+/// `max_distance`: the maximum distance at which the sprite is still visible, beyond which it won't scale further.
+fn scale_by_distance_linear(distance: f32, scaling_factor: f32) -> f32 {
+    1.0 / (distance * scaling_factor)
 }
 
 #[derive(Component, Clone)]
@@ -303,7 +341,7 @@ impl MapFloor {
         let scale = 1.0;
         let x_offset = 0.0;
         let y_offset = 0.0;
-        Self {
+        Self { 
             id,
             scale,
             x_offset,

@@ -11,6 +11,11 @@ use crate::{
     floor::Floor, play_background_audio, sound::BackgroundSong, EditorState, GameState,
     MainMenuText, Player, Wall,
 };
+use crate::asset_loader::SceneAssets;
+use crate::enemy::create_projectile;
+use crate::player::{PLAYER_HIT_RADIUS, PLAYER_PROJECTILE_SPEED};
+use crate::utility::normalize;
+
 
 #[derive(Default)]
 pub struct MouseState {
@@ -223,6 +228,8 @@ pub fn keyboard_input(
 }
 
 pub fn mouse_input(
+    mut commands: Commands,
+    mut scene_assets: Res<SceneAssets>,
     mut mouse_motion_events: EventReader<MouseMotion>,
     mouse_button_input: Res<ButtonInput<MouseButton>>,
     mut mouse_state: ResMut<MouseState>,
@@ -230,7 +237,6 @@ pub fn mouse_input(
     mut query: Query<&mut Player>,
     game_state: Res<State<GameState>>,
     asset_server: Res<AssetServer>,
-    commands: Commands,
 ) {
     for event in mouse_motion_events.read() {
         let primary_window = window_query.single_mut();
@@ -250,6 +256,21 @@ pub fn mouse_input(
 
     if mouse_button_input.just_pressed(MouseButton::Left) {
         mouse_state.press_coords.clear();
+
+        // Shoot projectile
+        for player in query.iter_mut() {
+            let position = Vec3::new(player.x, player.y, player.z);
+            let direction = normalize(player.forward_vector());
+
+            create_projectile(
+                &mut commands,
+                scene_assets.projectile.clone(),
+                position,
+                direction,
+                PLAYER_HIT_RADIUS + 10.,
+                PLAYER_PROJECTILE_SPEED,
+            )
+        }
 
         let window = window_query.single_mut();
         let _window_pos = window.cursor_position().unwrap();
