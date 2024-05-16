@@ -163,7 +163,7 @@ pub fn floor_collision(
             if movement[1] != 0. {
                 movement[1] = 0.;
             }
-            player.y = calc_y(floor.a.position, floor.b.position, floor.c.position, player.x, player.z) + player.height + 1.5;
+            player.y = y + player.height + 1.5;
         } 
     }
 }
