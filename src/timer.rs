@@ -12,6 +12,6 @@ pub struct WalkTimer {
 }
 
 #[derive(Component, Deref, DerefMut)]
-pub struct AnimationTimer(Timer);
+pub struct AnimationTimer(pub Timer);
 
 

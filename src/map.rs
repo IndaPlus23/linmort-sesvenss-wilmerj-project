@@ -14,11 +14,13 @@ use crate::{
     floor::Floor, render::MAX_STRUCTURES, vertex::Vertex, CustomMaterial, Player, SceneAssets, Wall,
     enemy::Enemy, movement::{Acceleration, MovingObjectBundle, Velocity}
 };
+use crate::animate::{AnimationComponent, AnimationIndices};
 use crate::collision_detection::Collider;
 use crate::enemy::{ActionState, EnemyState};
+use crate::movement::MovingObjectSpriteSheetBundle;
 use crate::player::PLAYER_HIT_RADIUS;
 use crate::sprites::SpriteComponent;
-use crate::timer::{ShootingTimer, WalkTimer};
+use crate::timer::{AnimationTimer, ShootingTimer, WalkTimer};
 
 
 #[derive(Component, Clone)]
@@ -135,12 +137,16 @@ impl Map {
         // Spawn enemies
         for enemy in &self.enemies {
             commands.spawn((
-                MovingObjectBundle {
+                MovingObjectSpriteSheetBundle {
                     velocity: Velocity::new(Vec3::ZERO),
                     acceleration: Acceleration::new(Vec3::ZERO),
-                    sprite: SpriteBundle {
-                        texture: scene_assets.enemy.clone(),
-                        transform: Transform::from_translation(enemy.position),
+                    sprite: SpriteSheetBundle {
+                        texture: scene_assets.enemy_a_spritesheet.clone(),
+                        atlas: TextureAtlas {
+                            layout: scene_assets.enemy_a_spritelayout.clone(),
+                            index: 0,
+                        },
+                        transform: Transform::from_translation(Vec3::new(100000.,100000.,100000.)),
                         ..default()
                     },
                 }, SpriteComponent {
@@ -154,6 +160,13 @@ impl Map {
                 }, WalkTimer {
                     timer: Timer::new(Duration::from_secs(0), TimerMode::Once),
                 }, Collider::new(5.),
+                AnimationComponent {
+                    dormant: AnimationIndices{first: 0, last: 4},
+                    attack: AnimationIndices{first: 5, last: 9},
+                    dying: AnimationIndices{first: 10, last: 14},
+                    dead: AnimationIndices{first: 14, last: 14},
+                },
+                AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
             ));
         }
     }

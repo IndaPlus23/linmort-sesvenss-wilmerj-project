@@ -23,6 +23,7 @@ pub const ENEMY_PROJECTILE_RADIUS: f32 = 11.;
 pub enum ActionState {
     Dormant,
     Attacking,
+    Dying,
     Dead,
 }
 
@@ -187,7 +188,6 @@ fn act(
     }
 }
 
-// TODO: Detect collisions correctly
 fn handle_projectile_collisions(
     mut commands: Commands,
     query: Query<(Entity, &Collider), With<ProjectileComponent>>
@@ -195,12 +195,11 @@ fn handle_projectile_collisions(
     for (entity, collider) in query.iter() {
         for &collided_entity in collider.colliding_entities.iter() {
 
-            // TODO: Projectile collides with enemy once spawning
             if query.get(collided_entity).is_ok() {
                 continue;
             }
 
-            commands.entity(collided_entity).despawn_recursive();
+            commands.entity(collided_entity).despawn();
         }
     }
 }

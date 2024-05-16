@@ -17,6 +17,8 @@ pub struct SceneAssets {
     pub enemy_types: HashMap<String, Enemy>,
     pub textures: Vec<Handle<Image>>,
     pub texture_paths: Vec<String>,
+    pub enemy_a_spritelayout: Handle<TextureAtlasLayout>,
+    pub enemy_a_spritesheet: Handle<Image>,
     pub projectile: Handle<Image>,
 }
 
@@ -31,7 +33,11 @@ impl Plugin for AssetLoaderPlugin {
 
 /// Loads assets from asset folder and populates AssetScene, making them available
 /// for usage without having multiple handles reference various copies of the same asset.
-pub fn load_assets(mut scene_assets: ResMut<SceneAssets>, mut asset_server: Res<AssetServer>) {
+pub fn load_assets(
+    mut scene_assets: ResMut<SceneAssets>,
+    mut asset_server: Res<AssetServer>,
+    mut texture_atlas_layout: ResMut<Assets<TextureAtlasLayout>>
+) {
     let hud_paths = texture_paths("assets\\textures\\hud\\");
     let cubemap_paths = texture_paths("assets\\textures\\cubemap\\");
     let texture_paths = texture_paths("assets\\textures\\flats\\");
@@ -54,13 +60,24 @@ pub fn load_assets(mut scene_assets: ResMut<SceneAssets>, mut asset_server: Res<
         ),
         enemy: asset_server.load(Path::new("sprites/enemy.png")),
         projectile: asset_server.load(Path::new("sprites/projectile.png")),
+        enemy_a_spritesheet: asset_server.load(Path::new("spritesheets/spritesheet.png")),
+        enemy_a_spritelayout: load_sprite_sheet_layout(
+            asset_server,
+            texture_atlas_layout,
+            Vec2::new(116.8, 114.3),
+            5,
+            3,
+            None,
+            None,
+            "spritesheet.png",
+        ),
         enemy_types: load_enemy_types(),
         texture_paths,
     }
 }
 
 /// Loads folder of textures and upgrades into handle of image
-fn load_sprite_sheet(
+fn load_sprite_sheet_layout(
     asset_server: Res<AssetServer>,
     mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
     tile_size: Vec2,
@@ -68,9 +85,11 @@ fn load_sprite_sheet(
     rows: usize,
     padding: Option<Vec2>,
     offset: Option<Vec2>,
-    file_name: String,
+    file_name: &str,
 ) -> Handle<TextureAtlasLayout> {
-    let texture: Handle<Image> = asset_server.load("spritesheet.png");
+    // let base_path = Path::new("spritesheets");
+    // let full_path = base_path.join(file_name);
+    // let texture: Handle<Image> = asset_server.load(full_path);
     let layout = TextureAtlasLayout::from_grid(tile_size, columns, rows, None, None);
     texture_atlas_layouts.add(layout)
 }

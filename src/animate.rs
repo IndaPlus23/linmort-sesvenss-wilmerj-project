@@ -7,31 +7,22 @@ use crate::timer::AnimationTimer;
 
 
 #[derive(Component)]
-struct AnimationIndices {
-    first: usize,
-    last: usize,
+pub struct AnimationIndices {
+    pub(crate) first: usize,
+    pub(crate) last: usize,
 }
 
 #[derive(Component)]
-struct AnimationComponent {
-    dormant: AnimationIndices,
-    attack: AnimationIndices,
-    dead: AnimationIndices,
+pub struct AnimationComponent {
+    pub dormant: AnimationIndices,
+    pub attack: AnimationIndices,
+    pub dying: AnimationIndices,
+    pub dead: AnimationIndices,
 }
 
-impl AnimationComponent {
-    pub fn new(dormant: usize, attack: usize, dead: usize) -> Self {
-        Self {
-            dormant: AnimationIndices {first: 0, last: dormant},
-            attack: AnimationIndices {first: dormant + 1, last: attack},
-            dead: AnimationIndices {first: attack + 1, last: dead},
-        }
-    }
-}
+pub struct AnimatePlugin;
 
-struct AnimationPlugin;
-
-impl Plugin for AnimationPlugin {
+impl Plugin for AnimatePlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Update, animate);
     }
@@ -46,11 +37,12 @@ fn animate(
         &mut TextureAtlas
     )>,
 ) {
-    for (animation_component, state, mut timer, mut atlas) in &mut query {
+    for (animation_component, state, mut timer, mut atlas) in &mut query.iter_mut() {
 
         let indices: &AnimationIndices = match state.state {
             ActionState::Dormant => { &animation_component.dormant },
             ActionState::Attacking => { &animation_component.attack },
+            ActionState::Dying => { &animation_component.dying }
             ActionState::Dead => { &animation_component.dead }
         };
 

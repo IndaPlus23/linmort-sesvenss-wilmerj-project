@@ -43,6 +43,7 @@ use crate::{
     sound::play_background_audio,
     wall::Wall,
 };
+use crate::animate::AnimatePlugin;
 use crate::collision_detection::CollisionDetectionPlugin;
 use crate::enemy::EnemyPlugin;
 use crate::movement::MovementPlugin;
@@ -82,6 +83,7 @@ fn main() {
         })
         .add_plugins(AssetLoaderPlugin)
         .add_plugins(MovementPlugin)
+        .add_plugins(AnimatePlugin)
         .add_plugins((DefaultPlugins
             .set(WindowPlugin {
                 primary_window: Some(Window {
