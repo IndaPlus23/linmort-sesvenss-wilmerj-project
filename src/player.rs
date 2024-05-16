@@ -7,6 +7,7 @@ pub struct Player {
     pub z: f32,
     pub yaw: f32,
     pub pitch: f32,
+    pub health: i32
 }
 
 impl Player {
@@ -17,6 +18,11 @@ impl Player {
             z,
             yaw,
             pitch,
+            health: 100,
         }
+    }
+
+    pub fn update_health(&mut self, amount: i32) {
+        self.health += amount;
     }
 }

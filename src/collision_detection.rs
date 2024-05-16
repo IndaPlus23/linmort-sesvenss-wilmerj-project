@@ -28,7 +28,7 @@ impl Plugin for CollisionDetectionPlugin {
 fn collision_detection(
     mut commands: Commands,
     mut query: Query<(Entity, &SpriteComponent, &mut Collider)>,
-    mut player_query: Query<(Entity, &Player, &mut Collider), Without<SpriteComponent>>
+    mut player_query: Query<(Entity, &mut Player, &mut Collider), Without<SpriteComponent>>
 ) {
     let mut colliding_entities: HashMap<Entity, Vec<Entity>> = HashMap::new();
 
@@ -36,10 +36,11 @@ fn collision_detection(
     for (entity_a, transform_a, collider_a) in query.iter() {
 
         // Detect player collision (WORKAROUND since player is not a SpriteComponent and time is running out)
-        for (player_entity, player, collider_player) in player_query.iter() {
+        for (player_entity, mut player, collider_player) in player_query.iter_mut() {
             let distance = transform_a.position.distance(Vec3::new(player.x, player.y, player.z));
 
             if distance < collider_a.radius + collider_player.radius {
+                player.update_health(-10);
                 commands.entity(entity_a).despawn_recursive();
                 // TODO: Update player health and signal damage taken
             }
