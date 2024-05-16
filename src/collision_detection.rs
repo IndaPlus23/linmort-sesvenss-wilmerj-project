@@ -131,7 +131,7 @@ pub fn floor_collision(
     movement: &mut bevy::prelude::Vec3,
     player: &mut bevy::prelude::Mut<'_, Player>,
 ) {
-    let padding = 1.5;
+    let padding = 1.;
 
     let position_x = player.x + movement.x;
     let position_z = player.z + movement.z;
@@ -150,14 +150,21 @@ pub fn floor_collision(
         // CHECK IF PLAYER HITS FLOOR IN y DIRECTION
         // ASUMES THAT ALL y VALUES ARE THE SAME AND THAT THE TRIANGLE IS ALWAYS FLAT
         let position_y = player.y + movement.y - player.height;
-        let wall_start_y = floor.a.position.y - padding;
-        let wall_end_y = floor.a.position.y + padding;
+        let y = calc_y(floor.a.position, floor.b.position, floor.c.position, player.x, player.z);
+        let wall_start_y = y - padding;
+        let wall_end_y = y + padding;
+
 
         if wall_start_y < position_y && position_y < wall_end_y {
             if movement[1] != 0. {
                 movement[1] = 0.;
             }
-        }
+        } else if wall_start_y - 1. < position_y && position_y < wall_start_y {
+            if movement[1] != 0. {
+                movement[1] = 0.;
+            }
+            player.y = calc_y(floor.a.position, floor.b.position, floor.c.position, player.x, player.z) + player.height + 1.5;
+        } 
     }
 }
 
@@ -199,4 +206,15 @@ fn is_inside_triangle(
 (x2, y2) and (x3, y3) */
 fn area(x1: f32, y1: f32, x2: f32, y2: f32, x3: f32, y3: f32) -> f32 {
     return ((x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2)) / 2.0).abs();
+}
+// https://stackoverflow.com/questions/5507762/how-to-find-z-by-arbitrary-x-y-coordinates-within-triangle-if-you-have-triangle
+
+fn calc_y(p1: Vec3, p2: Vec3, p3: Vec3, x: f32, z: f32) -> f32 {
+    let det = (p2.z - p3.z) * (p1.x - p3.x) + (p3.x - p2.x) * (p1.z - p3.z);
+
+    let l1 = ((p2.z - p3.z) * (x - p3.x) + (p3.x - p2.x) * (z - p3.z)) / det;
+    let l2 = ((p3.z - p1.z) * (x - p3.x) + (p1.x - p3.x) * (z - p3.z)) / det;
+    let l3 = 1.0 - l1 - l2;
+
+    return l1 * p1.y + l2 * p2.y + l3 * p3.y;
 }
