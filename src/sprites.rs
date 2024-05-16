@@ -1,8 +1,8 @@
-use bevy::prelude::*;
 use crate::asset_loader::SceneAssets;
 use crate::enemy::ActionState;
 use crate::movement::{Acceleration, MovingObjectBundle, Velocity};
 use crate::player::Player;
+use bevy::prelude::*;
 
 #[derive(Component)]
 struct AnimationIndices {
@@ -52,11 +52,7 @@ impl Sprite {
     // }
 
     // Transforms the sprite's position based on the player's position and orientation
-    pub fn transform(
-        &self,
-        player: &Player
-    ) -> Vec2 {
-
+    pub fn transform(&self, player: &Player) -> Vec2 {
         // This code comes from transform_vertice
         let mut x = self.position.x;
         let mut y = self.position.y;
@@ -85,7 +81,7 @@ impl Sprite {
             // TODO: Might have to deal with scaling issues. Something like self.scale = screen/z
 
             self.screen()
-        }
+        };
     }
 
     fn screen(&self) -> Vec2 {

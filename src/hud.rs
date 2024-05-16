@@ -9,14 +9,27 @@ use bevy::{
     window::PrimaryWindow,
 };
 
+use crate::Player;
+
 #[derive(Component, Clone)]
 pub struct RenderItem {
     pub id: usize,
+    pub main_menu_exclusive: bool,
 }
 
 impl RenderItem {
     pub fn new_with_id(id: usize) -> Self {
-        Self { id }
+        Self {
+            id,
+            main_menu_exclusive: false,
+        }
+    }
+
+    pub fn new_main_menu_with_id(id: usize) -> Self {
+        Self {
+            id,
+            main_menu_exclusive: true,
+        }
     }
 
     pub fn new_mesh() -> Mesh {
@@ -63,42 +76,51 @@ impl MainMenuText {
     }
 }
 
-pub fn render_hud(
+pub fn render_game_hud(
     mut window: Query<&mut Window, With<PrimaryWindow>>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut hud_query: Query<(&mut RenderItem, &mut Mesh2dHandle)>,
 ) {
     let primary_window = window.single_mut();
 
-    for (_, mesh2dhandle) in hud_query.iter_mut() {
+    for (item, mesh2dhandle) in hud_query.iter_mut() {
         let mesh_handle = &mesh2dhandle.0;
         let mesh = meshes.get_mut(mesh_handle).unwrap();
         if let Some(_) = mesh.attribute_mut(Mesh::ATTRIBUTE_POSITION) {
-            mesh.insert_attribute(
-                Mesh::ATTRIBUTE_POSITION,
-                vec![
-                    [
-                        -primary_window.width() / 2.,
-                        -primary_window.height() / 2. + 100.,
-                        0.0,
+            if item.main_menu_exclusive {
+                mesh.insert_attribute(
+                    Mesh::ATTRIBUTE_POSITION,
+                    vec![[0., 0., 0.], [0., 0., 0.], [0., 0., 0.], [0., 0., 0.]],
+                );
+            } else {
+                let scale = primary_window.width() / (64. * 2.) / 10.;
+
+                mesh.insert_attribute(
+                    Mesh::ATTRIBUTE_POSITION,
+                    vec![
+                        [
+                            -primary_window.width() / 2.,
+                            -primary_window.height() / 2. + (64. * 2.) * scale,
+                            0.0,
+                        ],
+                        [
+                            primary_window.width() / 2.,
+                            -primary_window.height() / 2. + (64. * 2.) * scale,
+                            0.0,
+                        ],
+                        [
+                            primary_window.width() / 2.,
+                            -primary_window.height() / 2.,
+                            0.0,
+                        ],
+                        [
+                            -primary_window.width() / 2.,
+                            -primary_window.height() / 2.,
+                            0.0,
+                        ],
                     ],
-                    [
-                        primary_window.width() / 2.,
-                        -primary_window.height() / 2. + 100.,
-                        0.0,
-                    ],
-                    [
-                        primary_window.width() / 2.,
-                        -primary_window.height() / 2.,
-                        0.0,
-                    ],
-                    [
-                        -primary_window.width() / 2.,
-                        -primary_window.height() / 2.,
-                        0.0,
-                    ],
-                ],
-            );
+                );
+            }
         }
     }
 }
@@ -160,6 +182,70 @@ pub fn main_menu_text(
             }
         } else {
             transform.scale = Vec3::new(1.05, 1.2, 1.);
+        }
+    }
+}
+
+#[derive(Component, Clone)]
+pub struct GameScreenText {
+    pub id: usize,
+    pub shadow: bool,
+}
+
+impl GameScreenText {
+    pub fn new_with_id(id: usize, shadow: bool) -> Self {
+        Self { id, shadow }
+    }
+}
+
+pub fn game_screen_text(
+    mut player_query: Query<&Player>,
+    mut window: Query<&mut Window, With<PrimaryWindow>>,
+    mut text_query: Query<(&mut GameScreenText, &mut Text, &mut Transform)>,
+) {
+    let primary_window = window.single_mut();
+
+    for player in player_query.iter_mut() {
+        for (game_screen_text, mut text, mut transform) in text_query.iter_mut() {
+            if game_screen_text.id == 0 {
+                text.sections[0].value = player.health.to_string();
+
+                let scale1 = primary_window.width() / (640.);
+                let scale2 = primary_window.width() / (64. * 2.) / 10.;
+
+                transform.translation = Vec3::new(
+                    primary_window.width() / 2. - 57. * scale1,
+                    -primary_window.height() / 2. + 80. * scale2,
+                    100.0,
+                );
+
+                if !game_screen_text.shadow {
+                    transform.scale = Vec3::new(scale2, scale2, scale2);
+                } else {
+                    transform.translation.z = 90.;
+                    transform.scale = Vec3::new(1.05 * scale2, 1.2 * scale2, scale2);
+                }
+            }
+
+            if game_screen_text.id == 1 {
+                text.sections[0].value = player.ammo.to_string();
+
+                let scale1 = primary_window.width() / (640.);
+                let scale2 = primary_window.width() / (64. * 2.) / 10.;
+
+                transform.translation = Vec3::new(
+                    -primary_window.width() / 2. + 46. * scale1,
+                    -primary_window.height() / 2. + 80. * scale2,
+                    100.0,
+                );
+
+                if !game_screen_text.shadow {
+                    transform.scale = Vec3::new(scale2, scale2, scale2);
+                } else {
+                    transform.translation.z = 90.;
+                    transform.scale = Vec3::new(1.05 * scale2, 1.2 * scale2, scale2);
+                }
+            }
         }
     }
 }

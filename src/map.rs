@@ -10,16 +10,19 @@ use std::{
 use std::collections::HashMap;
 use std::time::Duration;
 
-use crate::{
-    floor::Floor, render::MAX_STRUCTURES, vertex::Vertex, CustomMaterial, Player, SceneAssets, Wall,
-    enemy::Enemy, movement::{Acceleration, MovingObjectBundle, Velocity}
-};
 use crate::collision_detection::Collider;
 use crate::enemy::{ActionState, EnemyState};
 use crate::player::PLAYER_HIT_RADIUS;
 use crate::sprites::SpriteComponent;
 use crate::timer::{ShootingTimer, WalkTimer};
-
+use crate::{
+    enemy::Enemy,
+    floor::Floor,
+    movement::{Acceleration, MovingObjectBundle, Velocity},
+    render::MAX_STRUCTURES,
+    vertex::Vertex,
+    CustomMaterial, Player, SceneAssets, Wall,
+};
 
 #[derive(Component, Clone)]
 pub struct Map {
@@ -30,7 +33,6 @@ pub struct Map {
     pub walls: Vec<Wall>,
     pub floors: Vec<Floor>,
     pub enemies: Vec<Enemy>,
-
 }
 
 #[derive(Component)]
@@ -143,17 +145,22 @@ impl Map {
                         transform: Transform::from_translation(enemy.position),
                         ..default()
                     },
-                }, SpriteComponent {
+                },
+                SpriteComponent {
                     position: enemy.position,
                     health: 100.,
-                }, ShootingTimer {
+                },
+                ShootingTimer {
                     // create the non-repeating fuse timer
                     timer: Timer::new(Duration::from_secs(5), TimerMode::Repeating),
-                }, EnemyState {
+                },
+                EnemyState {
                     state: ActionState::Dormant,
-                }, WalkTimer {
+                },
+                WalkTimer {
                     timer: Timer::new(Duration::from_secs(0), TimerMode::Once),
-                }, Collider::new(5.),
+                },
+                Collider::new(5.),
             ));
         }
     }
@@ -303,7 +310,7 @@ pub fn load_from_file(filename: &str, enemy_types: &HashMap<String, Enemy>) -> O
         // Convert to enemy_type
         let enemy_type = match data[0] as i32 {
             0 => "enemy_a",
-            _ => "enemy_a"
+            _ => "enemy_a",
         };
 
         let mut enemy = enemy_types.get(enemy_type).unwrap().clone();

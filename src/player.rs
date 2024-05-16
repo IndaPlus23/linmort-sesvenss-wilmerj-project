@@ -1,6 +1,6 @@
-use std::f32::consts::PI;
 use bevy::prelude::*;
 use nalgebra::{Rotation3, Unit, Vector3};
+use std::f32::consts::PI;
 
 pub const PLAYER_PROJECTILE_SPEED: f32 = 1000.;
 pub const PLAYER_HIT_RADIUS: f32 = 10.;
@@ -15,7 +15,8 @@ pub struct Player {
     pub height: f32,
     pub noclip: bool,
     pub gravity: f32,
-    pub health: i32
+    pub health: i32,
+    pub ammo: i32,
 }
 
 impl Player {
@@ -30,6 +31,7 @@ impl Player {
             noclip: true,
             gravity: 0.,
             health: 100,
+            ammo: 7,
         }
     }
 

@@ -7,15 +7,14 @@ use bevy::{
 };
 use std::f32::consts::PI;
 
-use crate::{
-    floor::Floor, play_background_audio, sound::BackgroundSong, EditorState, GameState,
-    MainMenuText, Player, Wall,
-};
 use crate::asset_loader::SceneAssets;
 use crate::enemy::create_projectile;
 use crate::player::{PLAYER_HIT_RADIUS, PLAYER_PROJECTILE_SPEED};
 use crate::utility::normalize;
-
+use crate::{
+    floor::Floor, play_background_audio, sound::BackgroundSong, EditorState, GameState,
+    MainMenuText, Player, Wall,
+};
 
 #[derive(Default)]
 pub struct MouseState {

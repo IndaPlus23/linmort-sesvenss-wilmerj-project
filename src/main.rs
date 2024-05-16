@@ -1,22 +1,21 @@
 mod asset_loader;
 mod collision_detection;
 mod egui;
+mod enemy;
 mod floor;
 mod hud;
 mod input;
 mod map;
+mod movement;
 mod player;
 mod render;
 mod skybox;
 mod sound;
-mod vertex;
-mod wall;
-mod enemy;
-mod movement;
 mod sprites;
 mod timer;
 mod utility;
-
+mod vertex;
+mod wall;
 
 use bevy::{
     core::FrameCount,
@@ -29,10 +28,15 @@ use bevy_egui::EguiPlugin;
 use render::render_grid;
 use std::f32::consts::PI;
 
+use crate::collision_detection::CollisionDetectionPlugin;
+use crate::enemy::EnemyPlugin;
+use crate::movement::MovementPlugin;
 use crate::{
     asset_loader::{load_assets, AssetLoaderPlugin, SceneAssets},
     egui::editor_ui,
-    hud::{main_menu_text, render_hud, render_main_menu, MainMenuText, RenderItem},
+    hud::{
+        main_menu_text, render_game_hud, render_main_menu, game_screen_text, GameScreenText, MainMenuText, RenderItem,
+    },
     input::{keyboard_input, lock_cursor, main_menu_input, mouse_input, MouseState},
     map::load_from_file,
     player::Player,
@@ -42,9 +46,6 @@ use crate::{
     sound::play_background_audio,
     wall::Wall,
 };
-use crate::collision_detection::CollisionDetectionPlugin;
-use crate::enemy::EnemyPlugin;
-use crate::movement::MovementPlugin;
 
 #[derive(States, Debug, Clone, PartialEq, Eq, Hash)]
 enum GameState {
@@ -122,9 +123,10 @@ fn main() {
                 mouse_input,
                 keyboard_input,
                 render,
-                render_hud,
+                render_game_hud,
                 render_skybox,
                 render_map,
+                game_screen_text,
             )
                 .in_set(GameSet),
         )
@@ -135,7 +137,7 @@ fn main() {
                 keyboard_input,
                 render,
                 render_map,
-                render_hud,
+                render_game_hud,
                 render_skybox,
                 editor_ui,
                 render_grid,
@@ -155,7 +157,8 @@ fn setup(
     mut scene_assets: Res<SceneAssets>,
     mut window_query: Query<&mut Window, With<PrimaryWindow>>,
 ) {
-    let map = load_from_file("map.txt", &scene_assets.enemy_types).expect("Error: could not open map");
+    let map =
+        load_from_file("map.txt", &scene_assets.enemy_types).expect("Error: could not open map");
 
     commands.spawn(Camera2dBundle {
         transform: Transform::from_xyz(map.camera[0], map.camera[1], map.camera[2]).looking_at(
@@ -186,7 +189,7 @@ fn setup(
 
     // Main menu
     commands.spawn((
-        RenderItem::new_with_id(0),
+        RenderItem::new_main_menu_with_id(0),
         MaterialMesh2dBundle {
             mesh: meshes.add(RenderItem::new_mesh()).into(),
             material: materials.add(scene_assets.hud[0].clone()),
@@ -294,6 +297,76 @@ fn setup(
             )
             .with_justify(JustifyText::Center),
             transform: Transform::from_xyz(0.0, -100.0, -1.0),
+            ..default()
+        },
+    ));
+
+    // Player health text
+    commands.spawn((
+        GameScreenText::new_with_id(0, false),
+        Text2dBundle {
+            text: Text::from_section(
+                "",
+                TextStyle {
+                    font: asset_server.load("fonts/DooM.ttf").clone(),
+                    font_size: 80.0,
+                    color: Color::RED,
+                },
+            )
+            .with_justify(JustifyText::Center),
+            transform: Transform::from_xyz(0.0, 0.0, 0.0),
+            ..default()
+        },
+    ));
+
+    commands.spawn((
+        GameScreenText::new_with_id(0, true),
+        Text2dBundle {
+            text: Text::from_section(
+                "",
+                TextStyle {
+                    font: asset_server.load("fonts/DooM.ttf").clone(),
+                    font_size: 80.0,
+                    color: Color::BLACK,
+                },
+            )
+            .with_justify(JustifyText::Center),
+            transform: Transform::from_xyz(0.0, 0.0, 0.0),
+            ..default()
+        },
+    ));
+
+    // Player ammo text
+    commands.spawn((
+        GameScreenText::new_with_id(1, false),
+        Text2dBundle {
+            text: Text::from_section(
+                "",
+                TextStyle {
+                    font: asset_server.load("fonts/DooM.ttf").clone(),
+                    font_size: 80.0,
+                    color: Color::RED,
+                },
+            )
+            .with_justify(JustifyText::Center),
+            transform: Transform::from_xyz(0.0, 0.0, 0.0),
+            ..default()
+        },
+    ));
+
+    commands.spawn((
+        GameScreenText::new_with_id(1, true),
+        Text2dBundle {
+            text: Text::from_section(
+                "",
+                TextStyle {
+                    font: asset_server.load("fonts/DooM.ttf").clone(),
+                    font_size: 80.0,
+                    color: Color::BLACK,
+                },
+            )
+            .with_justify(JustifyText::Center),
+            transform: Transform::from_xyz(0.0, 0.0, 0.0),
             ..default()
         },
     ));

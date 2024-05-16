@@ -1,17 +1,17 @@
-use bevy::prelude::*;
+use crate::asset_loader::SceneAssets;
 use crate::collision_detection::Collider;
 use crate::movement::{Acceleration, MovingObjectBundle, Velocity};
-use bevy::ecs::component::Component;
-use crate::asset_loader::SceneAssets;
 use crate::player::Player;
-use bevy::time::Timer;
 use crate::sprites::SpriteComponent;
 use crate::timer::{ShootingTimer, WalkTimer};
 use crate::utility::normalize;
+use crate::wall::Wall;
+use bevy::ecs::component::Component;
+use bevy::prelude::*;
+use bevy::time::Timer;
 use rand::Rng;
 use std::f32::consts::PI;
 use std::time::Duration;
-use crate::wall::Wall;
 
 const MISSILE_SPEED: f32 = 150.;
 const ENEMY_MOVEMENT_SPEED: f32 = 20.;
@@ -28,7 +28,7 @@ pub enum ActionState {
 
 #[derive(Component)]
 pub struct EnemyState {
-    pub(crate) state: ActionState
+    pub(crate) state: ActionState,
 }
 
 struct Movement {
@@ -85,11 +85,7 @@ impl Enemy {
     }
 
     // TODO: transform and screen are copies from sprite.rs which is a copy from vertex.rs
-    pub fn transform(
-        position: Vec3,
-        player: &Player
-    ) -> Vec3 {
-
+    pub fn transform(position: Vec3, player: &Player) -> Vec3 {
         // This code comes from transform_vertice
         let mut x = position.x;
         let mut y = position.y;
@@ -141,24 +137,19 @@ fn act(
         &mut WalkTimer,
     )>,
 ) {
-    for (
-        mut velocity,
-        transform,
-        state,
-        enemy,
-        mut shooting_timer,
-        mut walk_timer
-    ) in enemy_query.iter_mut() {
+    for (mut velocity, transform, state, enemy, mut shooting_timer, mut walk_timer) in
+        enemy_query.iter_mut()
+    {
         // Random walking
         walk_timer.timer.tick(time.delta());
 
         if walk_timer.timer.finished() {
             let movement = generate_random_movement();
 
-            velocity.value = Vec3::new(movement.direction.x, 0., movement.direction.y) * ENEMY_MOVEMENT_SPEED;
+            velocity.value =
+                Vec3::new(movement.direction.x, 0., movement.direction.y) * ENEMY_MOVEMENT_SPEED;
             walk_timer.timer = Timer::new(movement.duration, TimerMode::Once);
         }
-
 
         // Combat actions
         match state.state {
@@ -190,11 +181,10 @@ fn act(
 // TODO: Detect collisions correctly
 fn handle_projectile_collisions(
     mut commands: Commands,
-    query: Query<(Entity, &Collider), With<ProjectileComponent>>
+    query: Query<(Entity, &Collider), With<ProjectileComponent>>,
 ) {
     for (entity, collider) in query.iter() {
         for &collided_entity in collider.colliding_entities.iter() {
-
             // TODO: Projectile collides with enemy once spawning
             if query.get(collided_entity).is_ok() {
                 continue;
@@ -247,6 +237,8 @@ fn generate_random_movement() -> Movement {
     // Generate a random duration between 0.5 and 3.0 seconds
     let duration: Duration = Duration::from_secs(rng.gen_range(0.5..5.0) as u64);
 
-    Movement { direction, duration }
+    Movement {
+        direction,
+        duration,
+    }
 }
-

@@ -1,10 +1,10 @@
 use crate::floor::Floor;
+use crate::sprites::SpriteComponent;
 use crate::wall::Wall;
 use crate::Player;
 use bevy::prelude::*;
-use std::f32::consts::PI;
 use bevy::{prelude::*, utils::HashMap};
-use crate::sprites::SpriteComponent;
+use std::f32::consts::PI;
 
 #[derive(Component)]
 pub struct Collider {
@@ -32,19 +32,19 @@ impl Plugin for CollisionDetectionPlugin {
 fn collision_detection(
     mut commands: Commands,
     mut query: Query<(Entity, &SpriteComponent, &mut Collider)>,
-    mut player_query: Query<(Entity, &mut Player, &mut Collider), Without<SpriteComponent>>
+    mut player_query: Query<(Entity, &mut Player, &mut Collider), Without<SpriteComponent>>,
 ) {
     let mut colliding_entities: HashMap<Entity, Vec<Entity>> = HashMap::new();
 
     // First phase: Detect collisions
     for (entity_a, transform_a, collider_a) in query.iter() {
-
         // Detect player collision (WORKAROUND since player is not a SpriteComponent and time is running out)
         for (player_entity, mut player, collider_player) in player_query.iter_mut() {
-            let distance = transform_a.position.distance(Vec3::new(player.x, player.y, player.z));
+            let distance = transform_a
+                .position
+                .distance(Vec3::new(player.x, player.y, player.z));
 
             if distance < collider_a.radius + collider_player.radius {
-
                 println!("Hit player");
 
                 player.update_health(-10);
@@ -55,8 +55,7 @@ fn collision_detection(
         // Detect Sprite on sprite collision
         for (entity_b, transform_b, collider_b) in query.iter() {
             if entity_a != entity_b {
-                let distance = transform_a.position
-                    .distance(transform_b.position);
+                let distance = transform_a.position.distance(transform_b.position);
                 if distance < collider_a.radius + collider_b.radius {
                     println!("Collision");
                     colliding_entities
@@ -80,9 +79,6 @@ fn collision_detection(
         }
     }
 }
-
-
-
 
 /*
     WALL COLLISION
@@ -115,7 +111,6 @@ pub fn wall_collision(
             wall.start.position.z - wall.end.position.z,
         )
         .normalize_or_zero();
-
 
         // calculate angle between wall_vector and movement
         let angle = movement.angle_between(wall_vector);
@@ -158,22 +153,10 @@ fn check_if_wall(
     let wall_2: Vec3 = wall.end.position;
 
     // vectors from player to the walls 2 corners
-    let vec1: Vec3 = Vec3::new(
-        player_vec[0] - wall_1[0],
-        0.,
-        player_vec[2] - wall_1[2],
-    );
-    let vec2: Vec3 = Vec3::new(
-        player_vec[0] - wall_2[0],
-        0.,
-        player_vec[2] - wall_2[2],
-    );
+    let vec1: Vec3 = Vec3::new(player_vec[0] - wall_1[0], 0., player_vec[2] - wall_1[2]);
+    let vec2: Vec3 = Vec3::new(player_vec[0] - wall_2[0], 0., player_vec[2] - wall_2[2]);
     // wall vector
-    let vec3: Vec3 = Vec3::new(
-        wall_1[0] - wall_2[0],
-        0.,
-        wall_1[2] - wall_2[2],
-    );
+    let vec3: Vec3 = Vec3::new(wall_1[0] - wall_2[0], 0., wall_1[2] - wall_2[2]);
 
     // calc distance of all 3 vectors
     let distance_1: f32 = (vec1[0] * vec1[0] + vec1[1] * vec1[1] + vec1[2] * vec1[2]).sqrt();
@@ -183,7 +166,6 @@ fn check_if_wall(
     // checks if the player is inside the wall
     // make sure the player is pushed the right way! (the player is pushed the right way)
     if distance_1 + distance_2 <= distance_3 + 1.4 {
-
         // vec3 kryss 0,wall height, 0
         let mut normalen = vec3.cross(Vec3::new(0., wall.height, 0.));
 
@@ -238,10 +220,15 @@ pub fn floor_collision(
         // CHECK IF PLAYER HITS FLOOR IN y DIRECTION
         // ASUMES THAT ALL y VALUES ARE THE SAME AND THAT THE TRIANGLE IS ALWAYS FLAT
         let position_y = player.y + movement.y - player.height;
-        let y = calc_y(floor.a.position, floor.b.position, floor.c.position, player.x, player.z);
+        let y = calc_y(
+            floor.a.position,
+            floor.b.position,
+            floor.c.position,
+            player.x,
+            player.z,
+        );
         let wall_start_y = y - padding;
         let wall_end_y = y + padding;
-
 
         if wall_start_y < position_y && position_y < wall_end_y {
             if movement[1] != 0. {

@@ -1,7 +1,7 @@
-use bevy::prelude::*;
 use crate::collision_detection::Collider;
 use crate::enemy::ActionState;
 use crate::sprites::SpriteComponent;
+use bevy::prelude::*;
 
 #[derive(Component, Debug)]
 pub struct Velocity {
@@ -9,7 +9,9 @@ pub struct Velocity {
 }
 
 impl Velocity {
-    pub fn new(value: Vec3) -> Self { Self { value }}
+    pub fn new(value: Vec3) -> Self {
+        Self { value }
+    }
 }
 
 #[derive(Component)]
@@ -18,7 +20,9 @@ pub struct Acceleration {
 }
 
 impl Acceleration {
-    pub fn new(value: Vec3) -> Self { Self { value }}
+    pub fn new(value: Vec3) -> Self {
+        Self { value }
+    }
 }
 
 #[derive(Bundle)]
@@ -49,6 +53,6 @@ fn update_velocity(mut query: Query<(&Acceleration, &mut Velocity)>, time: Res<T
 fn update_position(mut query: Query<(&Velocity, &mut SpriteComponent)>, time: Res<Time>) {
     // TODO: Query enemycomponent instead, transform.translation does not represent the position of the sprite. Position does that.
     for (velocity, mut sprite) in query.iter_mut() {
-        sprite.position+= velocity.value  * time.delta_seconds();
+        sprite.position += velocity.value * time.delta_seconds();
     }
 }
