@@ -26,7 +26,6 @@ pub struct MovingObjectBundle {
     pub velocity: Velocity,
     pub acceleration: Acceleration,
     pub sprite: SpriteBundle,
-    pub collider: Collider,
 }
 
 pub struct MovementPlugin;

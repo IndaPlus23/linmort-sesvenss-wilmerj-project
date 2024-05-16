@@ -1,4 +1,6 @@
 use bevy::{prelude::*, utils::HashMap};
+use crate::player::Player;
+use crate::sprites::SpriteComponent;
 
 #[derive(Component)]
 pub struct Collider {
@@ -23,17 +25,33 @@ impl Plugin for CollisionDetectionPlugin {
     }
 }
 
-fn collision_detection(mut query: Query<(Entity, &GlobalTransform, &mut Collider)>) {
+fn collision_detection(
+    mut commands: Commands,
+    mut query: Query<(Entity, &SpriteComponent, &mut Collider)>,
+    mut player_query: Query<(Entity, &Player, &mut Collider), Without<SpriteComponent>>
+) {
     let mut colliding_entities: HashMap<Entity, Vec<Entity>> = HashMap::new();
 
     // First phase: Detect collisions
     for (entity_a, transform_a, collider_a) in query.iter() {
+
+        // Detect player collision (WORKAROUND since player is not a SpriteComponent and time is running out)
+        for (player_entity, player, collider_player) in player_query.iter() {
+            let distance = transform_a.position.distance(Vec3::new(player.x, player.y, player.z));
+
+            if distance < collider_a.radius + collider_player.radius {
+                commands.entity(entity_a).despawn_recursive();
+                // TODO: Update player health and signal damage taken
+            }
+        }
+
+        // Detect Sprite on sprite collision
         for (entity_b, transform_b, collider_b) in query.iter() {
             if entity_a != entity_b {
-                let distance = transform_a
-                    .translation()
-                    .distance(transform_b.translation());
+                let distance = transform_a.position
+                    .distance(transform_b.position);
                 if distance < collider_a.radius + collider_b.radius {
+                    println!("Collision");
                     colliding_entities
                         .entry(entity_a)
                         .or_insert_with(Vec::new)

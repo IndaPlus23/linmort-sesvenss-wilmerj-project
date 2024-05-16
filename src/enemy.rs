@@ -2,15 +2,15 @@ use bevy::prelude::*;
 use crate::collision_detection::Collider;
 use crate::movement::{Acceleration, MovingObjectBundle, Velocity};
 use bevy::ecs::component::Component;
-use bevy::log::tracing_subscriber::fmt::time;
 use crate::asset_loader::SceneAssets;
 use crate::player::Player;
-use crate::sound::Sound;
 use bevy::time::Timer;
-use crate::map::PlayerComponent;
 use crate::sprites::SpriteComponent;
-use crate::timer::ShootingTimer;
+use crate::timer::{ShootingTimer, WalkTimer};
 use crate::utility::normalize;
+use rand::Rng;
+use std::f32::consts::PI;
+use std::time::Duration;
 
 const MISSILE_SPEED: f32 = 100.;
 
@@ -24,6 +24,11 @@ pub enum ActionState {
 #[derive(Component)]
 pub struct EnemyState {
     pub(crate) state: ActionState
+}
+
+struct Movement {
+    direction: Vec2,
+    duration: Duration,
 }
 
 // Enemy stats are stored in JSON format.
@@ -43,7 +48,7 @@ pub struct EnemyPlugin;
 
 impl Plugin for EnemyPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, (act, handle_projectile_collisions));
+        app.add_systems(Update, (act));
     }
 }
 
@@ -123,30 +128,44 @@ fn act(
     time: Res<Time>,
     mut player_query: Query<&Player>,
     mut enemy_query: Query<(
-        &Velocity,
+        &mut Velocity,
         &Transform,
         &mut EnemyState,
         &mut SpriteComponent,
-        &mut ShootingTimer
+        &mut ShootingTimer,
+        &mut WalkTimer,
     )>,
 ) {
     for (
-        velocity,
+        mut velocity,
         transform,
         state,
         enemy,
-        mut timer
+        mut shooting_timer,
+        mut walk_timer
     ) in enemy_query.iter_mut() {
+        // Random walking
+        walk_timer.timer.tick(time.delta());
+
+        if walk_timer.timer.finished() {
+            let movement = generate_random_movement();
+
+            velocity.value = Vec3::new(movement.direction.x, 0., movement.direction.y);
+            walk_timer.timer = Timer::new(movement.duration, TimerMode::Once);
+        }
+
+
+        // Combat actions
         match state.state {
             ActionState::Dormant => {
                 // Shoot if enemy state is attacking
-                timer.timer.tick(time.delta());
+                shooting_timer.timer.tick(time.delta());
 
                 let player = player_query.single();
 
                 let direction = normalize(Vec3::new(player.x, player.y, player.z));
 
-                if timer.timer.finished() {
+                if shooting_timer.timer.finished() {
                     // TODO: Change to shooting animation sprite
                     create_projectile(&mut commands, scene_assets.projectile.clone(), enemy.position, direction);
                 }
@@ -158,40 +177,19 @@ fn act(
 
 
 // TODO: Detect collisions correctly
-// fn handle_projectile_collisions(
-//     mut commands: Commands,
-//     query: Query<(Entity, &Collider), With<ProjectileComponent>>
-// ) {
-//     for (entity, collider) in query.iter() {
-//         for &collided_entity in collider.colliding_entities.iter() {
-//
-//             // TODO: Projectile collides with enemy once spawning
-//             if query.get(collided_entity).is_ok() {
-//                 continue;
-//             }
-//
-//             commands.entity(entity).despawn_recursive();
-//         }
-//     }
-// }
-
 fn handle_projectile_collisions(
     mut commands: Commands,
-    projectile_query: Query<(Entity, &Collider), With<ProjectileComponent>>,
-    player_query: Query<Entity, With<PlayerComponent>>,
+    query: Query<(Entity, &Collider), With<ProjectileComponent>>
 ) {
-    for (projectile_entity, projectile_collider) in projectile_query.iter() {
+    for (entity, collider) in query.iter() {
+        for &collided_entity in collider.colliding_entities.iter() {
 
-        println!("{}", projectile_collider.colliding_entities.iter().len());
-
-        for &collided_entity in projectile_collider.colliding_entities.iter() {
-
-            // Check if the collided entity is the player
-            if player_query.get(collided_entity).is_ok() {
-                // Despawn the projectile if it collides with the player
-                commands.entity(projectile_entity).despawn_recursive();
-                break;  // No need to check further since the projectile will be despawned
+            // TODO: Projectile collides with enemy once spawning
+            if query.get(collided_entity).is_ok() {
+                continue;
             }
+
+            commands.entity(entity).despawn_recursive();
         }
     }
 }
@@ -209,13 +207,13 @@ fn create_projectile(
         MovingObjectBundle {
             velocity: Velocity::new(Vec3::new(direction.x, direction.y, direction.z) * MISSILE_SPEED),
             acceleration: Acceleration::new(Vec3::ZERO),
-            collider: Collider::new(50.),
             sprite: SpriteBundle {
                 texture: sprite,
                 transform: Transform::from_translation(position),
                 ..default()
             },
         },
+        Collider::new(5.),
         SpriteComponent {
             position,
             height: 10.,
@@ -269,4 +267,19 @@ fn create_projectile(
 //         }
 //     }
 // }
+
+fn generate_random_movement() -> Movement {
+    let mut rng = rand::thread_rng();
+
+    // Generate a random angle in radians
+    let angle: f32 = rng.gen_range(0.0..2.0 * PI);
+
+    // Convert the angle to a 2D vector
+    let direction = Vec2::new(angle.cos(), angle.sin());
+
+    // Generate a random duration between 0.5 and 3.0 seconds
+    let duration: Duration = Duration::from_secs(rng.gen_range(0.5..5.0) as u64);
+
+    Movement { direction, duration }
+}
 

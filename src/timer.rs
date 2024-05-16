@@ -5,3 +5,8 @@ use bevy::prelude::{Component, Timer, TimerMode};
 pub struct ShootingTimer {
     pub timer: Timer,
 }
+
+#[derive(Component)]
+pub struct WalkTimer {
+    pub timer: Timer,
+}
