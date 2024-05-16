@@ -1,4 +1,9 @@
+use std::f32::consts::PI;
 use bevy::prelude::*;
+use nalgebra::{Rotation3, Unit, Vector3};
+
+pub const PLAYER_PROJECTILE_SPEED: f32 = 1000.;
+pub const PLAYER_HIT_RADIUS: f32 = 10.;
 
 #[derive(Default, Component, Clone, PartialEq)]
 pub struct Player {
@@ -24,5 +29,25 @@ impl Player {
 
     pub fn update_health(&mut self, amount: i32) {
         self.health += amount;
+
+        if self.health <= 0 {
+            // TODO: Change game state to dead
+        }
+    }
+
+    // TODO: COPY FROM SKYBOX, REMOVE WHEN MERGING
+    pub fn forward_vector(&self) -> Vec3 {
+        let mut vector = Vector3::new(0., 0., -1.);
+
+        //create rotation matrices from yaw and pitch
+        let yaw_rotation = Rotation3::from_euler_angles(0., 2. * PI - self.yaw, 0.);
+        vector = yaw_rotation * vector;
+
+        let axis = Unit::new_normalize(vector.cross(&Vector3::y()));
+        let pitch_rotation = Rotation3::from_axis_angle(&axis, self.pitch);
+
+        vector = pitch_rotation * vector;
+
+        Vec3::new(vector.x, vector.y, vector.z)
     }
 }

@@ -40,9 +40,11 @@ fn collision_detection(
             let distance = transform_a.position.distance(Vec3::new(player.x, player.y, player.z));
 
             if distance < collider_a.radius + collider_player.radius {
+
+                println!("Hit player");
+
                 player.update_health(-10);
                 commands.entity(entity_a).despawn_recursive();
-                // TODO: Update player health and signal damage taken
             }
         }
 

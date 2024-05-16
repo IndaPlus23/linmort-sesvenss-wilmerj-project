@@ -11,9 +11,13 @@ use crate::utility::normalize;
 use rand::Rng;
 use std::f32::consts::PI;
 use std::time::Duration;
+use crate::wall::Wall;
 
 const MISSILE_SPEED: f32 = 150.;
 const ENEMY_MOVEMENT_SPEED: f32 = 20.;
+
+// Used to spawn projectiles from outside of hit radius of enemy
+pub const ENEMY_PROJECTILE_RADIUS: f32 = 11.;
 
 #[derive(Clone, Copy, Debug, Component)]
 pub enum ActionState {
@@ -49,7 +53,7 @@ pub struct EnemyPlugin;
 
 impl Plugin for EnemyPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, (act));
+        app.add_systems(Update, (act, handle_projectile_collisions));
     }
 }
 
@@ -168,7 +172,14 @@ fn act(
 
                 if shooting_timer.timer.finished() {
                     // TODO: Change to shooting animation sprite
-                    create_projectile(&mut commands, scene_assets.projectile.clone(), enemy.position, direction);
+                    create_projectile(
+                        &mut commands,
+                        scene_assets.projectile.clone(),
+                        enemy.position,
+                        direction,
+                        ENEMY_PROJECTILE_RADIUS,
+                        MISSILE_SPEED,
+                    );
                 }
             }
             _ => {}
@@ -176,98 +187,53 @@ fn act(
     }
 }
 
-
 // TODO: Detect collisions correctly
-// fn handle_projectile_collisions(
-//     mut commands: Commands,
-//     query: Query<(Entity, &Collider), With<ProjectileComponent>>
-// ) {
-//     for (entity, collider) in query.iter() {
-//         for &collided_entity in collider.colliding_entities.iter() {
-//
-//             // TODO: Projectile collides with enemy once spawning
-//             if query.get(collided_entity).is_ok() {
-//                 continue;
-//             }
-//
-//             commands.entity(entity).despawn_recursive();
-//         }
-//     }
-// }
+fn handle_projectile_collisions(
+    mut commands: Commands,
+    query: Query<(Entity, &Collider), With<ProjectileComponent>>
+) {
+    for (entity, collider) in query.iter() {
+        for &collided_entity in collider.colliding_entities.iter() {
+
+            // TODO: Projectile collides with enemy once spawning
+            if query.get(collided_entity).is_ok() {
+                continue;
+            }
+
+            commands.entity(collided_entity).despawn_recursive();
+        }
+    }
+}
 
 #[derive(Component)]
 struct ProjectileComponent;
 
-fn create_projectile(
+pub fn create_projectile(
     commands: &mut Commands,
     sprite: Handle<Image>,
     position: Vec3,
     direction: Vec3,
+    radius: f32,
+    projectile_speed: f32,
 ) {
     commands.spawn((
         MovingObjectBundle {
-            velocity: Velocity::new(Vec3::new(direction.x, direction.y, direction.z) * MISSILE_SPEED),
+            velocity: Velocity::new(direction * projectile_speed),
             acceleration: Acceleration::new(Vec3::ZERO),
             sprite: SpriteBundle {
                 texture: sprite,
-                transform: Transform::from_translation(position),
+                transform: Transform::from_translation(Vec3::new(100000., 1000000., 1000000.)),
                 ..default()
             },
         },
         Collider::new(5.),
         SpriteComponent {
-            position,
-            height: 10.,
+            position: (position + direction * radius),
+            health: 10.,
         },
         ProjectileComponent,
     ));
 }
-
-
-// Enemy AI Systems
-// TODO: Update to work with our implementation of the game
-// fn vision_system(
-//     player_query: Query<&Transform, With<Player>>,
-//     mut enemy_query: Query<(&Transform, &mut EnemyState), With<Enemy>>,
-// ) {
-//     if let Ok(player_transform) = player_query.single() {
-//         for (enemy_transform, mut enemy_ai) in enemy_query.iter_mut() {
-//             let direction_to_player = player_transform.translation - enemy_transform.translation;
-//             let distance_to_player = direction_to_player.length();
-//
-//             if distance_to_player < enemy_ai.vision_range {
-//                 let forward = enemy_transform.rotation.mul_vec3(Vec3::Z).normalize();
-//                 let direction = direction_to_player.normalize();
-//
-//                 let angle = forward.dot(direction).acos();
-//                 if angle < enemy_ai.vision_angle / 2.0 {
-//                     enemy_ai.state = EnemyState::Chasing;
-//                 } else {
-//                     enemy_ai.state = EnemyState::Idle;
-//                 }
-//             } else {
-//                 enemy_ai.state = EnemyState::Idle;
-//             }
-//         }
-//     }
-// }
-//
-// fn movement_system(
-//     player_query: Query<&Transform, With<Player>>,
-//     mut enemy_query: Query<(&Transform, &mut EnemyAI, &mut Transform), With<Enemy>>,
-//     time: Res<Time>,
-// ) {
-//     if let Ok(player_transform) = player_query.single() {
-//         for (enemy_transform, mut enemy_ai, mut enemy_transform_mut) in enemy_query.iter_mut() {
-//             if let EnemyState::Chasing = enemy_ai.state {
-//                 let direction_to_player = (player_transform.translation - enemy_transform.translation).normalize();
-//                 let speed = 2.0; // Define your enemy speed here
-//
-//                 enemy_transform_mut.translation += direction_to_player * speed * time.delta_seconds();
-//             }
-//         }
-//     }
-// }
 
 fn generate_random_movement() -> Movement {
     let mut rng = rand::thread_rng();

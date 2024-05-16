@@ -29,7 +29,7 @@ pub struct Sprite {
 #[derive(Component)]
 pub struct SpriteComponent {
     pub position: Vec3,
-    pub height: f32,
+    pub health: f32,
 }
 
 impl Sprite {

@@ -16,6 +16,7 @@ use crate::{
 };
 use crate::collision_detection::Collider;
 use crate::enemy::{ActionState, EnemyState};
+use crate::player::PLAYER_HIT_RADIUS;
 use crate::sprites::SpriteComponent;
 use crate::timer::{ShootingTimer, WalkTimer};
 
@@ -68,7 +69,7 @@ impl Map {
         commands.spawn((
             self.player.clone(),
             PlayerComponent,
-            Collider::new(10.),
+            Collider::new(PLAYER_HIT_RADIUS),
         ));
 
         for wall in &self.walls {
@@ -142,7 +143,7 @@ impl Map {
                     },
                 }, SpriteComponent {
                     position: enemy.position,
-                    height: 10.,
+                    health: 100.,
                 }, ShootingTimer {
                     // create the non-repeating fuse timer
                     timer: Timer::new(Duration::from_secs(5), TimerMode::Repeating),
@@ -150,7 +151,7 @@ impl Map {
                     state: ActionState::Dormant,
                 }, WalkTimer {
                     timer: Timer::new(Duration::from_secs(0), TimerMode::Once),
-                }
+                }, Collider::new(5.),
             ));
         }
     }
