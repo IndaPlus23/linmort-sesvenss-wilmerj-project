@@ -143,8 +143,8 @@ fn check_if_wall(
     player: &mut bevy::prelude::Mut<'_, Player>,
 ) -> bool {
     // check if player and wall is at same height before starting all calculations
-    let wall_start = wall.start.position.y;
-    let wall_end = wall.start.position.y + wall.height;
+    let wall_start = wall.start.position.y - 1.;
+    let wall_end = wall.start.position.y + wall.height + 1.;
     let player_start = player.y - player.height;
     let player_end = player.y;
 
@@ -159,22 +159,22 @@ fn check_if_wall(
     let wall_2: Vec3 = wall.end.position;
 
     // vectors from player to the walls 2 corners
-    let vec1: [f32; 3] = [
+    let vec1: Vec3 = Vec3::new(
         player_vec[0] - wall_1[0],
         player_vec[1] - wall_1[1],
         player_vec[2] - wall_1[2],
-    ];
-    let vec2: [f32; 3] = [
+    );
+    let vec2: Vec3 = Vec3::new(
         player_vec[0] - wall_2[0],
         player_vec[1] - wall_2[1],
         player_vec[2] - wall_2[2],
-    ];
+    );
     // wall vector
-    let vec3: [f32; 3] = [
+    let vec3: Vec3 = Vec3::new(
         wall_1[0] - wall_2[0],
         wall_1[1] - wall_2[1],
         wall_1[2] - wall_2[2],
-    ];
+    );
 
     // calc distance of all 3 vectors
     let distance_1: f32 = (vec1[0] * vec1[0] + vec1[1] * vec1[1] + vec1[2] * vec1[2]).sqrt();
@@ -182,19 +182,27 @@ fn check_if_wall(
     let distance_3: f32 = (vec3[0] * vec3[0] + vec3[1] * vec3[1] + vec3[2] * vec3[2]).sqrt();
 
     // checks if the player is inside the wall
-    // CAUSES THE PLAYER TO SHAKE A BIT
-    /* if distance_1 + distance_2 <= distance_3 + 0.9 {
+    // make sure the player is pushed the right way! (the player is pushed the right way)
+    if distance_1 + distance_2 <= distance_3 + 1.4 {
+
         // vec3 kryss 0,wall height, 0
-        let normalen = Vec3::new(
-            vec3[1] * 0. - vec3[2] * wall.height,
-            vec3[2] * 0. - vec3[0] * 0.,
-            vec3[0] * wall.height - vec3[1] * 0.,
-        ).normalize_or_zero();
+        let mut normalen = vec3.cross(Vec3::new(0., wall.height, 0.));
+
+        // kolla om vec från wall till player och jämför om normalen är positiv eller negativ multipel
 
         // ta position plus eller minus normalen
-        player.x += normalen.x / 10.;
-        player.z += normalen.z / 10.;
-    } */
+        let check = normalen.dot(vec1);
+
+        normalen = normalen.normalize_or_zero();
+
+        if check > 0. {
+            player.x += normalen.x / 5.;
+            player.z += normalen.z / 5.;
+        } else {
+            player.x -= normalen.x / 5.;
+            player.z -= normalen.z / 5.;
+        }
+    }
 
     // padding must be at least 1.5
     // if the distance of the 2 vectors to the wall from
