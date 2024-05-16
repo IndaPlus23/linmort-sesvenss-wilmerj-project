@@ -89,9 +89,7 @@ fn collision_detection(
 
     KNOWN BUGs:
 
-    1. player can get stuck in the wall if they walk in towards the edge of a wall,
-    you can still walks alongside the wall but not away from it.
-    2. when there are 2 walls in a sharp angle the player can slip through them
+    1. when there are 2 walls in a sharp angle the player can slip through them
 
     TODO:
     fix bugs
@@ -118,6 +116,7 @@ pub fn wall_collision(
         )
         .normalize_or_zero();
 
+
         // calculate angle between wall_vector and movement
         let angle = movement.angle_between(wall_vector);
 
@@ -143,8 +142,8 @@ fn check_if_wall(
     player: &mut bevy::prelude::Mut<'_, Player>,
 ) -> bool {
     // check if player and wall is at same height before starting all calculations
-    let wall_start = wall.start.position.y - 1.;
-    let wall_end = wall.start.position.y + wall.height + 1.;
+    let wall_start = wall.start.position.y - 2.;
+    let wall_end = wall.start.position.y + wall.height + 2.;
     let player_start = player.y - player.height;
     let player_end = player.y;
 
@@ -161,18 +160,18 @@ fn check_if_wall(
     // vectors from player to the walls 2 corners
     let vec1: Vec3 = Vec3::new(
         player_vec[0] - wall_1[0],
-        player_vec[1] - wall_1[1],
+        0.,
         player_vec[2] - wall_1[2],
     );
     let vec2: Vec3 = Vec3::new(
         player_vec[0] - wall_2[0],
-        player_vec[1] - wall_2[1],
+        0.,
         player_vec[2] - wall_2[2],
     );
     // wall vector
     let vec3: Vec3 = Vec3::new(
         wall_1[0] - wall_2[0],
-        wall_1[1] - wall_2[1],
+        0.,
         wall_1[2] - wall_2[2],
     );
 
