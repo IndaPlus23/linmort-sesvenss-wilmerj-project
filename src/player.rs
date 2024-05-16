@@ -12,6 +12,9 @@ pub struct Player {
     pub z: f32,
     pub yaw: f32,
     pub pitch: f32,
+    pub height: f32,
+    pub noclip: bool,
+    pub gravity: f32,
     pub health: i32
 }
 
@@ -23,6 +26,9 @@ impl Player {
             z,
             yaw,
             pitch,
+            height: 8.,
+            noclip: true,
+            gravity: 0.,
             health: 100,
         }
     }

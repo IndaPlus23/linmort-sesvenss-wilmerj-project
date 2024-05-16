@@ -95,6 +95,7 @@ impl Map {
                         b_position: Vec3::new(0., 0., 0.),
                         c_position: Vec3::new(0., 0., 0.),
                         pitch: 0.0,
+                        selected: 0,
                     }),
                     ..Default::default()
                 },
@@ -124,6 +125,7 @@ impl Map {
                         b_position: Vec3::new(0., 0., 0.),
                         c_position: Vec3::new(0., 0., 0.),
                         pitch: 0.0,
+                        selected: 0,
                     }),
                     ..Default::default()
                 },

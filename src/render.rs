@@ -1,10 +1,14 @@
+use crate::{
+    floor::Floor, skybox::CubeMapMaterial, vertex::Vertex, wall::Wall, EditorState, GameState,
+    Player, SceneAssets, map::Map,
+};
 use bevy::{
     prelude::*,
     reflect::TypePath,
     render::{
         mesh::Mesh,
+        prelude::Image,
         render_resource::{AsBindGroup, ShaderRef},
-        texture::Image,
     },
     sprite::{Material2d, MaterialMesh2dBundle, Mesh2dHandle},
 };
@@ -54,6 +58,8 @@ pub struct CustomMaterial {
     pub c_position: Vec3,
     #[uniform(17)]
     pub pitch: f32,
+    #[uniform(18)]
+    pub selected: u32,
 }
 
 impl Material2d for CustomMaterial {
@@ -64,10 +70,14 @@ impl Material2d for CustomMaterial {
 
 pub fn render(
     mut commands: Commands,
+    game_state: Res<State<GameState>>,
+    scene_assets: Res<SceneAssets>,
     mut player_query: Query<&Player>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut custom_materials: ResMut<Assets<CustomMaterial>>,
-    scene_assets: Res<SceneAssets>,
+    mut map_query: Query<&mut Map>,
+    mut cubemap_materials: ResMut<Assets<CubeMapMaterial>>,
+    mut cubemap: Query<&mut Handle<CubeMapMaterial>>,
     mut wall_query: Query<(
         &mut Wall,
         &mut Transform,
@@ -93,7 +103,21 @@ pub fn render(
     mut gizmos: Gizmos,
 ) {
     for player in player_query.iter_mut() {
-        // Calculate mask for z-buffering
+        let mut selected_id = 1000000000000;
+        let mut n_walls = 0;
+        let mut n_floors = 0;
+        let _ = match map_query.get_single_mut() {
+            Ok(map) => {
+                selected_id = map.selected_id;
+                n_walls = map.walls.len();
+                n_floors = map.floors.len();
+            }
+            Err(_) => {
+                println!("Error: No map found");
+            }
+        };
+
+        // Construct mask for z-buffering
         let mut mask: [Vec3; 1000] = [Vec3::new(0., 0., 0.); 1000];
         let mut i = 0;
 
@@ -138,6 +162,14 @@ pub fn render(
             i += 7;
         }
 
+        // Pass mask to cubemap, rendered in skybox.rs
+        for material_handle in cubemap.iter_mut() {
+            let material = cubemap_materials.get_mut(material_handle.clone()).unwrap();
+
+            material.mask = mask;
+            material.mask_len = i as i32;
+        }
+
         // Render walls with calculated mask
         for (wall, _, mesh2dhandle, material_handle) in wall_query.iter_mut() {
             let mesh_handle = &mesh2dhandle.0;
@@ -167,6 +199,20 @@ pub fn render(
             material.id = wall.id as f32;
             material.mask = mask;
             material.mask_len = i as i32;
+
+            if selected_id < n_walls {
+                if selected_id == wall.id {
+                    if game_state.get() == &GameState::InEditor {
+                        material.selected = 1;
+                    } else {
+                        material.selected = 0;
+                    }
+                } else {
+                    material.selected = 0;
+                }
+            } else {
+                material.selected = 0;
+            }
 
             if let Some(_positions) = mesh.attribute_mut(Mesh::ATTRIBUTE_POSITION) {
                 mesh.insert_attribute(
@@ -230,6 +276,20 @@ pub fn render(
             material.mask = mask;
             material.mask_len = i as i32;
 
+            if selected_id >= n_walls {
+                if selected_id == floor.id - 1000 + n_walls {
+                    if game_state.get() == &GameState::InEditor {
+                        material.selected = 1;
+                    } else {
+                        material.selected = 0;
+                    }
+                } else {
+                    material.selected = 0;
+                }
+            } else {
+                material.selected = 0;
+            }
+
             if let Some(_positions) = mesh.attribute_mut(Mesh::ATTRIBUTE_POSITION) {
                 mesh.insert_attribute(
                     Mesh::ATTRIBUTE_POSITION,
@@ -281,7 +341,7 @@ impl MapFloor {
         let scale = 1.0;
         let x_offset = 0.0;
         let y_offset = 0.0;
-        Self {
+        Self { 
             id,
             scale,
             x_offset,
@@ -290,16 +350,14 @@ impl MapFloor {
     }
 }
 
-pub fn render_grid(
-    mut gizmos: Gizmos,
-    mut player_query: Query<&Player>,
-) {
+pub fn render_grid(mut gizmos: Gizmos, mut player_query: Query<&Player>) {
     for player in player_query.iter_mut() {
         let mut previous = 0.0;
         for x in -1000..1000 {
             let nearest = round_to_nearest(x as f32, 10.0);
             if nearest != previous {
-                let position = Vertex::new(Vec3::new(nearest, 0.0, 0.0), Vec2::ZERO).transform_vertice(player);
+                let position =
+                    Vertex::new(Vec3::new(nearest, 0.0, 0.0), Vec2::ZERO).transform_vertice(player);
                 let color = Color::Rgba {
                     red: 0.7,
                     green: 0.7,
@@ -316,7 +374,8 @@ pub fn render_grid(
         for y in -1000..1000 {
             let nearest = round_to_nearest(y as f32, 10.0);
             if nearest != previous {
-                let position = Vertex::new(Vec3::new(0.0, nearest, 0.0), Vec2::ZERO).transform_vertice(player);
+                let position =
+                    Vertex::new(Vec3::new(0.0, nearest, 0.0), Vec2::ZERO).transform_vertice(player);
                 let color = Color::Rgba {
                     red: 0.7,
                     green: 0.7,
@@ -333,7 +392,8 @@ pub fn render_grid(
         for z in -1000..1000 {
             let nearest = round_to_nearest(z as f32, 10.0);
             if nearest != previous {
-                let position = Vertex::new(Vec3::new(0.0, 0.0, nearest), Vec2::ZERO).transform_vertice(player);
+                let position =
+                    Vertex::new(Vec3::new(0.0, 0.0, nearest), Vec2::ZERO).transform_vertice(player);
                 let color = Color::Rgba {
                     red: 0.7,
                     green: 0.7,
@@ -355,7 +415,7 @@ fn round_to_nearest(num: f32, factor: f32) -> f32 {
 
 fn scale_alpha(num: f32, factor: f32) -> f32 {
     let k = -2.5 / factor;
-    return k * num + 1.0
+    return k * num + 1.0;
 }
 
 pub fn render_map(
@@ -435,9 +495,21 @@ pub fn render_map(
                         mesh.insert_attribute(
                             Mesh::ATTRIBUTE_POSITION,
                             vec![
-                                [(floor.a.position.x + x_offset) * scale, -(floor.a.position.z + y_offset) * scale, 0.0],
-                                [(floor.b.position.x + x_offset) * scale, -(floor.b.position.z + y_offset) * scale, 0.0],
-                                [(floor.c.position.x + x_offset) * scale, -(floor.c.position.z + y_offset) * scale, 0.0],
+                                [
+                                    (floor.a.position.x + x_offset) * scale,
+                                    -(floor.a.position.z + y_offset) * scale,
+                                    0.0,
+                                ],
+                                [
+                                    (floor.b.position.x + x_offset) * scale,
+                                    -(floor.b.position.z + y_offset) * scale,
+                                    0.0,
+                                ],
+                                [
+                                    (floor.c.position.x + x_offset) * scale,
+                                    -(floor.c.position.z + y_offset) * scale,
+                                    0.0,
+                                ],
                             ],
                         );
                     }
@@ -446,29 +518,27 @@ pub fn render_map(
         }
 
         // Render player
-        gizmos.circle_2d(Vec2::new((player.x + x_offset)* scale, -(player.z + y_offset)* scale), 2., Color::WHITE);
+        gizmos.circle_2d(
+            Vec2::new(
+                (player.x + x_offset) * scale,
+                -(player.z + y_offset) * scale,
+            ),
+            2.,
+            Color::WHITE,
+        );
 
         for wall in wall_query.iter_mut() {
             gizmos.line_2d(
-                Vec2::new((wall.start.position.x + x_offset) * scale, -(wall.start.position.z + y_offset) * scale),
-                Vec2::new((wall.end.position.x + x_offset) * scale, -(wall.end.position.z + y_offset) * scale),
+                Vec2::new(
+                    (wall.start.position.x + x_offset) * scale,
+                    -(wall.start.position.z + y_offset) * scale,
+                ),
+                Vec2::new(
+                    (wall.end.position.x + x_offset) * scale,
+                    -(wall.end.position.z + y_offset) * scale,
+                ),
                 Color::RED,
             );
         }
     }
-}
-
-fn forward_vector(yaw: f32, pitch: f32) -> Vec3 {
-    let mut vector = Vector3::new(0., 0., -1.);
-
-    //create rotation matrices from yaw and pitch
-    let yaw_rotation = Rotation3::from_euler_angles(0., 2. * PI - yaw, 0.);
-    vector = yaw_rotation * vector;
-
-    let axis = Unit::new_normalize(vector.cross(&Vector3::y()));
-    let pitch_rotation = Rotation3::from_axis_angle(&axis, pitch);
-
-    vector = pitch_rotation * vector;
-
-    Vec3::new(vector.x, vector.y, vector.z)
 }
