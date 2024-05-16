@@ -100,29 +100,28 @@ pub fn editor_ui(
 
             ui.separator();
             if ui.button("Spawn floor").clicked() {
-                for player in player_query.iter_mut() {
-                    let floor = Floor::new(
-                        map.floors.len() + 1000,
-                        Vertex::new(Vec3::new(player.x.round(), 0.0, player.z.round()), Vec2::ZERO),
-                        Vertex::new(Vec3::new(player.x.round() + 10.0, 0.0, player.z.round() + 10.0), Vec2::ZERO),
-                        Vertex::new(Vec3::new(player.x.round(), 0.0, player.z.round() + 10.0), Vec2::ZERO),
-                        Vec2::ONE,
-                        Vec2::ZERO,
-                        0.0,
-                        true,
-                        1,
-                    );
+                let len = map.floors.len() - 1;
+                let floor = Floor::new(
+                    map.floors.len() + 1000,
+                    Vertex::new(map.floors[len].a.position, Vec2::ZERO),
+                    Vertex::new(map.floors[len].b.position, Vec2::ZERO),
+                    Vertex::new(map.floors[len].c.position, Vec2::ZERO),
+                    Vec2::ONE,
+                    Vec2::ZERO,
+                    0.0,
+                    true,
+                    1,
+                );
 
-                    spawn_floor(
-                        &mut commands,
-                        &mut meshes,
-                        &mut custom_materials,
-                        &asset_server,
-                        floor.clone()
-                    );
+                spawn_floor(
+                    &mut commands,
+                    &mut meshes,
+                    &mut custom_materials,
+                    &asset_server,
+                    floor.clone()
+                );
 
-                    map.floors.push(floor)
-                }
+                map.floors.push(floor)
             }
 
             ui.separator();
@@ -327,7 +326,7 @@ pub fn editor_ui(
                     ui.heading("UV scaling");
                     ui.horizontal(|ui| {
                         ui.label("u:");
-                        ui.add(egui::Slider::new(&mut uv_scaling.x, 0.0..=10.));
+                        ui.add(egui::Slider::new(&mut uv_scaling.x, 0.0..=20.));
                     });
                     ui.horizontal(|ui| {
                         ui.label("v:");
