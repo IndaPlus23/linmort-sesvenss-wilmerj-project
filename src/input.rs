@@ -238,7 +238,6 @@ pub fn mouse_input(
     mut query: Query<&mut Player>,
     game_state: Res<State<GameState>>,
     asset_server: Res<AssetServer>,
-    commands: Commands,
 ) {
     for event in mouse_motion_events.read() {
         let primary_window = window_query.single_mut();

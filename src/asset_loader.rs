@@ -11,7 +11,7 @@ use crate::enemy::Enemy;
 /// SceneAssets stores handles for assets used in the scene.
 #[derive(Resource, Debug, Default)]
 pub struct SceneAssets {
-    pub enemy: Handle<Scene>,
+    pub enemy: Handle<Image>,
     pub hud: Vec<Handle<Image>>,
     pub cubemaps: Vec<Handle<Image>>,
     pub enemy_types: HashMap<String, Enemy>,
@@ -37,7 +37,6 @@ pub fn load_assets(mut scene_assets: ResMut<SceneAssets>, mut asset_server: Res<
     let texture_paths = texture_paths("assets\\textures\\flats\\");
 
     *scene_assets = SceneAssets {
-        enemy: asset_server.load(""),
         hud: load_textures_from_folder(
             hud_paths.clone(),
             &mut asset_server,
@@ -56,8 +55,7 @@ pub fn load_assets(mut scene_assets: ResMut<SceneAssets>, mut asset_server: Res<
         enemy: asset_server.load(Path::new("sprites/enemy.png")),
         projectile: asset_server.load(Path::new("sprites/projectile.png")),
         enemy_types: load_enemy_types(),
-        textures: load_textures_from_folder(texture_paths.clone(), asset_server),
-        texture_paths: texture_paths,
+        texture_paths,
     }
 }
 

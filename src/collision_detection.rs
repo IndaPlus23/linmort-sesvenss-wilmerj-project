@@ -4,7 +4,6 @@ use crate::Player;
 use bevy::prelude::*;
 use std::f32::consts::PI;
 use bevy::{prelude::*, utils::HashMap};
-use crate::player::Player;
 use crate::sprites::SpriteComponent;
 
 #[derive(Component)]

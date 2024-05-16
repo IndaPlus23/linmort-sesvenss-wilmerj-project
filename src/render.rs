@@ -15,7 +15,7 @@ use bevy::{
 use core::f32::consts::PI;
 use nalgebra::{Rotation3, Unit, Vector3};
 
-use crate::{floor::Floor, wall::Wall, EditorState, GameState, Player, SceneAssets, vertex::Vertex, enemy::{Enemy}, sprites::SpriteComponent};
+use crate::{enemy::{Enemy}, sprites::SpriteComponent};
 use crate::movement::{Acceleration, MovingObjectBundle, Velocity};
 
 pub const MAX_STRUCTURES: usize = 1000;
