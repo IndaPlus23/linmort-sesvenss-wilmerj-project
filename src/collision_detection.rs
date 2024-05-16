@@ -2,6 +2,7 @@ use crate::floor::Floor;
 use crate::sprites::SpriteComponent;
 use crate::wall::Wall;
 use crate::Player;
+use crate::GameState;
 use bevy::prelude::*;
 use bevy::{prelude::*, utils::HashMap};
 use std::f32::consts::PI;
@@ -33,6 +34,7 @@ fn collision_detection(
     mut commands: Commands,
     mut query: Query<(Entity, &SpriteComponent, &mut Collider)>,
     mut player_query: Query<(Entity, &mut Player, &mut Collider), Without<SpriteComponent>>,
+    mut next_game_state: ResMut<NextState<GameState>>,
 ) {
     let mut colliding_entities: HashMap<Entity, Vec<Entity>> = HashMap::new();
 
@@ -47,7 +49,7 @@ fn collision_detection(
             if distance < collider_a.radius + collider_player.radius {
                 println!("Hit player");
 
-                player.update_health(-10);
+                player.update_health(-10, &mut next_game_state);
                 commands.entity(entity_a).despawn_recursive();
             }
         }

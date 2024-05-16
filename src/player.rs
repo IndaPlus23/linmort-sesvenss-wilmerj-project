@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use nalgebra::{Rotation3, Unit, Vector3};
 use std::f32::consts::PI;
+use crate::GameState;
 
 pub const PLAYER_PROJECTILE_SPEED: f32 = 1000.;
 pub const PLAYER_HIT_RADIUS: f32 = 10.;
@@ -35,11 +36,11 @@ impl Player {
         }
     }
 
-    pub fn update_health(&mut self, amount: i32) {
+    pub fn update_health(&mut self, amount: i32, next_game_state: &mut ResMut<NextState<GameState>>,) {
         self.health += amount;
 
         if self.health <= 0 {
-            // TODO: Change game state to dead
+            next_game_state.set(GameState::Dead);
         }
     }
 
