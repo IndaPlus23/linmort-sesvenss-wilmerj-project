@@ -16,6 +16,7 @@ mod movement;
 mod sprites;
 mod timer;
 mod utility;
+mod animate;
 
 
 use bevy::{
