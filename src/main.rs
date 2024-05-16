@@ -41,6 +41,8 @@ use crate::{
 enum GameState {
     MainMenu,
     InGame,
+    EndGame,
+    Dead,
     InEditor,
 }
 

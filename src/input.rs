@@ -116,7 +116,7 @@ pub fn keyboard_input(
                     primary_window.cursor.visible = false;
                 }
             }
-            GameState::MainMenu => {}
+            _ => {}
         }
     }
 
@@ -134,8 +134,7 @@ pub fn keyboard_input(
                     next_editor_state.set(EditorState::World);
                 }
             },
-            GameState::InGame => {}
-            GameState::MainMenu => {}
+            _ => {}
         }
     }
 
