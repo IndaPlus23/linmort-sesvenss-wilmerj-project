@@ -18,6 +18,7 @@
 @group(2) @binding(15) var<uniform> b_position: vec3<f32>;
 @group(2) @binding(16) var<uniform> c_position: vec3<f32>;
 @group(2) @binding(17) var<uniform> pitch: f32;
+@group(2) @binding(18) var<uniform> selected: u32;
 
 // Compute barycentric coordinates (b1, b2, b3) for pixel p with respect to triangle (a, b, c)
 fn barycentric(p: vec2<f32>, a: vec2<f32>, b: vec2<f32>, c: vec2<f32>) -> vec3<f32>{
@@ -130,10 +131,16 @@ fn fragment(mesh: VertexOutput) -> @location(0) vec4<f32> {
     if length(corrected_position) >= shortest_distance[0] && id != shortest_distance[1] {
         sampled_color[3] = 0.0;
     } else {
-        let shadow = -0.005 * length(corrected_position) + 1.0;
-        sampled_color[0] *= shadow;
-        sampled_color[1] *= shadow;
-        sampled_color[2] *= shadow;
+        let shadow = -0.0003 * length(corrected_position);
+        sampled_color[0] += shadow;
+        sampled_color[1] += shadow;
+        sampled_color[2] += shadow;
+    }
+
+    if selected == 1 {
+        sampled_color[0] += 0.3;
+        sampled_color[1] += 0.3;
+        sampled_color[2] += 0.3;
     }
 
     return sampled_color;

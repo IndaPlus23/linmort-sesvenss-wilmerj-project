@@ -104,7 +104,15 @@ fn main() {
         )
         .add_systems(
             Update,
-            (mouse_input, keyboard_input, render, render_hud, render_skybox, render_map).in_set(GameSet),
+            (
+                mouse_input,
+                keyboard_input,
+                render,
+                render_hud,
+                render_skybox,
+                render_map,
+            )
+                .in_set(GameSet),
         )
         .add_systems(
             Update,
@@ -156,7 +164,11 @@ fn setup(
     lock_cursor(&mut window_query);
 
     // Play main menu music
-    play_background_audio(&mut asset_server, &mut commands, "sounds\\main_menu.ogg".to_string());
+    play_background_audio(
+        &mut asset_server,
+        &mut commands,
+        "sounds\\main_menu.ogg".to_string(),
+    );
 
     // Main menu
     commands.spawn((

@@ -5,9 +5,10 @@ use bevy::{
         render_asset::RenderAssetUsages,
         render_resource::PrimitiveTopology,
     },
+    sprite::MaterialMesh2dBundle,
 };
 
-use crate::{vertex::Vertex, Player};
+use crate::{vertex::Vertex, Player, CustomMaterial, SceneAssets, MAX_STRUCTURES};
 
 #[derive(Component, Clone)]
 pub struct Floor {
@@ -261,4 +262,40 @@ impl Floor {
         // No vertices are behind player
         return (a, b, c, zero, zero, zero);
     }
+}
+
+pub fn spawn_floor(
+    commands: &mut Commands,
+    meshes: &mut ResMut<Assets<Mesh>>,
+    custom_materials: &mut ResMut<Assets<CustomMaterial>>,
+    asset_server: &Res<SceneAssets>,
+    floor: Floor,
+) {
+    commands.spawn((
+        floor.clone(),
+        MaterialMesh2dBundle {
+            mesh: meshes.add(Floor::mesh()).into(),
+            material: custom_materials.add(CustomMaterial {
+                texture: asset_server.textures[floor.texture_id].clone(),
+                id: -1.,
+                mask: [Vec3::new(0., 0., 0.); MAX_STRUCTURES],
+                mask_len: 0,
+                a_screen: Vec3::new(0., 0., 0.),
+                b_screen: Vec3::new(0., 0., 0.),
+                c_screen: Vec3::new(0., 0., 0.),
+                a_uv: Vec2::new(0., 0.),
+                b_uv: Vec2::new(0., 0.),
+                c_uv: Vec2::new(0., 0.),
+                uv_scalar: Vec2::new(1., 1.),
+                uv_offset: Vec2::new(0., 0.),
+                uv_rotation: 0.,
+                a_position: Vec3::new(0., 0., 0.),
+                b_position: Vec3::new(0., 0., 0.),
+                c_position: Vec3::new(0., 0., 0.),
+                pitch: 0.0,
+                selected: 0,
+            }),
+            ..Default::default()
+        },
+    ));
 }

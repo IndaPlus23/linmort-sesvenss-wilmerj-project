@@ -5,13 +5,18 @@ use bevy::prelude::*;
 pub struct BackgroundSong;
 
 // Play background song
-pub fn play_background_audio(asset_server: &mut Res<AssetServer>, commands: &mut Commands, path: String) {
+pub fn play_background_audio(
+    asset_server: &mut Res<AssetServer>,
+    commands: &mut Commands,
+    path: String,
+) {
     commands.spawn((
         BackgroundSong,
         AudioBundle {
-        source: asset_server.load(path),
-        settings: PlaybackSettings::LOOP.with_volume(Volume::new(0.5)),
-    }));
+            source: asset_server.load(path),
+            settings: PlaybackSettings::LOOP.with_volume(Volume::new(0.0)),
+        },
+    ));
 }
 
 // Pause music
@@ -50,9 +55,11 @@ then use the function like this (shotgun.ogg must be a file in assets/sounds)->
     play_audio(asset_server,commands, "shotgun.ogg")
 
 */
+
 pub fn play_audio(asset_server: Res<AssetServer>, mut commands: Commands, path: &str) {
     commands.spawn(AudioBundle {
         source: asset_server.load("sounds\\".to_owned() + path),
+        settings: PlaybackSettings::ONCE.with_volume(Volume::new(0.0)),
         ..default()
     });
 }

@@ -1,6 +1,6 @@
 use crate::{
     floor::Floor, skybox::CubeMapMaterial, vertex::Vertex, wall::Wall, EditorState, GameState,
-    Player, SceneAssets,
+    Player, SceneAssets, map::Map,
 };
 use bevy::{
     prelude::*,
@@ -52,6 +52,8 @@ pub struct CustomMaterial {
     pub c_position: Vec3,
     #[uniform(17)]
     pub pitch: f32,
+    #[uniform(18)]
+    pub selected: u32,
 }
 
 impl Material2d for CustomMaterial {
@@ -61,10 +63,12 @@ impl Material2d for CustomMaterial {
 }
 
 pub fn render(
+    game_state: Res<State<GameState>>,
+    asset_server: Res<SceneAssets>,
     mut player_query: Query<&Player>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut custom_materials: ResMut<Assets<CustomMaterial>>,
-    asset_server: Res<SceneAssets>,
+    mut map_query: Query<&mut Map>,
     mut cubemap_materials: ResMut<Assets<CubeMapMaterial>>,
     mut cubemap: Query<&mut Handle<CubeMapMaterial>>,
     mut wall_query: Query<(
@@ -84,6 +88,20 @@ pub fn render(
     >,
 ) {
     for player in player_query.iter_mut() {
+        let mut selected_id = 1000000000000;
+        let mut n_walls = 0;
+        let mut n_floors = 0;
+        let _ = match map_query.get_single_mut() {
+            Ok(map) => {
+                selected_id = map.selected_id;
+                n_walls = map.walls.len();
+                n_floors = map.floors.len();
+            }
+            Err(_) => {
+                println!("Error: No map found");
+            }
+        };
+
         // Construct mask for z-buffering
         let mut mask: [Vec3; 1000] = [Vec3::new(0., 0., 0.); 1000];
         let mut i = 0;
@@ -167,6 +185,20 @@ pub fn render(
             material.mask = mask;
             material.mask_len = i as i32;
 
+            if selected_id < n_walls {
+                if selected_id == wall.id {
+                    if game_state.get() == &GameState::InEditor {
+                        material.selected = 1;
+                    } else {
+                        material.selected = 0;
+                    }
+                } else {
+                    material.selected = 0;
+                }
+            } else {
+                material.selected = 0;
+            }
+
             if let Some(_positions) = mesh.attribute_mut(Mesh::ATTRIBUTE_POSITION) {
                 mesh.insert_attribute(
                     Mesh::ATTRIBUTE_POSITION,
@@ -228,6 +260,20 @@ pub fn render(
             material.id = floor.id as f32;
             material.mask = mask;
             material.mask_len = i as i32;
+
+            if selected_id >= n_walls {
+                if selected_id == floor.id - 1000 + n_walls {
+                    if game_state.get() == &GameState::InEditor {
+                        material.selected = 1;
+                    } else {
+                        material.selected = 0;
+                    }
+                } else {
+                    material.selected = 0;
+                }
+            } else {
+                material.selected = 0;
+            }
 
             if let Some(_positions) = mesh.attribute_mut(Mesh::ATTRIBUTE_POSITION) {
                 mesh.insert_attribute(
