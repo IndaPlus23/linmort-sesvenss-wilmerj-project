@@ -206,6 +206,7 @@ fn handle_projectile_collisions(
             // Check if the collided entity is an enemy and if so, modify its state
             if let Ok((_, mut enemy_state)) = enemy_query.get_mut(collided_entity) {
                 enemy_state.state = ActionState::Dead;
+                commands.entity(projectile_entity).despawn();
             }
         }
     }
