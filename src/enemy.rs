@@ -142,7 +142,7 @@ fn act(
         mut velocity,
         transform,
         mut state,
-        enemy,
+        mut enemy,
         mut shooting_timer,
         mut walk_timer
     ) in enemy_query.iter_mut() {
@@ -154,7 +154,7 @@ fn act(
                 walk_timer.timer.tick(time.delta());
 
                 if walk_timer.timer.finished() {
-                    let movement = generate_random_movement();
+                    let mut movement = generate_random_movement();
 
                     velocity.value = Vec3::new(movement.direction.x, 0., movement.direction.y) * ENEMY_MOVEMENT_SPEED;
                     walk_timer.timer = Timer::new(movement.duration, TimerMode::Once);
@@ -256,4 +256,31 @@ fn generate_random_movement() -> Movement {
     let duration: Duration = Duration::from_secs(rng.gen_range(0.5..5.0) as u64);
 
     Movement { direction, duration }
+}
+
+pub fn enemy_position (
+    mut enemies: Query<(&mut SpriteComponent, &mut EnemyState)>
+) {
+    for (mut enemy, _) in enemies.iter_mut() {
+        if enemy.position.x > 80. {
+            enemy.position.x = 80.;
+        }
+
+        if enemy.position.x < -80. {
+            enemy.position.x = -80.;
+        }
+
+        if enemy.position.z > 230. {
+            enemy.position.z = 230.;
+        }
+
+        if enemy.position.z < 30. {
+            enemy.position.z = 30.;
+        }
+
+        if enemy.position.z > 90. && enemy.position.z < 230. {
+            //y= 0.06x + -5.79
+            enemy.position.y = enemy.position.z * 0.06 -5.79; 
+        }
+    }
 }

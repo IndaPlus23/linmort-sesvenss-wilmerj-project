@@ -3,7 +3,7 @@
 @group(2) @binding(0) var color_texture: texture_2d<f32>;
 @group(2) @binding(1) var color_sampler: sampler;
 @group(2) @binding(2) var<uniform> id: f32;
-@group(2) @binding(3) var<uniform> mask: array<vec3<f32>, 1000>;
+@group(2) @binding(3) var<uniform> mask: array<vec3<f32>, 2000>;
 @group(2) @binding(4) var<uniform> mask_len: i32;
 @group(2) @binding(5) var<uniform> a: vec3<f32>;
 @group(2) @binding(6) var<uniform> b: vec3<f32>;

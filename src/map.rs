@@ -191,7 +191,7 @@ impl Map {
                 ..default()
             }, AnimationComponent {
                 dormant: AnimationIndices{first: 0, last: 0},
-                attack: AnimationIndices{first: 1, last: 3},
+                attack: AnimationIndices{first: 1, last: 7},
                 dying: AnimationIndices{first: 4, last: 6},
                 dead: AnimationIndices{first: 0, last: 0},
             }, EnemyState {
@@ -351,7 +351,7 @@ pub fn load_from_file(filename: &str, enemy_types: &HashMap<String, Enemy>) -> O
         };
 
         let mut enemy = enemy_types.get(enemy_type).unwrap().clone();
-        enemy.update_position(Vec3::new(data[1], data[2], data[3]));
+        enemy.position = Vec3::new(data[1], data[2], data[3]);
 
         map.enemies.push(enemy.clone());
     }

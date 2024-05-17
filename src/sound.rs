@@ -59,7 +59,7 @@ then use the function like this (shotgun.ogg must be a file in assets/sounds)->
 pub fn play_audio(asset_server: Res<AssetServer>, mut commands: Commands, path: &str) {
     commands.spawn(AudioBundle {
         source: asset_server.load("sounds\\".to_owned() + path),
-        settings: PlaybackSettings::ONCE.with_volume(Volume::new(0.1)),
+        settings: PlaybackSettings::ONCE.with_volume(Volume::new(0.3)),
         ..default()
     });
 }

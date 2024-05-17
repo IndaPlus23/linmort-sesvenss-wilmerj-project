@@ -1,6 +1,6 @@
 use crate::{
     floor::Floor, map::Map, skybox::CubeMapMaterial, vertex::Vertex, wall::Wall, EditorState,
-    GameState, Player, SceneAssets,
+    GameState, Player, SceneAssets, map::ShotgunTag,
 };
 use bevy::{
     prelude::*,
@@ -11,6 +11,7 @@ use bevy::{
         render_resource::{AsBindGroup, ShaderRef},
     },
     sprite::{Material2d, MaterialMesh2dBundle, Mesh2dHandle},
+    window::PrimaryWindow,
 };
 use core::f32::consts::PI;
 use nalgebra::{Rotation3, Unit, Vector3};
@@ -18,7 +19,7 @@ use nalgebra::{Rotation3, Unit, Vector3};
 use crate::movement::{Acceleration, MovingObjectBundle, Velocity};
 use crate::{enemy::Enemy, sprites::SpriteComponent};
 
-pub const MAX_STRUCTURES: usize = 1000;
+pub const MAX_STRUCTURES: usize = 2000;
 const SCALING_FACTOR: f32 = 0.01;
 
 #[derive(Component, Asset, TypePath, AsBindGroup, Debug, Clone)]
@@ -70,6 +71,7 @@ impl Material2d for CustomMaterial {
 
 pub fn render(
     mut commands: Commands,
+    mut window: Query<&mut Window, With<PrimaryWindow>>,
     game_state: Res<State<GameState>>,
     scene_assets: Res<SceneAssets>,
     mut player_query: Query<&Player>,
@@ -93,7 +95,8 @@ pub fn render(
         ),
         Without<Wall>,
     >,
-    mut enemy_query: Query<(&mut SpriteComponent, &mut Transform), (Without<Wall>, Without<Floor>)>,
+    mut shotgun: Query<(&mut ShotgunTag, &mut Transform), (Without<Wall>, Without<Floor>)>,
+    mut enemy_query: Query<(&mut SpriteComponent, &mut Transform), (Without<Wall>, Without<Floor>, Without<ShotgunTag>)>,
     mut gizmos: Gizmos,
 ) {
     for player in player_query.iter_mut() {
@@ -112,7 +115,7 @@ pub fn render(
         };
 
         // Construct mask for z-buffering
-        let mut mask: [Vec3; 1000] = [Vec3::new(0., 0., 0.); 1000];
+        let mut mask: [Vec3; MAX_STRUCTURES] = [Vec3::new(0., 0., 0.); MAX_STRUCTURES];
         let mut i = 0;
 
         // Very ugly but gets the job done for now
@@ -310,6 +313,14 @@ pub fn render(
                 transform.translation = Vec3::new(screen_pos.x, screen_pos.y, 10.0);
                 transform.scale = Vec3::new(scaling, scaling, scaling);
             }
+        }
+
+        // Shotgun
+        for (_, mut transform) in shotgun.iter_mut() {
+            let window = window.single_mut();
+            let scaling = window.width() / (454.);
+            transform.translation.y = -window.height() / 2. + 110. * scaling;
+            transform.scale = Vec3::new(scaling * 0.9, scaling * 0.9, scaling * 0.9);
         }
     }
 }

@@ -144,7 +144,7 @@ pub fn keyboard_input(
     }
 
     for mut player in query.iter_mut() {
-        let mut speed = 50.;
+        let mut speed = 30.;
 
         let mut movement = Vec3::ZERO;
 
@@ -153,6 +153,10 @@ pub fn keyboard_input(
                 true => player.noclip = false,
                 false => player.noclip = true,
             }
+        }
+
+        if keyboard_input.just_pressed(KeyCode::KeyR) {
+            player.ammo = 7;
         }
 
         if keyboard_input.pressed(KeyCode::KeyW) {
@@ -263,10 +267,16 @@ pub fn mouse_input(
 
         match state.state {
             ActionState::Dormant => {
-                state.state = ActionState::Attacking;
 
                 // Shoot projectile
-                for player in query.iter_mut() {
+                for mut player in query.iter_mut() {
+                    if player.ammo <= 0 {
+                        play_audio(asset_server, commands, "no_ammo.ogg");
+                        return;
+                    }
+
+                    state.state = ActionState::Attacking;
+
                     let position = Vec3::new(player.x, player.y - 5., player.z);
                     let direction = normalize(player.forward_vector());
 
@@ -277,7 +287,9 @@ pub fn mouse_input(
                         direction,
                         PLAYER_HIT_RADIUS + 10.,
                         PLAYER_PROJECTILE_SPEED,
-                    )
+                    );
+
+                    player.ammo -= 1;
                 }
 
                 let window = window_query.single_mut();
@@ -290,8 +302,6 @@ pub fn mouse_input(
             }
             _ => ()
         }
-
-
     }
 
     if mouse_button_input.just_released(MouseButton::Left) {

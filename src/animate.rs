@@ -54,7 +54,7 @@ fn animate(
                     ActionState::Dormant => {  }, // Don't change
                     ActionState::Attacking => {
                         state.state = ActionState::Dormant;
-                        &animation_component.dormant.first;
+                        let _ = &animation_component.dormant.first;
                     },
                     ActionState::Dying => { state.state = ActionState::Dead }
                     ActionState::Dead => { } // Don't Change

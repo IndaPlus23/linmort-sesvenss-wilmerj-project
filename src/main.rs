@@ -47,6 +47,7 @@ use crate::{
     skybox::{render_skybox, CubeMapMaterial},
     sound::play_background_audio,
     wall::Wall,
+    enemy::enemy_position,
 };
 use crate::animate::AnimatePlugin;
 #[derive(States, Debug, Clone, PartialEq, Eq, Hash)]
@@ -108,11 +109,12 @@ fn main() {
         .add_plugins(EnemyPlugin)
         .add_plugins(CollisionDetectionPlugin)
         .add_systems(PreStartup, load_assets)
-        .add_systems(Startup, setup)
+        .add_systems(Startup, (setup, spawn_enemies))
         .add_systems(Update, change_title)
         .add_systems(
             Update,
             (
+                full_health,
                 make_visible,
                 main_menu_input,
                 render_main_menu,
@@ -130,6 +132,7 @@ fn main() {
                 render_skybox,
                 render_map,
                 game_screen_text,
+                enemy_position,
             )
                 .in_set(GameSet),
         )
@@ -145,6 +148,7 @@ fn main() {
                 editor_ui,
                 render_grid,
                 game_screen_text,
+                enemy_position,
             )
                 .in_set(EditorSet),
         )
@@ -427,5 +431,85 @@ fn change_title(mut windows: Query<&mut Window>, time: Res<'_, Time<Real>>, quer
 fn make_visible(mut window: Query<&mut Window>, frames: Res<FrameCount>) {
     if frames.0 == 3 {
         window.single_mut().visible = true;
+    }
+}
+
+fn full_health(mut player: Query<&mut Player>) {
+    for mut player in player.iter_mut() {
+        player.health = 100;
+    }
+}
+
+use crate::collision_detection::Collider;
+use crate::enemy::{ActionState, EnemyState};
+use crate::movement::MovingObjectSpriteSheetBundle;
+use crate::sprites::SpriteComponent;
+use crate::timer::{AnimationTimer, ShootingTimer, WalkTimer};
+use std::time::Duration;
+use crate::movement::Velocity;
+use crate::movement::Acceleration;
+use crate::animate::{AnimationComponent, AnimationIndices};
+use crate::enemy::Enemy;
+use rand::Rng;
+
+fn spawn_enemies(
+    mut commands: Commands,
+    scene_assets: Res<SceneAssets>,
+) {
+    for _ in 0..10 {
+        let mut enemy = Enemy::new(
+            5,
+            1,
+            100,
+            20,
+            5,
+            Some(0),
+            2,
+        );
+
+        let mut rng = rand::thread_rng();
+        // Generate x within the range -80 to 80
+        let x: f32 = rng.gen_range(-80.0..80.0);
+        // y is always 0
+        let y: f32 = 0.0;
+        // Generate z within the range 30 to 230
+        let z: f32 = rng.gen_range(30.0..230.0);
+        // Create the 3D vector
+        let random_vector = (x, y, z);
+
+        enemy.position = random_vector.into();
+
+        commands.spawn((
+            MovingObjectSpriteSheetBundle {
+                velocity: Velocity::new(Vec3::ZERO),
+                acceleration: Acceleration::new(Vec3::ZERO),
+                sprite: SpriteSheetBundle {
+                    texture: scene_assets.enemy_a_spritesheet.clone(),
+                    atlas: TextureAtlas {
+                        layout: scene_assets.enemy_a_spritelayout.clone(),
+                        index: 0,
+                    },
+                    transform: Transform::from_translation(Vec3::new(100000.,100000.,100000.)),
+                    ..default()
+                },
+            }, SpriteComponent {
+                position: enemy.position,
+                health: 100.,
+            }, ShootingTimer {
+                // create the non-repeating fuse timer
+                timer: Timer::new(Duration::from_secs(5), TimerMode::Repeating),
+            }, EnemyState {
+                state: ActionState::Dormant,
+            }, WalkTimer {
+                timer: Timer::new(Duration::from_secs(0), TimerMode::Once),
+            }, Collider::new(5.),
+            AnimationComponent {
+                dormant: AnimationIndices{first: 0, last: 4},
+                attack: AnimationIndices{first: 5, last: 9},
+                dying: AnimationIndices{first: 10, last: 14},
+                dead: AnimationIndices{first: 14, last: 14},
+            },
+            AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
+        ));
     }
 }
