@@ -74,6 +74,9 @@ struct GameSet;
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
 struct EditorSet;
 
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
+struct DeadSet;
+
 fn main() {
     App::new()
         .insert_state(GameState::MainMenu)
@@ -81,6 +84,7 @@ fn main() {
         .configure_sets(Update, MenuSet.run_if(in_state(GameState::MainMenu)))
         .configure_sets(Update, GameSet.run_if(in_state(GameState::InGame)))
         .configure_sets(Update, EditorSet.run_if(in_state(GameState::InEditor)))
+        .configure_sets(Update, DeadSet.run_if(in_state(GameState::Dead)))
         .insert_resource(ClearColor(Color::rgb(0.1, 0.1, 0.1)))
         .insert_resource(MouseState {
             press_coords: Vec::new(),
@@ -135,6 +139,19 @@ fn main() {
                 enemy_position,
             )
                 .in_set(GameSet),
+        )
+        .add_systems(
+            Update,
+            (
+                mouse_input,
+                keyboard_input,
+                render,
+                render_game_hud,
+                render_skybox,
+                game_screen_text,
+                enemy_position,
+            )
+                .in_set(DeadSet),
         )
         .add_systems(
             Update,
