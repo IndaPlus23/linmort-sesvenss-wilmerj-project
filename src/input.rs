@@ -12,7 +12,8 @@ use crate::{
     MainMenuText, Player, Wall,
 };
 use crate::asset_loader::SceneAssets;
-use crate::enemy::create_projectile;
+use crate::enemy::{ActionState, create_projectile, EnemyState};
+use crate::map::ShotgunTag;
 use crate::player::{PLAYER_HIT_RADIUS, PLAYER_PROJECTILE_SPEED};
 use crate::utility::normalize;
 
@@ -238,6 +239,7 @@ pub fn mouse_input(
     mut query: Query<&mut Player>,
     game_state: Res<State<GameState>>,
     asset_server: Res<AssetServer>,
+    mut shotgun_query: Query<&mut EnemyState, With<ShotgunTag>>
 ) {
     for event in mouse_motion_events.read() {
         let primary_window = window_query.single_mut();
@@ -271,6 +273,11 @@ pub fn mouse_input(
                 PLAYER_HIT_RADIUS + 10.,
                 PLAYER_PROJECTILE_SPEED,
             )
+        }
+
+        // Trigger animation
+        for mut state in shotgun_query.iter_mut() {
+            state.state = ActionState::Attacking;
         }
 
         let window = window_query.single_mut();

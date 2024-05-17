@@ -36,6 +36,9 @@ pub struct Map {
 }
 
 #[derive(Component)]
+pub struct ShotgunTag;
+
+#[derive(Component)]
 pub struct PlayerComponent;
 
 impl Map {
@@ -189,6 +192,7 @@ impl Map {
                 state: ActionState::Dormant,
             },
             AnimationTimer(Timer::from_seconds(0.3, TimerMode::Repeating)),
+            ShotgunTag,
         ));
     }
 
