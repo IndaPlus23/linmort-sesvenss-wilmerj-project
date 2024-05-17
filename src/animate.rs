@@ -37,7 +37,7 @@ fn animate(
         &mut TextureAtlas
     )>,
 ) {
-    for (animation_component, state, mut timer, mut atlas) in &mut query.iter_mut() {
+    for (animation_component, mut state, mut timer, mut atlas) in &mut query.iter_mut() {
 
         let indices: &AnimationIndices = match state.state {
             ActionState::Dormant => { &animation_component.dormant },
@@ -48,7 +48,18 @@ fn animate(
 
         timer.tick(time.delta());
         if timer.just_finished() {
-            atlas.index = if atlas.index == indices.last {
+            atlas.index = if atlas.index >= indices.last {
+                // Change back to correct state when animation is done
+                match state.state {
+                    ActionState::Dormant => {  }, // Don't change
+                    ActionState::Attacking => {
+                        state.state = ActionState::Dormant;
+                        &animation_component.dormant.first;
+                    },
+                    ActionState::Dying => { state.state = ActionState::Dead }
+                    ActionState::Dead => { } // Don't Change
+                };
+
                 indices.first
             } else {
                 atlas.index + 1
@@ -56,3 +67,4 @@ fn animate(
         }
     }
 }
+

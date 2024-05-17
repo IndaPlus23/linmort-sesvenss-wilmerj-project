@@ -169,6 +169,27 @@ impl Map {
                 AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
             ));
         }
+
+        // Spawn shotgun sprite
+        commands.spawn((
+            SpriteSheetBundle {
+                texture: scene_assets.shotgun_sprite.clone(),
+                atlas: TextureAtlas {
+                    layout: scene_assets.shotgun_spritelayout.clone(),
+                    index: 0,
+                },
+                transform: Transform::from_translation(Vec3::new(0.,-140.,1.)),
+                ..default()
+            }, AnimationComponent {
+                dormant: AnimationIndices{first: 0, last: 0},
+                attack: AnimationIndices{first: 1, last: 3},
+                dying: AnimationIndices{first: 4, last: 6},
+                dead: AnimationIndices{first: 0, last: 0},
+            }, EnemyState {
+                state: ActionState::Dormant,
+            },
+            AnimationTimer(Timer::from_seconds(0.3, TimerMode::Repeating)),
+        ));
     }
 
     pub fn save(&self) -> Option<()> {

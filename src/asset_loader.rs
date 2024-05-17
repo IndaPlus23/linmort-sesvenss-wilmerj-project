@@ -20,6 +20,8 @@ pub struct SceneAssets {
     pub enemy_a_spritelayout: Handle<TextureAtlasLayout>,
     pub enemy_a_spritesheet: Handle<Image>,
     pub projectile: Handle<Image>,
+    pub shotgun_sprite: Handle<Image>,
+    pub shotgun_spritelayout: Handle<TextureAtlasLayout>,
 }
 
 pub struct AssetLoaderPlugin;
@@ -62,8 +64,8 @@ pub fn load_assets(
         projectile: asset_server.load(Path::new("sprites/projectile.png")),
         enemy_a_spritesheet: asset_server.load(Path::new("spritesheets/spritesheet.png")),
         enemy_a_spritelayout: load_sprite_sheet_layout(
-            asset_server,
-            texture_atlas_layout,
+            &mut asset_server,
+            &mut texture_atlas_layout,
             Vec2::new(116.8, 114.3),
             5,
             3,
@@ -73,13 +75,24 @@ pub fn load_assets(
         ),
         enemy_types: load_enemy_types(),
         texture_paths,
+        shotgun_sprite: asset_server.load(Path::new("spritesheets/shotgun.png")),
+        shotgun_spritelayout: load_sprite_sheet_layout(
+            &mut asset_server,
+            &mut texture_atlas_layout,
+            Vec2::new(454., 256.),
+            7,
+            1,
+            None,
+            None,
+            "spritesheet.png",
+        ),
     }
 }
 
 /// Loads folder of textures and upgrades into handle of image
 fn load_sprite_sheet_layout(
-    asset_server: Res<AssetServer>,
-    mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
+    asset_server: &mut Res<AssetServer>,
+    texture_atlas_layouts: &mut ResMut<Assets<TextureAtlasLayout>>,
     tile_size: Vec2,
     columns: usize,
     rows: usize,

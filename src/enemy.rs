@@ -145,25 +145,25 @@ fn act(
     for (
         mut velocity,
         transform,
-        state,
+        mut state,
         enemy,
         mut shooting_timer,
         mut walk_timer
     ) in enemy_query.iter_mut() {
-        // Random walking
-        walk_timer.timer.tick(time.delta());
-
-        if walk_timer.timer.finished() {
-            let movement = generate_random_movement();
-
-            velocity.value = Vec3::new(movement.direction.x, 0., movement.direction.y) * ENEMY_MOVEMENT_SPEED;
-            walk_timer.timer = Timer::new(movement.duration, TimerMode::Once);
-        }
-
-
         // Combat actions
         match state.state {
             ActionState::Dormant => {
+
+                // Random walking
+                walk_timer.timer.tick(time.delta());
+
+                if walk_timer.timer.finished() {
+                    let movement = generate_random_movement();
+
+                    velocity.value = Vec3::new(movement.direction.x, 0., movement.direction.y) * ENEMY_MOVEMENT_SPEED;
+                    walk_timer.timer = Timer::new(movement.duration, TimerMode::Once);
+                }
+
                 // Shoot if enemy state is attacking
                 shooting_timer.timer.tick(time.delta());
 
@@ -172,7 +172,7 @@ fn act(
                 let direction = normalize(Vec3::new(player.x, player.y, player.z) - enemy.position);
 
                 if shooting_timer.timer.finished() {
-                    // TODO: Change to shooting animation sprite
+                    state.state = ActionState::Attacking;
                     create_projectile(
                         &mut commands,
                         scene_assets.projectile.clone(),
@@ -183,6 +183,12 @@ fn act(
                     );
                 }
             }
+            ActionState::Dying => {
+                velocity.value = Vec3::ZERO;
+            }
+            ActionState::Dead => {
+                velocity.value = Vec3::ZERO;
+            }
             _ => {}
         }
     }
@@ -190,16 +196,17 @@ fn act(
 
 fn handle_projectile_collisions(
     mut commands: Commands,
-    query: Query<(Entity, &Collider), With<ProjectileComponent>>
+    projectile_query: Query<(Entity, &Collider), With<ProjectileComponent>>,
+    mut enemy_query: Query<(Entity, &mut EnemyState)>
 ) {
-    for (entity, collider) in query.iter() {
+    // Iterate over all projectiles
+    for (projectile_entity, collider) in projectile_query.iter() {
+        // Check each colliding entity
         for &collided_entity in collider.colliding_entities.iter() {
-
-            if query.get(collided_entity).is_ok() {
-                continue;
+            // Check if the collided entity is an enemy and if so, modify its state
+            if let Ok((_, mut enemy_state)) = enemy_query.get_mut(collided_entity) {
+                enemy_state.state = ActionState::Dead;
             }
-
-            commands.entity(collided_entity).despawn();
         }
     }
 }
