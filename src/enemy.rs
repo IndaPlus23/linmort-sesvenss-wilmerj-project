@@ -1,17 +1,17 @@
-use bevy::prelude::*;
+use crate::asset_loader::SceneAssets;
 use crate::collision_detection::Collider;
 use crate::movement::{Acceleration, MovingObjectBundle, Velocity};
-use bevy::ecs::component::Component;
-use crate::asset_loader::SceneAssets;
 use crate::player::Player;
-use bevy::time::Timer;
 use crate::sprites::SpriteComponent;
 use crate::timer::{ShootingTimer, WalkTimer};
 use crate::utility::normalize;
+use crate::wall::Wall;
+use bevy::ecs::component::Component;
+use bevy::prelude::*;
+use bevy::time::Timer;
 use rand::Rng;
 use std::f32::consts::PI;
 use std::time::Duration;
-use crate::wall::Wall;
 
 const MISSILE_SPEED: f32 = 150.;
 const ENEMY_MOVEMENT_SPEED: f32 = 20.;
@@ -29,7 +29,7 @@ pub enum ActionState {
 
 #[derive(Component)]
 pub struct EnemyState {
-    pub(crate) state: ActionState
+    pub(crate) state: ActionState,
 }
 
 struct Movement {
@@ -86,11 +86,7 @@ impl Enemy {
     }
 
     // TODO: transform and screen are copies from sprite.rs which is a copy from vertex.rs
-    pub fn transform(
-        position: Vec3,
-        player: &Player
-    ) -> Vec3 {
-
+    pub fn transform(position: Vec3, player: &Player) -> Vec3 {
         // This code comes from transform_vertice
         let mut x = position.x;
         let mut y = position.y;
@@ -196,6 +192,7 @@ fn act(
 
 fn handle_projectile_collisions(
     mut commands: Commands,
+    query: Query<(Entity, &Collider), With<ProjectileComponent>>,
     projectile_query: Query<(Entity, &Collider), With<ProjectileComponent>>,
     mut enemy_query: Query<(Entity, &mut EnemyState)>
 ) {
@@ -203,6 +200,9 @@ fn handle_projectile_collisions(
     for (projectile_entity, collider) in projectile_query.iter() {
         // Check each colliding entity
         for &collided_entity in collider.colliding_entities.iter() {
+            // TODO: Projectile collides with enemy once spawning
+            if query.get(collided_entity).is_ok() {
+                continue;
             // Check if the collided entity is an enemy and if so, modify its state
             if let Ok((_, mut enemy_state)) = enemy_query.get_mut(collided_entity) {
                 enemy_state.state = ActionState::Dead;
@@ -254,6 +254,8 @@ fn generate_random_movement() -> Movement {
     // Generate a random duration between 0.5 and 3.0 seconds
     let duration: Duration = Duration::from_secs(rng.gen_range(0.5..5.0) as u64);
 
-    Movement { direction, duration }
+    Movement {
+        direction,
+        duration,
+    }
 }
-

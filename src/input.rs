@@ -7,16 +7,15 @@ use bevy::{
 };
 use std::f32::consts::PI;
 
-use crate::{
-    floor::Floor, play_background_audio, sound::BackgroundSong, EditorState, GameState,
-    MainMenuText, Player, Wall,
-};
 use crate::asset_loader::SceneAssets;
 use crate::enemy::{ActionState, create_projectile, EnemyState};
 use crate::map::ShotgunTag;
 use crate::player::{PLAYER_HIT_RADIUS, PLAYER_PROJECTILE_SPEED};
 use crate::utility::normalize;
-
+use crate::{
+    floor::Floor, play_background_audio, sound::BackgroundSong, EditorState, GameState,
+    MainMenuText, Player, Wall,
+};
 
 #[derive(Default)]
 pub struct MouseState {
@@ -122,7 +121,7 @@ pub fn keyboard_input(
                     primary_window.cursor.visible = false;
                 }
             }
-            GameState::MainMenu => {}
+            _ => {}
         }
     }
 
@@ -140,8 +139,7 @@ pub fn keyboard_input(
                     next_editor_state.set(EditorState::World);
                 }
             },
-            GameState::InGame => {}
-            GameState::MainMenu => {}
+            _ => {}
         }
     }
 

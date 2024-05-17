@@ -8,7 +8,7 @@ use bevy::{
     sprite::MaterialMesh2dBundle,
 };
 
-use crate::{vertex::Vertex, Player, CustomMaterial, SceneAssets, MAX_STRUCTURES};
+use crate::{vertex::Vertex, CustomMaterial, Player, SceneAssets, MAX_STRUCTURES};
 
 #[derive(Component, Clone)]
 pub struct Floor {

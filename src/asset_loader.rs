@@ -1,12 +1,12 @@
+use crate::enemy::Enemy;
 use bevy::prelude::*;
+use serde::{Deserialize, Serialize};
+use serde_json;
 use std::{
+    collections::HashMap,
     fs,
     path::{Path, PathBuf},
-    collections::HashMap,
 };
-use serde_json;
-use serde::{Deserialize, Serialize};
-use crate::enemy::Enemy;
 
 /// SceneAssets stores handles for assets used in the scene.
 #[derive(Resource, Debug, Default)]
@@ -196,20 +196,24 @@ struct EnemyJSON {
 
 fn load_enemy_types() -> HashMap<String, Enemy> {
     let data = fs::read_to_string("./assets/enemies/enemies.json").expect("Unable to read file");
-    let enemy_datas: HashMap<String, EnemyJSON> = serde_json::from_str(&data).expect("JSON was incorrectly formatted");
+    let enemy_datas: HashMap<String, EnemyJSON> =
+        serde_json::from_str(&data).expect("JSON was incorrectly formatted");
 
     let mut enemies: HashMap<String, Enemy> = Default::default();
 
     for (id, enemy) in enemy_datas {
-        enemies.insert(id, Enemy::new(
-            enemy.reaction_speed,
-            enemy.speed,
-            enemy.hp,
-            enemy.attack,
-            enemy.range,
-            enemy.respawn_time,
-            enemy.projectile_speed,
-        ));
+        enemies.insert(
+            id,
+            Enemy::new(
+                enemy.reaction_speed,
+                enemy.speed,
+                enemy.hp,
+                enemy.attack,
+                enemy.range,
+                enemy.respawn_time,
+                enemy.projectile_speed,
+            ),
+        );
     }
 
     enemies

@@ -10,18 +10,21 @@ use std::{
 use std::collections::HashMap;
 use std::time::Duration;
 
-use crate::{
-    floor::Floor, render::MAX_STRUCTURES, vertex::Vertex, CustomMaterial, Player, SceneAssets, Wall,
-    enemy::Enemy, movement::{Acceleration, MovingObjectBundle, Velocity}
-};
-use crate::animate::{AnimationComponent, AnimationIndices};
 use crate::collision_detection::Collider;
 use crate::enemy::{ActionState, EnemyState};
 use crate::movement::MovingObjectSpriteSheetBundle;
 use crate::player::PLAYER_HIT_RADIUS;
 use crate::sprites::SpriteComponent;
 use crate::timer::{AnimationTimer, ShootingTimer, WalkTimer};
-
+use crate::{
+    enemy::Enemy,
+    floor::Floor,
+    movement::{Acceleration, MovingObjectBundle, Velocity},
+    render::MAX_STRUCTURES,
+    vertex::Vertex,
+    CustomMaterial, Player, SceneAssets, Wall,
+};
+use crate::animate::{AnimationComponent, AnimationIndices};
 
 #[derive(Component, Clone)]
 pub struct Map {
@@ -32,7 +35,6 @@ pub struct Map {
     pub walls: Vec<Wall>,
     pub floors: Vec<Floor>,
     pub enemies: Vec<Enemy>,
-
 }
 
 #[derive(Component)]
@@ -345,7 +347,7 @@ pub fn load_from_file(filename: &str, enemy_types: &HashMap<String, Enemy>) -> O
         // Convert to enemy_type
         let enemy_type = match data[0] as i32 {
             0 => "enemy_a",
-            _ => "enemy_a"
+            _ => "enemy_a",
         };
 
         let mut enemy = enemy_types.get(enemy_type).unwrap().clone();

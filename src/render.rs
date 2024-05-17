@@ -1,6 +1,6 @@
 use crate::{
-    floor::Floor, skybox::CubeMapMaterial, vertex::Vertex, wall::Wall, EditorState, GameState,
-    Player, SceneAssets, map::Map,
+    floor::Floor, map::Map, skybox::CubeMapMaterial, vertex::Vertex, wall::Wall, EditorState,
+    GameState, Player, SceneAssets,
 };
 use bevy::{
     prelude::*,
@@ -15,8 +15,8 @@ use bevy::{
 use core::f32::consts::PI;
 use nalgebra::{Rotation3, Unit, Vector3};
 
-use crate::{enemy::{Enemy}, sprites::SpriteComponent};
 use crate::movement::{Acceleration, MovingObjectBundle, Velocity};
+use crate::{enemy::Enemy, sprites::SpriteComponent};
 
 pub const MAX_STRUCTURES: usize = 1000;
 const SCALING_FACTOR: f32 = 0.01;
@@ -93,13 +93,7 @@ pub fn render(
         ),
         Without<Wall>,
     >,
-    mut enemy_query: Query<(
-        &mut SpriteComponent,
-        &mut Transform,
-    ), (
-        Without<Wall>,
-        Without<Floor>
-    )>,
+    mut enemy_query: Query<(&mut SpriteComponent, &mut Transform), (Without<Wall>, Without<Floor>)>,
     mut gizmos: Gizmos,
 ) {
     for player in player_query.iter_mut() {
@@ -305,7 +299,6 @@ pub fn render(
 
         // Sprites
         for (sprite, mut transform) in enemy_query.iter_mut() {
-
             let transformed_pos = Enemy::transform(sprite.position, player);
             let scaling = scale_by_distance_linear(-transformed_pos.z, SCALING_FACTOR);
 
@@ -341,7 +334,7 @@ impl MapFloor {
         let scale = 1.0;
         let x_offset = 0.0;
         let y_offset = 0.0;
-        Self { 
+        Self {
             id,
             scale,
             x_offset,
