@@ -208,7 +208,7 @@ pub fn game_screen_text(
     for player in player_query.iter_mut() {
         for (game_screen_text, mut text, mut transform) in text_query.iter_mut() {
             if game_screen_text.id == 0 {
-                text.sections[0].value = player.health.to_string();
+                text.sections[0].value = format!("{}%", player.health);
 
                 let scale1 = primary_window.width() / (640.);
                 let scale2 = primary_window.width() / (64. * 2.) / 10.;

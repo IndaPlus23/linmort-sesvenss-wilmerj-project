@@ -141,6 +141,7 @@ fn main() {
                 render_skybox,
                 editor_ui,
                 render_grid,
+                game_screen_text,
             )
                 .in_set(EditorSet),
         )
@@ -309,7 +310,7 @@ fn setup(
                 "",
                 TextStyle {
                     font: asset_server.load("fonts/DooM.ttf").clone(),
-                    font_size: 80.0,
+                    font_size: 70.0,
                     color: Color::RED,
                 },
             )
@@ -326,7 +327,7 @@ fn setup(
                 "",
                 TextStyle {
                     font: asset_server.load("fonts/DooM.ttf").clone(),
-                    font_size: 80.0,
+                    font_size: 70.0,
                     color: Color::BLACK,
                 },
             )
