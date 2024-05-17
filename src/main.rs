@@ -451,17 +451,35 @@ use crate::movement::Acceleration;
 use crate::animate::{AnimationComponent, AnimationIndices};
 use crate::enemy::Enemy;
 use rand::Rng;
+use std::io;
 
 fn spawn_enemies(
     mut commands: Commands,
     scene_assets: Res<SceneAssets>,
 ) {
-    for _ in 0..10 {
+    println!("Enter number of enemies: ");
+    let mut input = String::new();
+
+    // Read the input from the standard input (stdin)
+    io::stdin()
+        .read_line(&mut input)
+        .expect("Failed to read line");
+
+    // Trim the input to remove any whitespace
+    let input = input.trim();
+
+    // Parse the input string to an i32
+    let number = match input.parse::<i32>() {
+        Ok(number) => number,
+        Err(_) => 0,
+    };
+
+    for _ in 0..number {
         let mut enemy = Enemy::new(
             5,
             1,
             100,
-            20,
+            5,
             5,
             Some(0),
             2,

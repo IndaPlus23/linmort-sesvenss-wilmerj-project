@@ -92,6 +92,8 @@ pub fn main_menu_input(
 }
 
 pub fn keyboard_input(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
     mut wall_query: Query<&mut Wall>,
     mut floor_query: Query<&mut Floor>,
     mut window: Query<&mut Window, With<PrimaryWindow>>,
@@ -156,6 +158,7 @@ pub fn keyboard_input(
         }
 
         if keyboard_input.just_pressed(KeyCode::KeyR) {
+            play_audio(&asset_server, &mut commands, "reload.ogg");
             player.ammo = 7;
         }
 
@@ -271,7 +274,7 @@ pub fn mouse_input(
                 // Shoot projectile
                 for mut player in query.iter_mut() {
                     if player.ammo <= 0 {
-                        play_audio(asset_server, commands, "no_ammo.ogg");
+                        play_audio(&asset_server, &mut commands, "no_ammo.ogg");
                         return;
                     }
 
@@ -297,7 +300,7 @@ pub fn mouse_input(
 
                 if game_state.get() != &GameState::InEditor {
                     // plays shotgun sound
-                    play_audio(asset_server, commands, "shotgun.ogg");
+                    play_audio(&asset_server, &mut commands, "shotgun.ogg");
                 }
             }
             _ => ()
