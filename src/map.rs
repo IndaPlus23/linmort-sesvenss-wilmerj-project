@@ -12,9 +12,10 @@ use std::time::Duration;
 
 use crate::collision_detection::Collider;
 use crate::enemy::{ActionState, EnemyState};
+use crate::movement::MovingObjectSpriteSheetBundle;
 use crate::player::PLAYER_HIT_RADIUS;
 use crate::sprites::SpriteComponent;
-use crate::timer::{ShootingTimer, WalkTimer};
+use crate::timer::{AnimationTimer, ShootingTimer, WalkTimer};
 use crate::{
     enemy::Enemy,
     floor::Floor,
@@ -23,6 +24,7 @@ use crate::{
     vertex::Vertex,
     CustomMaterial, Player, SceneAssets, Wall,
 };
+use crate::animate::{AnimationComponent, AnimationIndices};
 
 #[derive(Component, Clone)]
 pub struct Map {
@@ -34,6 +36,9 @@ pub struct Map {
     pub floors: Vec<Floor>,
     pub enemies: Vec<Enemy>,
 }
+
+#[derive(Component)]
+pub struct ShotgunTag;
 
 #[derive(Component)]
 pub struct PlayerComponent;
@@ -137,32 +142,64 @@ impl Map {
         // Spawn enemies
         for enemy in &self.enemies {
             commands.spawn((
-                MovingObjectBundle {
+                MovingObjectSpriteSheetBundle {
                     velocity: Velocity::new(Vec3::ZERO),
                     acceleration: Acceleration::new(Vec3::ZERO),
-                    sprite: SpriteBundle {
-                        texture: scene_assets.enemy.clone(),
-                        transform: Transform::from_translation(enemy.position),
+                    sprite: SpriteSheetBundle {
+                        texture: scene_assets.enemy_a_spritesheet.clone(),
+                        atlas: TextureAtlas {
+                            layout: scene_assets.enemy_a_spritelayout.clone(),
+                            index: 0,
+                        },
+                        transform: Transform::from_translation(Vec3::new(100000.,100000.,100000.)),
                         ..default()
                     },
-                },
-                SpriteComponent {
+                }, SpriteComponent {
                     position: enemy.position,
                     health: 100.,
-                },
-                ShootingTimer {
+                }, ShootingTimer {
                     // create the non-repeating fuse timer
                     timer: Timer::new(Duration::from_secs(5), TimerMode::Repeating),
-                },
-                EnemyState {
+                }, EnemyState {
                     state: ActionState::Dormant,
-                },
-                WalkTimer {
+                }, WalkTimer {
                     timer: Timer::new(Duration::from_secs(0), TimerMode::Once),
+                }, Collider::new(5.),
+                AnimationComponent {
+                    dormant: AnimationIndices{first: 0, last: 4},
+                    attack: AnimationIndices{first: 5, last: 9},
+                    dying: AnimationIndices{first: 10, last: 14},
+                    dead: AnimationIndices{first: 14, last: 14},
                 },
-                Collider::new(5.),
+                AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
             ));
         }
+
+        // Spawn shotgun sprite
+        commands.spawn((
+            SpriteSheetBundle {
+                texture: scene_assets.shotgun_sprite.clone(),
+                atlas: TextureAtlas {
+                    layout: scene_assets.shotgun_spritelayout.clone(),
+                    index: 0,
+                },
+                transform: Transform {
+                        translation: Vec3::new(0.,-104.,1.),
+                        scale: Vec3::new(2., 2., 2.),
+                        ..default()
+                },
+                ..default()
+            }, AnimationComponent {
+                dormant: AnimationIndices{first: 0, last: 0},
+                attack: AnimationIndices{first: 1, last: 3},
+                dying: AnimationIndices{first: 4, last: 6},
+                dead: AnimationIndices{first: 0, last: 0},
+            }, EnemyState {
+                state: ActionState::Dormant,
+            },
+            AnimationTimer(Timer::from_seconds(0.2, TimerMode::Repeating)),
+            ShotgunTag,
+        ));
     }
 
     pub fn save(&self) -> Option<()> {

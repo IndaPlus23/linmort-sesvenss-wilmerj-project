@@ -14,6 +14,8 @@ mod sound;
 mod sprites;
 mod timer;
 mod utility;
+mod animate;
+
 mod vertex;
 mod wall;
 
@@ -46,7 +48,7 @@ use crate::{
     sound::play_background_audio,
     wall::Wall,
 };
-
+use crate::animate::AnimatePlugin;
 #[derive(States, Debug, Clone, PartialEq, Eq, Hash)]
 enum GameState {
     MainMenu,
@@ -84,6 +86,7 @@ fn main() {
         })
         .add_plugins(AssetLoaderPlugin)
         .add_plugins(MovementPlugin)
+        .add_plugins(AnimatePlugin)
         .add_plugins((DefaultPlugins
             .set(WindowPlugin {
                 primary_window: Some(Window {

@@ -1,4 +1,4 @@
-use bevy::prelude::{Component, Timer, TimerMode};
+use bevy::prelude::{Component, Deref, DerefMut, Timer, TimerMode};
 
 /// Used to time events
 #[derive(Component)]
@@ -10,3 +10,8 @@ pub struct ShootingTimer {
 pub struct WalkTimer {
     pub timer: Timer,
 }
+
+#[derive(Component, Deref, DerefMut)]
+pub struct AnimationTimer(pub Timer);
+
+

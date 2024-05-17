@@ -32,6 +32,13 @@ pub struct MovingObjectBundle {
     pub sprite: SpriteBundle,
 }
 
+#[derive(Bundle)]
+pub struct MovingObjectSpriteSheetBundle {
+    pub velocity: Velocity,
+    pub acceleration: Acceleration,
+    pub sprite: SpriteSheetBundle,
+}
+
 pub struct MovementPlugin;
 
 impl Plugin for MovementPlugin {

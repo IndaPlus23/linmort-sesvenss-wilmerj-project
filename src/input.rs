@@ -8,7 +8,8 @@ use bevy::{
 use std::f32::consts::PI;
 
 use crate::asset_loader::SceneAssets;
-use crate::enemy::create_projectile;
+use crate::enemy::{ActionState, create_projectile, EnemyState};
+use crate::map::ShotgunTag;
 use crate::player::{PLAYER_HIT_RADIUS, PLAYER_PROJECTILE_SPEED};
 use crate::utility::normalize;
 use crate::{
@@ -236,6 +237,7 @@ pub fn mouse_input(
     mut query: Query<&mut Player>,
     game_state: Res<State<GameState>>,
     asset_server: Res<AssetServer>,
+    mut shotgun_query: Query<&mut EnemyState, With<ShotgunTag>>
 ) {
     for event in mouse_motion_events.read() {
         let primary_window = window_query.single_mut();
@@ -256,28 +258,40 @@ pub fn mouse_input(
     if mouse_button_input.just_pressed(MouseButton::Left) {
         mouse_state.press_coords.clear();
 
-        // Shoot projectile
-        for player in query.iter_mut() {
-            let position = Vec3::new(player.x, player.y, player.z);
-            let direction = normalize(player.forward_vector());
+        // Animation for realod, do not fire
+        let mut state = shotgun_query.single_mut();
 
-            create_projectile(
-                &mut commands,
-                scene_assets.projectile.clone(),
-                position,
-                direction,
-                PLAYER_HIT_RADIUS + 10.,
-                PLAYER_PROJECTILE_SPEED,
-            )
+        match state.state {
+            ActionState::Dormant => {
+                state.state = ActionState::Attacking;
+
+                // Shoot projectile
+                for player in query.iter_mut() {
+                    let position = Vec3::new(player.x, player.y - 5., player.z);
+                    let direction = normalize(player.forward_vector());
+
+                    create_projectile(
+                        &mut commands,
+                        scene_assets.projectile.clone(),
+                        position,
+                        direction,
+                        PLAYER_HIT_RADIUS + 10.,
+                        PLAYER_PROJECTILE_SPEED,
+                    )
+                }
+
+                let window = window_query.single_mut();
+                let _window_pos = window.cursor_position().unwrap();
+
+                if game_state.get() != &GameState::InEditor {
+                    // plays shotgun sound
+                    play_audio(asset_server, commands, "shotgun.ogg");
+                }
+            }
+            _ => ()
         }
 
-        let window = window_query.single_mut();
-        let _window_pos = window.cursor_position().unwrap();
 
-        if game_state.get() != &GameState::InEditor {
-            // plays shotgun sound
-            play_audio(asset_server, commands, "shotgun.ogg");
-        }
     }
 
     if mouse_button_input.just_released(MouseButton::Left) {

@@ -1,11 +1,11 @@
 use crate::floor::Floor;
-use crate::sprites::SpriteComponent;
 use crate::wall::Wall;
 use crate::Player;
 use crate::GameState;
 use bevy::prelude::*;
-use bevy::{prelude::*, utils::HashMap};
 use std::f32::consts::PI;
+use bevy::{prelude::*, utils::HashMap};
+use crate::sprites::SpriteComponent;
 
 #[derive(Component)]
 pub struct Collider {
@@ -47,8 +47,6 @@ fn collision_detection(
                 .distance(Vec3::new(player.x, player.y, player.z));
 
             if distance < collider_a.radius + collider_player.radius {
-                println!("Hit player");
-
                 player.update_health(-10, &mut next_game_state);
                 commands.entity(entity_a).despawn_recursive();
             }
@@ -59,7 +57,6 @@ fn collision_detection(
             if entity_a != entity_b {
                 let distance = transform_a.position.distance(transform_b.position);
                 if distance < collider_a.radius + collider_b.radius {
-                    println!("Collision");
                     colliding_entities
                         .entry(entity_a)
                         .or_insert_with(Vec::new)
