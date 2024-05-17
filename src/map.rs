@@ -181,7 +181,11 @@ impl Map {
                     layout: scene_assets.shotgun_spritelayout.clone(),
                     index: 0,
                 },
-                transform: Transform::from_translation(Vec3::new(0.,-140.,1.)),
+                transform: Transform {
+                        translation: Vec3::new(0.,-7.,1.),
+                        scale: Vec3::new(2., 2., 2.),
+                        ..default()
+                },
                 ..default()
             }, AnimationComponent {
                 dormant: AnimationIndices{first: 0, last: 0},
@@ -191,7 +195,7 @@ impl Map {
             }, EnemyState {
                 state: ActionState::Dormant,
             },
-            AnimationTimer(Timer::from_seconds(0.3, TimerMode::Repeating)),
+            AnimationTimer(Timer::from_seconds(0.2, TimerMode::Repeating)),
             ShotgunTag,
         ));
     }

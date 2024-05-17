@@ -55,7 +55,6 @@ fn collision_detection(
                 let distance = transform_a.position
                     .distance(transform_b.position);
                 if distance < collider_a.radius + collider_b.radius {
-                    println!("Collision");
                     colliding_entities
                         .entry(entity_a)
                         .or_insert_with(Vec::new)
