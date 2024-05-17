@@ -184,7 +184,7 @@ impl Map {
                     index: 0,
                 },
                 transform: Transform {
-                        translation: Vec3::new(0.,-7.,1.),
+                        translation: Vec3::new(0.,-104.,1.),
                         scale: Vec3::new(2., 2., 2.),
                         ..default()
                 },

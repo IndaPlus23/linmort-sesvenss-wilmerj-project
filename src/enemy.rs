@@ -203,6 +203,7 @@ fn handle_projectile_collisions(
             // TODO: Projectile collides with enemy once spawning
             if query.get(collided_entity).is_ok() {
                 continue;
+            }
             // Check if the collided entity is an enemy and if so, modify its state
             if let Ok((_, mut enemy_state)) = enemy_query.get_mut(collided_entity) {
                 enemy_state.state = ActionState::Dead;
@@ -254,8 +255,5 @@ fn generate_random_movement() -> Movement {
     // Generate a random duration between 0.5 and 3.0 seconds
     let duration: Duration = Duration::from_secs(rng.gen_range(0.5..5.0) as u64);
 
-    Movement {
-        direction,
-        duration,
-    }
+    Movement { direction, duration }
 }

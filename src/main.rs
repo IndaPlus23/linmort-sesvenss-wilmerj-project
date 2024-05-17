@@ -49,8 +49,6 @@ use crate::{
     wall::Wall,
 };
 use crate::animate::AnimatePlugin;
-use crate::collision_detection::CollisionDetectionPlugin;
-
 #[derive(States, Debug, Clone, PartialEq, Eq, Hash)]
 enum GameState {
     MainMenu,

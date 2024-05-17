@@ -267,7 +267,7 @@ pub fn mouse_input(
 
                 // Shoot projectile
                 for player in query.iter_mut() {
-                    let position = Vec3::new(player.x, player.y, player.z);
+                    let position = Vec3::new(player.x, player.y - 5., player.z);
                     let direction = normalize(player.forward_vector());
 
                     create_projectile(
