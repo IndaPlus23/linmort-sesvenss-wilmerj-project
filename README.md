@@ -22,6 +22,7 @@ Clone into the repository and run using `cargo run --release`.
 |R|Reload|
 |Left Alt|Open editor|
 |F1|Toggle noclip|
+|E/Q|Move up/down|
 |M|Toggle map (in editor)|
 |Escape|Exit|
 
