@@ -1,0 +1,30 @@
+{
+    "enemy_a": {
+        "state": "Dormant",
+        "reaction_speed": 5,
+        "speed": 1,
+        "hp": 100,
+        "attack": 20,
+        "range": 5,
+        "respawn_time": 0,
+        "projectile_speed": 2,
+        "texture_name": "enemy_a.png",
+        "columns": 1,
+        "rows": 1,
+        "sprite_sheet_states": [[1,4],[5,6],[7,9]]
+    },
+    "enemy_b": {
+        "state": "Attack",
+        "reaction_speed": 2,
+        "speed": 2,
+        "hp": 50,
+        "attack": 10,
+        "range": 1,
+        "respawn_time": 20,
+        "projectile_speed": 1,
+        "sprite_sheet": "enemy_b.png",
+        "columns": 1,
+        "rows": 1,
+        "sprite_sheet_states": [[1,4],[5,6],[7,9]]
+    }
+}
